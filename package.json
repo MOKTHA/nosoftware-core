@@ -1,0 +1,31 @@
+{
+  "name": "heynxt-core",
+  "version": "0.1.0",
+  "description": "Industrial AI App Builder - Product Control Plane and Orchestration Layer",
+  "private": true,
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
+    "test": "turbo test",
+    "clean": "turbo clean"
+  },
+  "keywords": [
+    "industrial-ai",
+    "app-builder",
+    "control-plane",
+    "orchestration"
+  ],
+  "author": "",
+  "license": "UNLICENSED",
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.0",
+    "typescript": "^5.5.0"
+  }
+}
