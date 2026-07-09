@@ -11,26 +11,44 @@
  *   import { User, type User } from '@heynxt/core-types';
  *   //    ^^^ Zod schema     ^^^ TypeScript type
  *
- * Current schemas:
- *   - Control plane: User, Organization, Workspace, RoleAssignment
- *   - RBAC: Permission, RoleName, RoleDefinition, ROLE_DEFINITIONS,
- *     getRolePermissions()
+ * Current schemas (Phase 1 — Product Control Plane):
  *
- * TODO: Define remaining core schemas (Phase 1+):
- *   - Project schema
- *   - Task schema + TaskStatus FSM
- *   - Artifact schema
- *   - GenerationRun schema
+ *   Identity & tenancy:
+ *     User, Organization, Workspace
+ *
+ *   RBAC:
+ *     Permission, RoleName, RoleDefinition, ROLE_DEFINITIONS,
+ *     RoleAssignment, getRolePermissions()
+ *
+ *   Execution domain:
+ *     Project, ProjectStatus
+ *     Task, TaskStatus, TaskType
+ *     GenerationRun, GenerationRunStatus, GenerationRunSnapshot
+ *     Artifact, ArtifactKind, ArtifactStorageKind
+ *
+ *   Audit:
+ *     AuditLogEntry, AuditEntityType, AuditAction, createStatusChangeEntry()
+ *
+ * TODO: Define remaining core schemas (Phase 4+):
  *   - AgentSpec schema (agent configuration contract)
  *   - PromptSpec schema (prompt-to-spec input/output types)
  *   - Blueprint schema (industrial recipe definition)
  *   - DomainModel schema (industrial entity types)
  */
 
-// Control plane
+// Control plane — identity and tenancy
 export * from './schemas/user.js';
 export * from './schemas/organization.js';
 export * from './schemas/workspace.js';
 
-// RBAC
+// Control plane — RBAC
 export * from './schemas/rbac.js';
+
+// Control plane — execution domain
+export * from './schemas/project.js';
+export * from './schemas/task.js';
+export * from './schemas/generation-run.js';
+export * from './schemas/artifact.js';
+
+// Control plane — audit
+export * from './schemas/audit-log.js';

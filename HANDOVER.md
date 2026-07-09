@@ -1,55 +1,69 @@
-# Handover — Task 1 Complete
+# Handover — Task 2 Complete
 
 **Date**: 2026-07-09
-**Status**: Task 1 implementation complete and verified locally. Commit pending.
-**Context handover**: Context window exceeded 80% — new session to finalize.
+**Status**: Task 2 implementation complete and verified locally. Commit pending.
+**Context handover**: context window healthy; committing now rather than because of pressure.
 
 ---
 
 ## What Was Done (this session)
 
-### Task 1 — Unblock the foundation (implementation complete)
+### Task 2 — Phase 1 remaining control-plane schemas (implementation complete)
 
-1. ✅ **ADR-0004: ORM and database choice** — `docs/adr/0004-orm-and-database.md`
-   - Decision: Drizzle + Neon Serverless Postgres
-   - Rationale aligned with Vercel coding-agent-template patterns (hard rule #1)
+1. ✅ **project.ts** — `packages/core-types/src/schemas/project.ts`
+   - `Project`, `ProjectId`, `ProjectSlug`, `ProjectStatus` (DRAFT → ACTIVE → ARCHIVED)
+   - `ProjectSummary`, `ProjectLookupKey` (workspace + slug composite)
+   - `createdBy: UserId` for ownership tracking
 
-2. ✅ **Gap analysis** — `docs/gap-analysis.md`
-   - Three blockers identified (deps not installed, no ORM, no schemas)
-   - All three now closed
+2. ✅ **task.ts** — `packages/core-types/src/schemas/task.ts`
+   - `Task`, `TaskId`, `TaskType`, `TaskStatus` (DRAFT → QUEUED → RUNNING → SUCCEEDED | FAILED | CANCELLED)
+   - `TaskType`: `generate-app` | `generate-blueprint` | `run-spec` | `validate`
+   - `TaskSummary`, `isTaskTerminal(status)` helper
+   - `inputPrompt: string.nullish()` (nullable for drafts; transition validation enforces non-null on submit)
+   - `completedAt: coerce.date().nullish()` (set on terminal transition)
 
-3. ✅ **Core-types schemas** — 4 new files under `packages/core-types/src/schemas/`:
-   - `user.ts` — User, UserId, UserStatus, UserSummary
-   - `organization.ts` — Organization, OrganizationId, OrganizationSlug, OrganizationStatus
-   - `workspace.ts` — Workspace, WorkspaceId, WorkspaceSlug, WorkspaceLookupKey
-   - `rbac.ts` — Permission (~30 permissions), RoleName (5 roles), RoleDefinition,
-     ROLE_DEFINITIONS map, RoleAssignment, `getRolePermissions()` helper
+3. ✅ **generation-run.ts** — `packages/core-types/src/schemas/generation-run.ts`
+   - `GenerationRun`, `GenerationRunId`, `GenerationRunStatus` (PENDING → RUNNING → SUCCEEDED | FAILED | CANCELLED)
+   - `GenerationRunSnapshot` — opaque spec/blueprint version + hash bag (stable as versions evolve)
+   - `runNumber` per-task monotonic counter (enforced at API/DB layer)
+   - `agentSessionId: string.nullish()` — matches Vercel coding-agent-template's session resumption
+   - `GenerationRunSummary`, `isGenerationRunTerminal(status)` helper
 
-4. ✅ **Index exports** — `packages/core-types/src/index.ts` re-exports all four schemas using `export *` for both value and type access.
+4. ✅ **artifact.ts** — `packages/core-types/src/schemas/artifact.ts`
+   - `Artifact`, `ArtifactId`, `ArtifactKind` (9 variants: code, diff, migration, spec, blueprint-plan, log, test-report, screenshot, config)
+   - `ArtifactStorageKind` (`inline` | `url` | `git`)
+   - Denormalized parent chain (workspaceId, projectId, taskId, generationRunId) for join-free queries
+   - `contentHash` for idempotent generation dedup
+   - `ArtifactSummary`, `hasInlineContent(a)` helper
+   - Immutable by design — re-runs produce new artifacts, never mutate old
 
-5. ✅ **Tests** — `packages/core-types/src/schemas/control-plane.test.ts`: 19 tests covering
-   - User valid/invalid parsing + status default
-   - Slug regex validation (valid, uppercase, hyphen edge cases, length)
-   - Organization + Workspace parsing + orgId requirement
-   - RBAC: permission count, role superset relationships, viewer restrictions,
-     self-validation of ROLE_DEFINITIONS against RoleDefinition schema
-   - **All 19 tests pass** (`pnpm test` → 19 passed)
+5. ✅ **audit-log.ts** — `packages/core-types/src/schemas/audit-log.ts`
+   - `AuditLogEntry`, `AuditLogId`, `AuditEntityType` (9 entity kinds), `AuditAction` (10 actions)
+   - Polymorphic entity references via `entityType` + `entityId`
+   - `before`/`after` snapshots follow snapshot discipline (small, relevant fields only)
+   - `reason` optional except for destructive actions (enforced at API layer)
+   - `metadata` bag for IP/userAgent/retention hints
+   - `createStatusChangeEntry` helper for the common status-transition case
 
-6. ✅ **Test framework configured** — `packages/core-types/vitest.config.ts` + `vitest` ^2.0.0 added to devDependencies.
+6. ✅ **Index exports** — `packages/core-types/src/index.ts` re-exports all schemas grouped by concern:
+   - Identity & tenancy: User, Organization, Workspace
+   - RBAC: Permission, RoleName, RoleDefinition, ...
+   - Execution domain: Project, Task, GenerationRun, Artifact
+   - Audit: AuditLogEntry, AuditEntityType, AuditAction, ...
 
-7. ✅ **Web app placeholder** — `apps/web/src/index.ts` + `apps/web/tsconfig.json` added so
-   `tsc --noEmit` succeeds in the web package. Build script temporarily echoes a Phase 6
-   placeholder instead of running `next build` (no Next.js app shell exists yet).
-
-8. ✅ **Dependencies installed** — `pnpm install` ran successfully; `pnpm-lock.yaml` generated
-   with 72 packages.
+7. ✅ **Tests extended** — `packages/core-types/src/schemas/control-plane.test.ts`
+   - **61 tests total** (19 existing from Task 1 + 42 new)
+   - New sections cover all 5 schemas: Project (6), Task (5), isTaskTerminal (3),
+     GenerationRun (5), isGenerationRunTerminal (3), Artifact (8), hasInlineContent (4),
+     AuditLogEntry (5), createStatusChangeEntry (3)
+   - All 61 tests pass (`pnpm test` → 61 passed in 279ms)
 
 ### Verification commands run (all pass)
 
 ```
-pnpm typecheck   → 11/11 tasks successful (574ms)
-pnpm test        → 19/19 tests pass, 1 test file, 260ms
-pnpm build       → 6/6 tasks successful (188ms)
+pnpm typecheck   → 11/11 tasks successful (3.19s)
+pnpm test        → 61/61 tests pass, 1 test file (279ms)
+pnpm build       → 6/6 tasks successful (195ms)
 ```
 
 ---
@@ -59,67 +73,56 @@ pnpm build       → 6/6 tasks successful (188ms)
 The implementation is **complete in the working tree** but uncommitted. Files:
 
 **Modified files** (already tracked):
-- `apps/web/package.json` — replaced next build/dev/lint scripts with Phase 6 echo placeholders
-- `packages/core-types/package.json` — added `test`, `test:watch` scripts; added `vitest` ^2.0.0 devDependency
-- `packages/core-types/src/index.ts` — replaced empty `export {};` stub with re-exports of 4 schemas
+- `packages/core-types/src/index.ts` — expanded exports to re-export the 5 new schemas with grouped-comment documentation
 
 **New files** (untracked):
-- `apps/web/src/index.ts` — web placeholder so tsc can typecheck
-- `apps/web/tsconfig.json` — Next.js-shaped tsconfig with jsx, plugins, paths
-- `docs/adr/0004-orm-and-database.md` — ORM/DB decision ADR
-- `docs/gap-analysis.md` — gap analysis (Task 1 proposal)
-- `packages/core-types/vitest.config.ts` — vitest config
-- `packages/core-types/src/schemas/user.ts`
-- `packages/core-types/src/schemas/organization.ts`
-- `packages/core-types/src/schemas/workspace.ts`
-- `packages/core-types/src/schemas/rbac.ts`
-- `packages/core-types/src/schemas/control-plane.test.ts`
-- `pnpm-lock.yaml` — lockfile (generated by `pnpm install`, 72 packages)
+- `packages/core-types/src/schemas/project.ts` (~85 lines)
+- `packages/core-types/src/schemas/task.ts` (~105 lines)
+- `packages/core-types/src/schemas/generation-run.ts` (~125 lines)
+- `packages/core-types/src/schemas/artifact.ts` (~130 lines)
+- `packages/core-types/src/schemas/audit-log.ts` (~158 lines)
+- `packages/core-types/src/schemas/control-plane.test.ts` — overwritten with 61-test suite
 
 ---
 
 ## Recommended Commit for Next Session
 
-Commit in **one commit** since this is a single atomic task:
+Commit in **one commit** since this is a single atomic task (Task 2):
 
 ```bash
 git add -A
-git commit -m "feat(core-types): Task 1 — unblock foundation w/ first control-plane schemas
+git commit -m "feat(core-types): Task 2 — remaining Phase 1 control-plane schemas
 
-Task 1 of buildplan Phase 1. Closes the three blockers identified in
-docs/gap-analysis.md: dependencies, ORM choice, first schemas.
+Task 2 of buildplan Phase 1. Completes the execution-domain schema surface
+needed to implement the control plane API routes and UI in subsequent tasks.
 
-ADR-0004 (ORM/DB):
-- Decision: Drizzle + Neon Serverless Postgres
-- Rationale: aligns with Vercel coding-agent-template pattern so Phase 2
-  agent-adapter integration maps directly to the 7-table template schema
+Schemas added:
+- Project (slug per workspace, status FSM: draft → active → archived,
+  ProjectLookupKey composite)
+- Task (TaskType: generate-app|generate-blueprint|run-spec|validate,
+  TaskStatus FSM: draft → queued → running → succeeded|failed|cancelled,
+  isTaskTerminal helper)
+- GenerationRun (runNumber per task, GenerationRunSnapshot for spec/blueprint
+  version capture, agentSessionId for Vercel-style resumption,
+  isGenerationRunTerminal helper)
+- Artifact (ArtifactKind: 9 variants, ArtifactStorageKind: inline|url|git,
+  denormalized parent chain for join-free queries, contentHash for idempotent
+  dedup, hasInlineContent helper)
+- AuditLogEntry (AuditEntityType: 9 kinds, AuditAction: 10 actions,
+  polymorphic entity refs via entityType+entityId, before/after snapshots,
+  createStatusChangeEntry helper)
 
-Schemas added (control plane + RBAC):
-- User, UserId, UserStatus, UserSummary
-- Organization, OrganizationId, OrganizationSlug, OrganizationStatus
-- Workspace, WorkspaceId, WorkspaceSlug, WorkspaceLookupKey
-- Permission (~30), RoleName (5 roles), RoleDefinition, ROLE_DEFINITIONS,
-  RoleAssignment, getRolePermissions()
-
+Tests: 61 cases total (19 existing + 42 new) in control-plane.test.ts.
 All re-exported from packages/core-types/src/index.ts.
 
-Tests:
-- 19 vitest cases in packages/core-types/src/schemas/control-plane.test.ts
-- Covers: schema validation, slug regex, RBAC subset relationships,
-  self-validation of ROLE_DEFINITIONS via RoleDefinition schema
-
-Web app:
-- Added placeholder src/index.ts + tsconfig so typecheck passes
-- Build scripts are echo placeholders (Next.js shell deferred to Phase 6)
-
 Verified:
-- pnpm install → 72 packages, lockfile generated
 - pnpm typecheck → 11/11 tasks successful
-- pnpm test → 19/19 pass
+- pnpm test → 61/61 pass
 - pnpm build → 6/6 tasks successful
 
-Next task: Project + Task + Artifact + GenerationRun schemas that
-complete Phase 1 control plane surface."
+Next task: Task 3 — local dev Postgres via docker-compose.yml mirroring
+Neon serverless per ADR-0004, OR jump to Task 4 — DB layer with Drizzle
+(once schema surface is large enough to justify persistence)."
 ```
 
 ---
@@ -129,34 +132,26 @@ complete Phase 1 control plane surface."
 ### Immediate (after picking up the commit)
 
 1. **Commit the unstaged changes** using the suggested message above. (Run `git status` to confirm state matches what's documented here.)
-2. **Refresh the graphify graph** for `heynxt-core` so the graph stays accurate:
+2. **Refresh the graphify graph** for `heynxt-core` so the graph stays accurate — the core-types package grew from ~4 schemas to ~9 schemas plus helpers:
    - Respawn Graphify agent per the instruction in CLAUDE.md: "Refresh the relevant graph…after structural refactors, package moves, or major workflow additions."
    - Output goes to `graphify-out/` which is already symlinked from `graphify/heynxt-core/`.
-3. **Update graphify Session Memory** to drop the stale sentence "pnpm install has NOT been run; no node_modules, no pnpm-lock.yaml" — it's now incorrect.
+3. **Update graphify Session Memory** to reflect the current test count (61) and new schema count (9 control-plane schemas).
 
-### Next task (Task 2) — Phase 1 remaining schemas
+### Task 3 — Local dev Postgres (optional but recommended next)
 
-Per buildplan Phase 1 and `docs/gap-analysis.md`, next step is the second slice of control-plane schemas:
-
-- `packages/core-types/src/schemas/project.ts` — Project, ProjectStatus FSM (DRAFT → ACTIVE → ARCHIVED)
-- `packages/core-types/src/schemas/task.ts` — Task, TaskStatus FSM (DRAFT → QUEUED → RUNNING → SUCCEEDED | FAILED), linkage to Project + Workspace
-- `packages/core-types/src/schemas/artifact.ts` — Artifact (output file / log / diff attached to task or generation run)
-- `packages/core-types/src/schemas/generation-run.ts` — GenerationRun (ties task to execution spec, blueprint versions, artifact set, status)
-- `packages/core-types/src/schemas/audit-log.ts` — AuditLogEntry (immutable append-only record of state-changing ops)
-
-Then extend `control-plane.test.ts` with test cases for the new schemas.
-
-### Task 3 — Local dev Postgres (buildplan Task 2)
-
-Add `docker-compose.yml` with Postgres 15 to mirror Neon locally (per ADR-0004 consequences). This is deferred until the schema set is large enough to need a dev DB, which is when the DB layer itself is implemented (Phase 1 later slice).
+Per buildplan Phase 1 and ADR-0004 consequences:
+- Add `docker-compose.yml` at repo root with Postgres 15
+- Mirror the Neon serverless environment locally so developers don't need a Neon account
+- Schema should be empty on first run (Drizzle migrations will populate later)
+- Document the setup in `docs/architecture/overview.md` or a new `docs/dev-setup.md`
 
 ### Task 4 — DB layer (Phase 1 later slice)
 
-Once ORM is chosen and schemas exist for all Phase 1 entities:
-- Add `drizzle-orm`, `drizzle-kit`, `neon-serverless` (or `postgres.js` for local) to `@heynxt/core-types` or a new `packages/persistence` package
-- Define Drizzle tables mapped to each Zod schema
+Once schema surface is large enough and local Postgres is in place:
+- Add `drizzle-orm`, `drizzle-kit`, `postgres` (postgres.js for local), `@neondatabase/serverless` (for production) to `packages/core-types` or a new `packages/persistence` package
+- Define Drizzle tables mapped to each Zod schema (project → projects, task → tasks, etc.)
 - First migration via `drizzle-kit generate`
-- Wire into web API routes (Phase 1.6)
+- Wire into web API routes (Phase 1.6 — control plane API)
 
 ---
 
@@ -164,15 +159,21 @@ Once ORM is chosen and schemas exist for all Phase 1 entities:
 
 These decisions should NOT be reopened without explicit justification and a new ADR:
 
-| Decision | Value | ADR |
+| Decision | Value | ADR / Source |
 |---|---|---|
 | ORM | Drizzle | ADR-0004 |
 | Database | Neon Serverless Postgres | ADR-0004 |
 | Schema naming (control plane) | User / Organization / Workspace | Task 1 |
 | Test framework | Vitest ^2.0.0 | Task 1 |
 | Test config location | `packages/core-types/vitest.config.ts` | Task 1 |
+| TaskStatus FSM | draft → queued → running → succeeded\|failed\|cancelled | Task 2 |
+| GenerationRunStatus FSM | pending → running → succeeded\|failed\|cancelled | Task 2 |
+| Artifact immutability | re-runs produce new artifacts, never mutate old | Task 2 |
+| Artifact denormalization | store parent chain workspaceId/projectId/taskId/generationRunId | Task 2 |
+| Audit log immmutability | append-only, never update/delete | Task 2 |
+| Audit snapshot discipline | store only relevant fields, not full entity rows | Task 2 |
 
-All three reference-repo decisions from earlier are also locked:
+All earlier reference-repo decisions remain locked:
 - Vercel coding-agent-template as agent substrate reference (ADR-0002)
 - FactoryNXT_PY_v2_Extrusion + FactoryNXT_PY_V2 as industrial blueprint sources (ADR-0003)
 - pnpm + Turbo monorepo with 5-package boundary set (ADR-0001)
@@ -182,37 +183,39 @@ All three reference-repo decisions from earlier are also locked:
 ## Session-Ready Checklist for New Session
 
 - [x] Read `CLAUDE.md` — instructions confirmed
-- [x] Read `graphify/heynxt-core/GRAPH_REPORT.md` — pre-Task 1 graph
-- [x] Read `docs/gap-analysis.md` — gap analysis + Task 1 proposal
+- [x] Read `graphify/heynxt-core/GRAPH_REPORT.md` — pre-Task 1 graph (now stale)
+- [x] Read `docs/gap-analysis.md` — gap analysis + Task 1 proposal (Task 1 ✅; Task 2 ✅)
 - [x] Graphify reports exist for all 4 repos under `graphify/`
-- [ ] **Stale graph**: heynxt-core graph needs refresh (task #1 added ~300 lines)
-- [ ] **Commit pending**: Task 1 work is complete but uncommitted
+- [ ] **Stale graph**: heynxt-core graph needs refresh after Task 2 additions
+- [ ] **Commit pending**: Task 2 work is complete and verified but UNCOMMITTED.
 
 Paste into your prompt before continuing:
 
 ```
-You are resuming heynxt-core after Task 1 completed.
+You are resuming heynxt-core after Task 2 completed.
 
 Current state:
 - Phase 0 (foundation) ✅ complete
-- Phase 1 (control plane) 🟡 partial — first schemas exist
-  (User, Organization, Workspace, RBAC with 5 named roles +
-  ~30 permissions, all tested with 19 vitest cases)
-- Task 1 implementation is complete and verified but UNCOMMITTED.
-  See HANDOVER.md for the exact commit message.
-- pnpm install has been run (lockfile exists, 72 packages).
+- Phase 1 (control plane) 🟡 substantial — 9 control-plane schemas exist:
+  Task 1: User, Organization, Workspace, RBAC (5 roles, ~30 permissions)
+  Task 2: Project, Task, GenerationRun, Artifact, AuditLogEntry
+  All 9 tested via 61 vitest cases in control-plane.test.ts
+- Task 2 implementation is complete and verified but UNCOMMITTED.
+  See handover.md for the exact commit message.
+- pnpm install has been run (lockfile exists).
 - Toolchain: pnpm 9 + Turbo 2 + TypeScript 5.9 + Vitest 2.1.9
 - ORM/DB chosen: Drizzle + Neon serverless (see docs/adr/0004-orm-and-database.md)
-- Gap analysis: see docs/gap-analysis.md
+- Gap analysis: see docs/gap-analysis.md (Task 1 ✅ closed all 3 blockers)
 
 First actions after resuming:
-1. git status — confirm HANDOVER.md state matches working tree
-2. Commit Task 1 (message in HANDOVER.md)
+1. git status — confirm handover.md state matches working tree
+2. Commit Task 2 (message in handover.md)
 3. Refresh graphify graph for heynxt-core (it's stale — see graphify/README.md)
-4. Start Task 2: Project + Task + Artifact + GenerationRun + AuditLog schemas
+4. Start Task 3: docker-compose.yml with Postgres 15 for local dev (mirrors Neon)
 
 Hard rules:
-- Don't redo Task 1 (already done)
+- Don't redo Task 1 (already done, committed)
+- Don't redo Task 2 (already done, uncommitted — just commit + verify)
 - Follow CLAUDE.md for process (work order, reporting format, safety rules)
 - Refresh graphify after structural changes
 ```
