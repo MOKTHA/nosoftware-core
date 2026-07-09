@@ -1,10 +1,20 @@
 import type { Metadata } from 'next';
 
+import { getSession } from '@/lib/session';
+import { UserMenu } from '@/components/UserMenu';
+
 /**
  * Root layout — the HTML shell for every page in the control plane.
  *
  * App Router convention: the root layout must contain <html> and <body>.
- * It's a React Server Component (no "use client") by default.
+ * It's a React Server Component (no "use client") by default. The
+ * async `getSession()` call runs on the server; the user slice it
+ * returns is passed into `<UserMenu>`, a client component that owns
+ * the sign-out action. Keeping `getSession` here means the header
+ * renders the correct user state on first paint (no client-side
+ * flicker waiting for `auth()` to resolve).
+ *
+ * See docs/adr/0008-auth-library-and-provider.md for background.
  */
 
 export const metadata: Metadata = {
@@ -13,11 +23,24 @@ export const metadata: Metadata = {
     'Control plane for HeyNXT: blueprints, generation runs, and industrial applications.',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const session = await getSession();
+  // Extract only the user fields we want to expose to the client.
+  // Sending the whole session object would cross the server/client
+  // boundary with internal Auth.js fields we don't need in the UI.
+  const user = session?.user
+    ? {
+        id: session.user.id,
+        name: session.user.name ?? null,
+        email: session.user.email ?? null,
+        image: session.user.image ?? null,
+      }
+    : null;
+
   return (
     <html lang="en">
       <body
@@ -45,23 +68,27 @@ export default function RootLayout({
               HeyNXT
             </a>
           </h1>
-          <nav
+          <div
             style={{
               display: 'flex',
+              alignItems: 'center',
               gap: '1rem',
               fontSize: '0.875rem',
             }}
           >
-            <a href="/workspaces" style={{ color: '#0070f3' }}>
-              Workspaces
-            </a>
-            <a href="/projects" style={{ color: '#0070f3' }}>
-              Projects
-            </a>
-            <a href="/tasks" style={{ color: '#0070f3' }}>
-              Tasks
-            </a>
-          </nav>
+            <nav style={{ display: 'flex', gap: '1rem' }}>
+              <a href="/workspaces" style={{ color: '#0070f3' }}>
+                Workspaces
+              </a>
+              <a href="/projects" style={{ color: '#0070f3' }}>
+                Projects
+              </a>
+              <a href="/tasks" style={{ color: '#0070f3' }}>
+                Tasks
+              </a>
+            </nav>
+            <UserMenu user={user} />
+          </div>
         </header>
         <main>{children}</main>
       </body>
