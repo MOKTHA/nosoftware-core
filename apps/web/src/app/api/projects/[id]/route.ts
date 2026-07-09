@@ -49,6 +49,7 @@ import { db, projects } from '@heynxt/persistence';
 import { badRequest, errorResponse, notFound, parseJsonBody } from '@/lib/api';
 import { insertStatusChangeEntry } from '@/lib/audit';
 import { requireAuth } from '@/lib/session';
+import { requirePermission } from '@/lib/rbac';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -103,6 +104,15 @@ export async function PATCH(
     // can trust `existing.project.status` as a typed ProjectStatus below.
     const existingProject = Project.parse(existing);
     const previousStatus: ProjectStatus = existingProject.status;
+
+    // RBAC gate: status transition is an update operation, scoped to
+    // the project's workspace. Checked after fetch+parse so the
+    // workspace scope is known and 404s win over 403s.
+    await requirePermission({
+      userId: actorId,
+      workspaceId: existingProject.workspaceId,
+      permission: 'project:update',
+    });
 
     // --- transition validation ---------------------------------------------
     if (!isProjectStatusTransitionAllowed(previousStatus, newStatus)) {

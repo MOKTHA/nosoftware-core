@@ -49,12 +49,38 @@ export const badRequest = (
 export const notFound = (message: string, code = 'NOT_FOUND') =>
   new NextApiError(message, 404, code);
 
+/**
+ * Build a ForbiddenError for permission-denied cases. Separate from
+ * NextApiError so the 403 path goes through the dedicated ForbiddenError
+ * branch in errorResponse() — cleaner than a 403 NextApiError because
+ * the code is always 'FORBIDDEN' and no extra fields are needed.
+ */
+export const forbidden = (message = 'Insufficient permissions') =>
+  new ForbiddenError(message);
+
 export const internalError = (message: string, code = 'INTERNAL_ERROR') =>
   new NextApiError(message, 500, code);
 
 /**
+ * Raised when the authenticated user lacks the required permission for
+ * the requested operation. Mapped to 403 FORBIDDEN by errorResponse().
+ *
+ * Distinct from NotAuthenticatedError (401) — the user is logged in,
+ * but their role assignments don't include the required permission for
+ * this workspace. See apps/web/src/lib/rbac.ts for the enforcement
+ * layer that raises this.
+ */
+export class ForbiddenError extends Error {
+  constructor(message = 'Forbidden') {
+    super(message);
+    this.name = 'ForbiddenError';
+  }
+}
+
+/**
  * Convert a thrown error into a JSON response.
  *   - NotAuthenticatedError → 401 UNAUTHENTICATED
+ *   - ForbiddenError        → 403 FORBIDDEN
  *   - NextApiError          → status + body from the error
  *   - ZodError              → 400 with `fields` derived from `error.issues`
  *   - Otherwise             → 500 INTERNAL_ERROR
@@ -64,6 +90,12 @@ export function errorResponse(err: unknown): NextResponse<ApiErrorBody> {
     return NextResponse.json<ApiErrorBody>(
       { error: err.message, code: 'UNAUTHENTICATED' },
       { status: 401 },
+    );
+  }
+  if (err instanceof ForbiddenError) {
+    return NextResponse.json<ApiErrorBody>(
+      { error: err.message, code: 'FORBIDDEN' },
+      { status: 403 },
     );
   }
   if (err instanceof NextApiError) {

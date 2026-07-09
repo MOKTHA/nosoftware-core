@@ -29,6 +29,7 @@ import { db, generationRuns } from '@heynxt/persistence';
 import { badRequest, errorResponse, parseJsonBody } from '@/lib/api';
 import { insertAuditEntry } from '@/lib/audit';
 import { requireAuth } from '@/lib/session';
+import { requirePermission } from '@/lib/rbac';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -89,6 +90,15 @@ export async function POST(req: NextRequest) {
     const body = await parseJsonBody(req);
 
     const input = CreateGenerationRunInput.parse(body);
+
+    // RBAC gate: generation runs are workspace-scoped, using the
+    // dedicated `generation:run` permission (separate from generic
+    // create — the role model treats generation as a privileged action).
+    await requirePermission({
+      userId: createdBy,
+      workspaceId: input.workspaceId,
+      permission: 'generation:run',
+    });
 
     const now = new Date();
     const id = randomUUID();

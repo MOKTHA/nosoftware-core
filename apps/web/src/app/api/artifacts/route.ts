@@ -30,6 +30,7 @@ import { db, artifacts } from '@heynxt/persistence';
 import { badRequest, errorResponse, parseJsonBody } from '@/lib/api';
 import { insertAuditEntry } from '@/lib/audit';
 import { requireAuth } from '@/lib/session';
+import { requirePermission } from '@/lib/rbac';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -90,6 +91,13 @@ export async function POST(req: NextRequest) {
     const body = await parseJsonBody(req);
 
     const input = CreateArtifactInput.parse(body);
+
+    // RBAC gate: artifact creation is workspace-scoped.
+    await requirePermission({
+      userId: createdBy,
+      workspaceId: input.workspaceId,
+      permission: 'artifact:create',
+    });
 
     const now = new Date();
     const id = randomUUID();

@@ -28,6 +28,7 @@ import { db, tasks } from '@heynxt/persistence';
 import { badRequest, errorResponse, parseJsonBody } from '@/lib/api';
 import { insertAuditEntry } from '@/lib/audit';
 import { requireAuth } from '@/lib/session';
+import { requirePermission } from '@/lib/rbac';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -82,6 +83,14 @@ export async function POST(req: NextRequest) {
     const body = await parseJsonBody(req);
 
     const input = CreateTaskInput.parse(body);
+
+    // RBAC gate: task creation is workspace-scoped. After body parsing
+    // so 400 beats 403 on malformed input.
+    await requirePermission({
+      userId: createdBy,
+      workspaceId: input.workspaceId,
+      permission: 'task:create',
+    });
 
     const now = new Date();
     const id = randomUUID();

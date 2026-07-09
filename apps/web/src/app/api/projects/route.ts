@@ -37,6 +37,7 @@ import { db, projects } from '@heynxt/persistence';
 import { badRequest, errorResponse, parseJsonBody } from '@/lib/api';
 import { insertAuditEntry } from '@/lib/audit';
 import { requireAuth } from '@/lib/session';
+import { requirePermission } from '@/lib/rbac';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -84,6 +85,15 @@ export async function POST(req: NextRequest) {
     const body = await parseJsonBody(req);
 
     const input = CreateProjectInput.parse(body);
+
+    // RBAC gate: create is a workspace-scoped operation. Checked after
+    // body validation so a malformed request fails fast with 400 before
+    // we make the permission query.
+    await requirePermission({
+      userId: createdBy,
+      workspaceId: input.workspaceId,
+      permission: 'project:create',
+    });
 
     const now = new Date();
     const id = randomUUID();
