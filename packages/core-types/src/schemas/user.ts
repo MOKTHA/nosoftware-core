@@ -25,9 +25,9 @@ export const UserStatus = z.enum([
 export const User = z.object({
   id: UserId,
   email: z.string().email(),
-  emailVerifiedAt: z.coerce.date().nullish(),
+  emailVerified: z.coerce.date().nullish(),
   name: z.string().min(1).max(200).nullish(),
-  imageUrl: z.string().url().nullish(),
+  image: z.string().url().nullish(),
 
   // Status / lifecycle
   status: UserStatus.default('invited'),
@@ -47,7 +47,7 @@ export const UserSummary = User.pick({
   id: true,
   email: true,
   name: true,
-  imageUrl: true,
+  image: true,
   status: true,
 });
 

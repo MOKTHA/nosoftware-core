@@ -10,14 +10,16 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@heynxt/core-types": "workspace:*",
-    "@heynxt/persistence": "workspace:*",
-    "@heynxt/prompt-spec": "workspace:*",
+    "@auth/drizzle-adapter": "1.7.4",
     "@heynxt/agent-adapter": "workspace:*",
     "@heynxt/blueprint-registry": "workspace:*",
+    "@heynxt/core-types": "workspace:*",
     "@heynxt/domain-models": "workspace:*",
+    "@heynxt/persistence": "workspace:*",
+    "@heynxt/prompt-spec": "workspace:*",
     "drizzle-orm": "^0.33.0",
     "next": "^14.2.0",
+    "next-auth": "5.0.0-beta.31",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
     "zod": "^3.23.0"

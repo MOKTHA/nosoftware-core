@@ -50,7 +50,7 @@ describe('User schema', () => {
 
     expect(parsed.email).toBe('alice@example.com');
     expect(parsed.status).toBe('active');
-    expect(parsed.imageUrl).toBeUndefined(); // nullish field not provided
+    expect(parsed.image).toBeUndefined(); // nullish field not provided
   });
 
   it('rejects an invalid email', () => {

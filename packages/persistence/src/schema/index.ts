@@ -53,3 +53,8 @@ export {
   auditEntityTypeEnum,
   auditActionEnum,
 } from './audit-log.js';
+
+// Auth.js adapter tables (ADR-0008)
+export { accounts } from './accounts.js';
+export { sessions } from './sessions.js';
+export { verificationTokens } from './verification-tokens.js';

@@ -6,6 +6,10 @@
  * Zod schema in `@heynxt/core-types` — no `mapFromView` transforms needed.
  *
  * Source Zod schema: packages/core-types/src/schemas/user.ts
+ *
+ * Auth.js compat note (see docs/adr/0008-auth-library-and-provider.md):
+ * Property names `emailVerified` and `image` match what Auth.js's Drizzle
+ * adapter expects; SQL column names match exactly.
  */
 import {
   pgTable,
@@ -39,19 +43,34 @@ export const users = pgTable('users', {
   email: text('email').notNull(),
 
   /** When the email was verified. Null until verified. */
-  emailVerifiedAt: timestamp('emailVerifiedAt', { mode: 'date' }),
+  emailVerified: timestamp('emailVerified', { mode: 'date' }),
 
   /** Display name. Nullable (may not be set yet). */
   name: text('name'),
 
   /** URL to the user's avatar image. Nullable. */
-  imageUrl: text('imageUrl'),
+  image: text('image'),
 
   /** Lifecycle status. Defaults to 'invited'. */
   status: userStatusEnum('status').notNull().default('invited'),
 
-  createdAt: timestamp('createdAt', { mode: 'date' }).notNull(),
-  updatedAt: timestamp('updatedAt', { mode: 'date' }).notNull(),
+  /**
+   * Row creation time. DB-level default so Auth.js (and any other code
+   * path that doesn't explicitly set this) can insert without failure.
+   * Existing seed rows already have values; this only affects new rows.
+   */
+  createdAt: timestamp('createdAt', { mode: 'date' })
+    .notNull()
+    .defaultNow(),
+
+  /**
+   * Last-modified time. See createdAt note — same Auth.js reasoning.
+   * Auth.js never updates this column on user update; application code
+   * that wants to track modification should set it explicitly.
+   */
+  updatedAt: timestamp('updatedAt', { mode: 'date' })
+    .notNull()
+    .defaultNow(),
 }, (table) => ({
   emailIdx: index('users_email_idx').on(table.email),
 }));
