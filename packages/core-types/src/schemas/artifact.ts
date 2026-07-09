@@ -127,3 +127,44 @@ export type ArtifactSummary = z.infer<typeof ArtifactSummary>;
 export function hasInlineContent(a: Artifact): boolean {
   return a.storageKind === 'inline' && a.textContent !== null && a.textContent !== undefined;
 }
+
+/**
+ * Input schema for creating a new Artifact.
+ *
+ * Omits server-generated fields:
+ *   - `id` (UUID, server-assigned)
+ *   - `createdAt` (timestamp, server-assigned)
+ *
+ * All foreign keys are required from the caller (the artifact denormalizes
+ * the parent chain for query efficiency — workspace/project/task/run must
+ * all be provided and match).
+ *
+ * Storage fields are optional and conditional on `storageKind`:
+ *   - `inline` → `textContent` should be set (content stored in DB)
+ *   - `url`    → `storageUrl` should be set (external URL)
+ *   - `git`    → `storageRef` should be set (blob SHA + path)
+ *
+ * Cross-field validation is soft: the schema accepts any combination, and
+ * the API layer relies on the caller to provide matching fields. The DB
+ * schema does not enforce this either — documentation drives correctness.
+ *
+ * `contentHash` and `byteSize` are optional. Callers may compute them
+ * client-side (e.g., SHA-256 of textContent before upload), or leave them
+ * null and rely on the server to fill them for inline artifacts.
+ *
+ * `createdBy` is temporarily required from the caller — same concession as
+ * CreateProjectInput; see the design note in generation-run.ts.
+ */
+export const CreateArtifactInput = Artifact.omit({
+  id: true,
+  createdAt: true,
+}).partial({
+  mimeType: true,
+  textContent: true,
+  storageUrl: true,
+  storageRef: true,
+  contentHash: true,
+  byteSize: true,
+});
+
+export type CreateArtifactInput = z.infer<typeof CreateArtifactInput>;

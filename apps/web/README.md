@@ -12,9 +12,9 @@ This is the control plane UI that allows users to:
 
 ## Status
 
-**Phase 1.6 — Task 6: workspaces, projects, and tasks APIs live**
+**Phase 1.7 — Task 7: generation runs + artifacts APIs live**
 
-The Next.js 14 App Router app exposes seven live API endpoints wired through
+The Next.js 14 App Router app exposes eleven live API endpoints wired through
 `@heynxt/persistence` against local Postgres 15:
 
 | Endpoint | Purpose |
@@ -26,6 +26,10 @@ The Next.js 14 App Router app exposes seven live API endpoints wired through
 | `POST /api/projects` | create a project |
 | `GET /api/tasks` | list tasks in a workspace (optional project filter) |
 | `POST /api/tasks` | create a task |
+| `GET /api/generation-runs` | list generation runs in a workspace |
+| `POST /api/generation-runs` | create a generation run |
+| `GET /api/artifacts` | list artifacts in a workspace |
+| `POST /api/artifacts` | create an artifact |
 
 A seed script (`pnpm db:seed`, lives in `packages/persistence/scripts/seed.ts`)
 inserts a starting user, org, workspace, projects, and tasks so the API is
@@ -91,6 +95,25 @@ All endpoints return JSON. Error responses follow `{ error, code, fields? }`.
   → 201 `{ task }`
   400 `FOREIGN_KEY_VIOLATION` when a referenced FK does not exist.
   `status` defaults to `'draft'`.
+
+### Generation Runs
+- `GET /api/generation-runs?workspaceId=<uuid>[&projectId=<uuid>][&taskId=<uuid>]`
+  → `{ generationRuns: GenerationRun[] }`
+- `POST /api/generation-runs`
+  Body: `{ workspaceId, projectId, taskId, snapshot?, createdBy }`
+  → 201 `{ generationRun }`
+  Server auto-computes `runNumber` (MAX+1 within the task).
+  `status` defaults to `'pending'`. `snapshot` defaults to all-null if omitted.
+  400 `FOREIGN_KEY_VIOLATION` when a referenced FK does not exist.
+
+### Artifacts
+- `GET /api/artifacts?workspaceId=<uuid>[&generationRunId=<uuid>][&taskId=<uuid>]`
+  → `{ artifacts: Artifact[] }`
+- `POST /api/artifacts`
+  Body: `{ workspaceId, projectId, taskId, generationRunId, kind, storageKind,
+  name, mimeType?, textContent?, storageUrl?, storageRef?, contentHash?,
+  byteSize?, createdBy }` → 201 `{ artifact }`
+  400 `FOREIGN_KEY_VIOLATION` when a referenced FK does not exist.
 
 ## Package Dependencies (runtime)
 

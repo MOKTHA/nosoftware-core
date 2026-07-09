@@ -122,3 +122,37 @@ export type GenerationRunSummary = z.infer<typeof GenerationRunSummary>;
 export function isGenerationRunTerminal(status: GenerationRunStatus): boolean {
   return status === 'succeeded' || status === 'failed' || status === 'cancelled';
 }
+
+/**
+ * Input schema for creating a new GenerationRun.
+ *
+ * Omits server-generated fields:
+ *   - `id` (UUID, server-assigned)
+ *   - `runNumber` (server-computed as MAX(runNumber)+1 within the task)
+ *   - `createdAt` / `updatedAt` (timestamps, server-assigned)
+ *   - `status` (server-defaults to `'pending'`)
+ *   - `agentSessionId` (assigned by the agent runtime on first execution)
+ *   - `startedAt` / `completedAt` (set by status transitions, not creation)
+ *
+ * `snapshot` is optional — defaults to an empty snapshot `{}` (no spec and
+ * no blueprint plan referenced). Callers can provide explicit spec/blueprint
+ * identifiers and hashes for full traceability.
+ *
+ * `createdBy` is temporarily required from the caller — once RBAC middleware
+ * is in place (Phase 1 follow-up), it will be supplied from the session
+ * context and moved out of the public input schema.
+ */
+export const CreateGenerationRunInput = GenerationRun.omit({
+  id: true,
+  runNumber: true,
+  createdAt: true,
+  updatedAt: true,
+  status: true,
+  agentSessionId: true,
+  startedAt: true,
+  completedAt: true,
+}).partial({
+  snapshot: true,
+});
+
+export type CreateGenerationRunInput = z.infer<typeof CreateGenerationRunInput>;

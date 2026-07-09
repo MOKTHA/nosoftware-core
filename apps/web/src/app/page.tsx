@@ -1,7 +1,7 @@
 /**
  * Home page — landing page for the HeyNXT control plane.
  *
- * Phase 1.6 / Task 6 API status. UI pages for these entities will follow
+ * Phase 1.7 / Task 7 API status. UI pages for these entities will follow
  * once the CRUD surface is fully in place.
  */
 
@@ -46,6 +46,20 @@ export default function HomePage() {
           <li>
             <code>POST /api/tasks</code> — create a task
           </li>
+          <li>
+            <code>GET /api/generation-runs?workspaceId=&lt;uuid&gt;</code> —
+            list generation runs
+          </li>
+          <li>
+            <code>POST /api/generation-runs</code> — create a generation run
+          </li>
+          <li>
+            <code>GET /api/artifacts?workspaceId=&lt;uuid&gt;</code> —
+            list artifacts
+          </li>
+          <li>
+            <code>POST /api/artifacts</code> — create an artifact
+          </li>
         </ul>
       </section>
       <section style={{ marginTop: '2rem' }}>
@@ -54,7 +68,7 @@ export default function HomePage() {
         </h3>
         <p style={{ color: '#555', lineHeight: 1.5 }}>
           Workspace / project / task CRUD pages (React Server Components),
-          OAuth auth scaffold, RBAC middleware, generation-run + artifact APIs.
+          OAuth auth scaffold, RBAC middleware.
         </p>
       </section>
     </div>
