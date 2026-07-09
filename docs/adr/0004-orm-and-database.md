@@ -73,16 +73,45 @@ Two leading options were evaluated:
 ### Negative
 - Neon has a cold-start cost (mitigated by HTTP-based connect vs. TCP)
 - Drizzle's docs are lighter than Prisma's (mitigated: Vercel template serves as working reference)
-- Drizzle + Neon means production depends on two Vercel-ecosystem services; mitigated by keeping the abstraction boundary tight (a `packages/persistence` package or similar will hold all Drizzle queries, making provider swap possible if needed)
+- Drizzle + Neon means production depends on two Vercel-ecosystem services; mitigated by keeping the abstraction boundary tight (`packages/persistence` owns all Drizzle code, making provider swap possible if needed)
 
 ### Neutral
-- Local development will require either a local Neon setup or a docker-compose Postgres for `DATABASE_URL`. To keep local dev friction low, we recommend a `docker-compose.yml` with Postgres 15 mirroring Neon's Postgres version, used via `pnpm dev:db`. Decision: **add `docker-compose.yml` with Postgres 15 in a follow-up task, Task 2**.
+- Local development requires a local Postgres mirroring Neon. **Landed in Task 3**: `docker-compose.yml` runs `postgres:15-alpine` with credentials `heynxt/heynxt/heynxt` on `127.0.0.1:5432`, matching Neon's default Postgres 15 major version. See `docs/dev-setup.md`.
 
-## Follow-ups
+## Implementation status (as of 2026-07-09)
 
-- Task 2 (planned): add `docker-compose.yml` for local Postgres dev to mirror Neon in CI/local
-- Task 3 (planned): choose and configure test framework — Vitest with an in-memory or local-Postgres adapter for schema tests
-- Task 4 (planned): implement control-plane DB tables corresponding to the schemas defined in this task (User, Organization, Workspace, Role)
+### Task 4 — Drizzle persistence layer (this session)
+
+- Added `packages/persistence` with `drizzle-orm ^0.33`, `postgres ^3.4`, and `drizzle-kit ^0.24`
+- Defined `pgTable` definitions 1:1 with the Zod schemas in `@heynxt/core-types`:
+  - 9 tables: `users`, `organizations`, `workspaces`, `role_assignments`, `projects`, `tasks`, `generation_runs`, `artifacts`, `audit_log`
+  - 12 Postgres enums (one per Zod `.enum` shape)
+  - camelCase column names (matches Zod field names 1:1, no `mapFromView`)
+  - `text()` for UUIDs (client-generated via Zod), `timestamp({ mode: 'date' })` for dates
+  - JSONB for `snapshot` on `generation_runs` and `before`/`after`/`metadata` on `audit_log`, typed via Drizzle's `$type<T>()`
+  - 19 indexes (scoped queries, lookup-by-fk, composite unique on `workspaces(organizationId, slug)`, `projects(workspaceId, slug)`, `generation_runs(taskId, runNumber)`)
+  - FK constraints added for all parent→child edges except polymorphic ones (`audit_log.entityId`, `audit_log.actorId` which can be 'system')
+  - `role_assignments` uses composite UNIQUE constraint (not PRIMARY KEY) because the natural key contains a nullable `workspaceId`; see the table's docstring for the NULL-equality caveat
+- `drizzle.config.ts` points at the compiled `dist/schema/index.js` (drizzle-kit resolves via CJS and cannot load ESM `.js` imports from `.ts` source directly); `db:migrate:generate` runs `pnpm build` as a prerequisite
+- First migration: `drizzle/0000_great_sunspot.sql` (12 CREATE TYPE, 9 CREATE TABLE, 21 ALTER TABLE FK, 19 CREATE INDEX)
+- **Deferred to Phase 1.6**: `db` client wired into `apps/web` API routes
+
+### Decisions locked in (Task 4)
+
+| Decision | Value | Rationale |
+|---|---|---|
+| Package location | `packages/persistence` | `@heynxt/core-types` is the leaf package (CLAUDE.md hard rule — acyclic deps); adding Drizzle deps there breaks the contract |
+| Column casing | camelCase (DB + TS) | 1:1 mapping with Zod field names; no transform layer |
+| ID column type | `text()`, not `uuid()` | IDs are client-generated `z.string().uuid()`; matches Zod contract, avoids DB-generated UUID |
+| Timestamp mode | `{ mode: 'date' }` | Returns JS `Date` objects, matches `z.coerce.date()` |
+| Migration output | `drizzle/` in `packages/persistence` | Single-source-of-truth migrations tied to schema source |
+| Migration script chain | `pnpm build && drizzle-kit generate` | drizzle-kit needs compiled `.js` output |
+
+## Follow-ups (all landed)
+
+- ✅ Task 3: `docker-compose.yml` with Postgres 15
+- ✅ Task 4: `packages/persistence` with Drizzle table definitions + first migration
+- Phase 1.6 (pending): wire `db` client into `apps/web` API routes
 
 ## References
 

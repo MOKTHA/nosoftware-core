@@ -1,6 +1,6 @@
 # HeyNXT Core - Industrial AI App Builder Platform
 
-> **Status**: Phase 1 - Product Control Plane (in progress) | **Next**: Dev database + Drizzle persistence layer
+> **Status**: Phase 1 - Product Control Plane (in progress) | **Next**: Wire DB client into API routes
 
 HeyNXT Core is the product control plane and orchestration layer for an industrial AI app builder platform. It combines coding-agent execution patterns with industrial manufacturing blueprints to enable AI-driven application generation for industrial use cases.
 
@@ -45,6 +45,7 @@ HeyNXT Core uses a **layered monorepo** architecture with explicit boundaries be
 |---------|---------|--------|
 | `@heynxt/web` | Next.js control plane UI | Scaffolded |
 | `@heynxt/core-types` | Shared Zod schemas and types | 9 control-plane schemas (User, Organization, Workspace, RBAC, Project, Task, GenerationRun, Artifact, AuditLogEntry) |
+| `@heynxt/persistence` | Drizzle ORM tables + migrations | 9 tables, 12 enums, 19 indexes; first migration `0000_great_sunspot.sql` |
 | `@heynxt/prompt-spec` | Prompt-to-spec transformation | Scaffolded |
 | `@heynxt/agent-adapter` | Coding agent execution adapter | Scaffolded |
 | `@heynxt/blueprint-registry` | Industrial blueprint catalog | Scaffolded |
@@ -103,14 +104,16 @@ See [docs/dev-setup.md](docs/dev-setup.md) for the full local setup guide
 
 ## 🎯 Current Phase: Phase 1 — Product Control Plane Foundation
 
-Tasks 1 and 2 are complete — nine control-plane Zod schemas are defined
-and tested in `@heynxt/core-types`. The next slice is Task 3 (local
-dev Postgres via `docker-compose.yml` — ✅ done) followed by Task 4
-(Drizzle persistence layer).
+Tasks 1–4 are complete:
+- **Task 1** — First 4 Zod schemas (User, Organization, Workspace, RBAC) in `@heynxt/core-types`
+- **Task 2** — 5 remaining schemas (Project, Task, GenerationRun, Artifact, AuditLogEntry) in `@heynxt/core-types`
+- **Task 3** — Local dev Postgres 15 via `docker-compose.yml`
+- **Task 4** — Drizzle persistence layer in `@heynxt/persistence` (9 tables, 12 enums, first migration)
+
+The next slice is **Phase 1.6**: wire the `db` client into `apps/web` API routes.
 
 See [buildplan.md](buildplan.md) for the full phase plan, and
-[docs/dev-setup.md](docs/dev-setup.md) for the local development
-workflow.
+[docs/dev-setup.md](docs/dev-setup.md) for the local development workflow.
 
 ## 🤝 Contributing
 
@@ -137,4 +140,4 @@ UNLICENSED - Proprietary
 
 ---
 
-**Repository Status**: Phase 1 In Progress — Tasks 1, 2, 3 Complete | Next: Drizzle persistence layer (Task 4)
+**Repository Status**: Phase 1 In Progress — Tasks 1-4 Complete | Next: Wire DB client into API routes

@@ -1,70 +1,60 @@
-# Handover — Task 3 Complete
+# Handover — Task 4 Complete
 
 **Date**: 2026-07-09
-**Status**: Task 3 implementation complete and verifies locally. Commit pending.
-**Context handover**: context window healthy; committing now rather than because of pressure.
+**Status**: Task 4 implementation complete in the working tree. Commit pending.
+**Context handover**: context window healthy; committing after verification.
 
 ---
 
 ## What Was Done (this session)
 
-### Task 3 — Local dev Postgres via docker-compose.yml (implementation complete)
+### Task 4 — Drizzle persistence layer (Phase 1.4-5-6)
 
-1. ✅ **docker-compose.yml** — `docker-compose.yml` (repo root)
-   - Postgres 15 alpine mirroring Neon's supported major version
-   - Credentials: `heynxt / heynxt / heynxt` (user/pass/db)
-   - Bound to `127.0.0.1:5432` — never exposed to LAN
-   - UTF8 + `C` collation so dialect/collation matches Neon serverless
-   - Named volume `heynxt-postgres-data` for persistence across restarts
-   - `healthcheck` via `pg_isready` so dependent services can wait on readiness
-   - Resource limits (`1.0` CPU / `512M` mem) to keep dev lightweight
+Implemented the Drizzle persistence layer for the 9 control-plane Zod schemas defined in Tasks 1-2.
 
-2. ✅ **.env.example** — updated `DATABASE_URL` to match docker-compose creds
-   - Added Neon production placeholder comment
-   - Cross-references `docs/dev-setup.md` and `docker-compose.yml`
-   - Old value (`user:password@localhost:5432/heynxt`) → new value
-     (`heynxt:heynxt@localhost:5432/heynxt`)
+1. ✅ **Decision: new `packages/persistence` package**
+   - `@heynxt/core-types` is the leaf package per CLAUDE.md hard rule (acyclic dependencies). Adding `drizzle-orm` there would break that contract and bloat the package for consumers who only need schema types.
+   - Follows the `packages/*` workspace pattern; 6th package in the monorepo.
 
-3. ✅ **package.json** — added 4 `dev:db:*` scripts
-   - `dev:db` → `docker compose up -d`
-   - `dev:db:stop` → `docker compose down`
-   - `dev:db:logs` → `docker compose logs -f postgres`
-   - `dev:db:bash` → `docker compose exec postgres bash`
+2. ✅ **`@heynxt/persistence` package scaffolded** (`packages/persistence/`)
+   - `package.json` with deps: `drizzle-orm ^0.33`, `postgres ^3.4`, `@heynxt/core-types workspace:*`; devDeps: `drizzle-kit ^0.24`, `typescript`, `vitest`
+   - `tsconfig.json` extending `../../tsconfig.base.json`
+   - `vitest.config.ts` matching core-types pattern
+   - `README.md` documenting purpose, API, design decisions
+   - `drizzle/.gitkeep` placeholder for migrations
 
-4. ✅ **docs/dev-setup.md** — new local dev setup guide
-   - Prerequisites table (Node ≥20, pnpm ≥9, Docker ≥24)
-   - Step-by-step: install, env file setup, container start
-   - Daily workflow block (start/stop/nuke)
-   - Database details table (image, major version, port, user, pass, db, encoding)
-   - Rationale sections for Postgres 15 choice and credential decisions
-   - Schema/migrations placeholder (grows with Task 4)
-   - Troubleshooting (docker compose v1, port conflicts, unhealthy container,
-     connection refused)
-   - Cross-references to docker-compose.yml, .env.example, ADR-0004
+3. ✅ **Drizzle table definitions 1:1 with Zod schemas** (`packages/persistence/src/schema/*`)
+   - 9 tables: `users`, `organizations`, `workspaces`, `role_assignments`, `projects`, `tasks`, `generation_runs`, `artifacts`, `audit_log`
+   - 12 Postgres enums — one per Zod `.enum` shape
+   - camelCase column names (TS key and DB column name match; no `mapFromView`)
+   - `text()` for UUIDs (client-generated via Zod `z.string().uuid()`); `timestamp({ mode: 'date' })` for dates
+   - JSONB for `snapshot` (generation runs) and `before`/`after`/`metadata` (audit log), typed via `$type<T>()` generic
+   - 19 indexes (single-column lookups, composite uniques, FK-backed)
+   - FK constraints for all parent→child edges except polymorphic ones (`audit_log.entityId`, `audit_log.actorId` which can be 'system')
+   - Fixed subtask issue flagged by scaffold agent: `role_assignments` uses a composite `UNIQUE` constraint (not `PRIMARY KEY`) because the natural key contains nullable `workspaceId`; documented the NULL-equality caveat
 
-5. ✅ **README.md** — documentation sync
-   - Status line: Phase 0 → Phase 1 (in progress)
-   - `@heynxt/core-types` status: 9 control-plane schemas listed
-   - Quick Start: added `pnpm dev:db` step
-   - Documentation section: linked `docs/dev-setup.md` and ADR-0004
-   - Current Phase section: rewrote to reflect Tasks 1-3 complete, Task 4 next
-   - Footer status line: Phase 0 → Phase 1, Tasks 1-3 complete
-   - Requirements: added Docker + Compose V2 plugin
+4. ✅ **`drizzle.config.ts` + first migration** (`packages/persistence/drizzle/0000_great_sunspot.sql`)
+   - Points at compiled `dist/schema/index.js` (drizzle-kit resolves via CJS; can't load ESM `.js` imports from `.ts` source directly)
+   - `db:migrate:generate` runs `pnpm build` first to ensure compiled output is fresh
+   - Generated migration: 12 CREATE TYPE, 9 CREATE TABLE, 21 ALTER TABLE FK, 19 CREATE INDEX (all idempotent with `IF NOT EXISTS` / `DO $$ ... EXCEPTION WHEN duplicate_object`)
 
-### Verification
+5. ✅ **Scripts added**
+   - `packages/persistence/package.json`: `db:migrate`, `db:migrate:generate`, `db:migrate:reset`, `db:studio` (all accept `--config=drizzle.config.ts`)
+   - `package.json` (root): `db:migrate`, `db:migrate:generate`, `db:migrate:reset`, `db:studio` that delegate via `pnpm --filter @heynxt/persistence`
+   - Existing `dev:db:*` scripts from Task 3 unchanged
 
-```
-docker compose config     → validates docker-compose.yml (syntax OK)
-docker compose up -d      → would start postgres:15-alpine container
-                            (deferred: docker not installed in sandbox)
-                            Container would become healthy via pg_isready
-pnpm typecheck            → 11/11 tasks successful (unchanged)
-pnpm build                → 6/6 tasks successful (unchanged)
-```
+6. ✅ **Documentation updates**
+   - `docs/adr/0004-orm-and-database.md`: added "Implementation status (as of 2026-07-09)" section with all Task 4 decisions; updated Consequences/Neutral with Landed status; updated Follow-ups with ✅ marks
+   - `README.md`: added `@heynxt/persistence` row to packages table; status line "Next: Drizzle persistence layer" → "Next: Wire DB client into API routes"; Current Phase section reflects Tasks 1-4 complete
+   - `packages/persistence/README.md`: expanded "What it exposes" with the 9 tables, 12 enums, 19 indexes, first migration reference
 
-Note: docker binary not available in this sandbox, so container startup is
-unverified here. The config is standard and has been tested previously on
-similar setups. The user should run `pnpm dev:db` locally to confirm.
+7. ✅ **Verification**
+   - `pnpm --filter @heynxt/persistence typecheck` → PASS
+   - `pnpm --filter @heynxt/persistence build` → PASS (emits dist/ with .js + .d.ts + source maps)
+   - `pnpm typecheck` (full monorepo) → 12/12 tasks successful (was 11/11 — now includes persistence)
+   - `pnpm build` (full monorepo) → 7/7 tasks successful (was 6/6 — now includes persistence)
+   - `pnpm db:migrate:generate` (via the script, not direct drizzle-kit) → generated `drizzle/0000_great_sunspot.sql`
+   - `docker compose up -d` failed — Docker daemon not accessible in sandbox; the local Homebrew Postgres runs on port 5432 with different credentials, so live `pnpm db:migrate` apply verification deferred to user
 
 ---
 
@@ -72,14 +62,18 @@ similar setups. The user should run `pnpm dev:db` locally to confirm.
 
 The implementation is **complete in the working tree** but uncommitted. Files:
 
-**Modified files** (already tracked):
-- `.env.example` — DATABASE_URL updated to heynxt/heynxt credentials
-- `package.json` — added `dev:db:*` scripts
-- `README.md` — status updates and dev-setup references
+**New package — `packages/persistence/`** (~30 files):
+- `package.json`, `tsconfig.json`, `vitest.config.ts`, `README.md`, `drizzle.config.ts`
+- `src/index.ts`, `src/schema/index.ts`
+- 9 table files in `src/schema/`: `users.ts`, `organizations.ts`, `workspaces.ts`, `role-assignments.ts`, `projects.ts`, `tasks.ts`, `generation-runs.ts`, `artifacts.ts`, `audit-log.ts`
+- `drizzle/0000_great_sunspot.sql` + `drizzle/meta/*.json` (snapshot + journal generated by drizzle-kit)
+- `drizzle/.gitkeep`
 
-**New files** (untracked):
-- `docker-compose.yml` (~60 lines)
-- `docs/dev-setup.md` (~160 lines)
+**Modified files** (already tracked):
+- `package.json` — added 4 `db:*` scripts at root
+- `README.md` — status updates, new package row
+- `docs/adr/0004-orm-and-database.md` — added Implementation status section, updated follow-ups
+- `pnpm-lock.yaml` — updated by `pnpm install` (added drizzle-orm, drizzle-kit, postgres deps — ~16 new packages)
 
 ---
 
@@ -87,31 +81,57 @@ The implementation is **complete in the working tree** but uncommitted. Files:
 
 ```bash
 git add -A
-git commit -m "feat: Task 3 — local dev Postgres via docker-compose.yml
+git commit -m "feat(persistence): Task 4 — Drizzle persistence layer
 
-Task 3 of buildplan Phase 1. Adds the local dev database matching
-Neon's Postgres 15 per ADR-0004 consequences section.
+Task 4 of buildplan Phase 1. Adds @heynxt/persistence package with
+Drizzle table definitions for the 9 control-plane Zod schemas from
+Tasks 1-2, the first Drizzle migration, and root-level db:* scripts.
 
-- docker-compose.yml: postgres:15-alpine with heynxt/heynxt/heynxt
-  credentials, 127.0.0.1 binding, UTF8+C collation, healthcheck,
-  resource limits, named volume for persistence across restarts
-- .env.example: DATABASE_URL updated to match container creds,
-  Neon production placeholder added
-- package.json: dev:db, dev:db:stop, dev:db:logs, dev:db:bash scripts
-- docs/dev-setup.md: new local dev setup guide (prerequisites,
-  first-time setup, daily workflow, DB details, troubleshooting)
-- README.md: status updates, Quick Start docker step, docs link,
-  ADR-0004 reference, Docker requirement added
+New package: packages/persistence/
+- package.json with drizzle-orm ^0.33, postgres ^3.4, drizzle-kit ^0.24
+- 9 pgTable definitions 1:1 with Zod schemas:
+  users, organizations, workspaces, role_assignments, projects,
+  tasks, generation_runs, artifacts, audit_log
+- 12 Postgres enums (one per Zod .enum shape)
+- camelCase column names (1:1 with Zod field names, no mapFromView)
+- text() for UUIDs (client-generated), timestamp({ mode: 'date' }) for dates
+- JSONB for snapshot/before/after/metadata, typed via \$type<T>()
+- 19 indexes + composite uniques on unique slugs/run numbers
+- FK constraints for all parent->child edges except polymorphic
+  (audit_log.entityId/actorId can be polymorphic or system actor)
+- role_assignments uses composite UNIQUE (not PRIMARY KEY) because
+  the natural key has nullable workspaceId; see table docstring
+
+drizzle.config.ts + first migration:
+- drizzle.config.ts points at compiled dist/schema/index.js
+  (drizzle-kit resolves via CJS, can't load ESM .js from .ts)
+- db:migrate:generate runs pnpm build first
+- drizzle/0000_great_sunspot.sql: 12 CREATE TYPE, 9 CREATE TABLE,
+  21 ALTER TABLE FK, 19 CREATE INDEX; all idempotent
+
+Scripts:
+- packages/persistence: db:migrate, db:migrate:generate,
+  db:migrate:reset, db:studio
+- root: db:* scripts delegate via pnpm --filter
+
+Docs:
+- ADR-0004: added 'Implementation status (2026-07-09)' section with
+  Task 4 decisions locked in; updated Follow-ups with ✅ marks
+- README.md: added @heynxt/persistence row to packages table;
+  status updates reflecting Tasks 1-4 complete
 
 Verified:
-- docker compose config validates syntax (container boot deferred —
-  docker not installed in sandbox)
-- pnpm typecheck → 11/11 successful (unchanged, no TS touched)
-- pnpm build → 6/6 successful (unchanged)
+- pnpm --filter @heynxt/persistence typecheck → PASS
+- pnpm --filter @heynxt/persistence build → PASS
+- pnpm typecheck (full monorepo) → 12/12 PASS
+- pnpm build (full monorepo) → 7/7 PASS
+- pnpm db:migrate:generate generated 0000_great_sunspot.sql
+- docker compose up -d deferred to user (daemon not in sandbox);
+  pnpm db:migrate verify deferred too — user should run locally
+  against the Postgres 15 container from Task 3
 
-Next task: Task 4 — Drizzle persistence layer (add drizzle-orm,
-drizzle-kit, postgres deps; define Drizzle tables for the 9 control-plane
-Zod schemas; first migration; wire into web API routes)."
+Next task: Phase 1.6 — wire db client into apps/web API routes
+(first minimal query: create/read a user or workspace)."
 ```
 
 ---
@@ -122,122 +142,120 @@ Zod schemas; first migration; wire into web API routes)."
 
 1. **Commit the unstaged changes** using the suggested message above.
    (Run `git status` to confirm state matches what's documented here.)
-2. **Verify locally** that `pnpm dev:db` starts the container,
-   `pg_isready -U heynxt -d heynxt` returns success, and
-   `psql postgresql://heynxt:heynxt@localhost:5432/heynxt -c '\dt'`
-   shows no tables yet (empty schema, ready for Task 4).
-3. **Optional graphify refresh** for heynxt-core — the core-types package
-   grew substantially after Tasks 1-2 (9 schemas vs the pre-Task-1 stub).
-   Graphify's heynxt-core graph is still marked "Phase 0 scaffold only"
-   and is stale. See `graphify/README.md` for the refresh procedure.
 
-### Task 4 — Drizzle persistence layer (Phase 1 later slice)
+2. **Verify migration applies locally**
+   - Ensure the local Homebrew Postgres running on port 5432 is stopped (different creds), OR
+   - Run the docker-compose Postgres: `pnpm dev:db`
+   - Then: `pnpm db:migrate` and confirm `0000_great_sunspot.sql` applies cleanly
+   - Then: `psql postgresql://heynxt:heynxt@localhost:5432/heynxt -c '\dt'` should show all 9 tables
 
-Per buildplan Phase 1, once the local Postgres is in place:
-- Add `drizzle-orm`, `drizzle-kit`, `postgres` (postgres.js for local),
-  and `@neondatabase/serverless` (for production) — recommend putting these
-  in a new `packages/persistence` package (boundary: all Drizzle queries
-  live there; other packages depend on its exported client, not Drizzle
-  directly). Alternative: keep Drizzle in `packages/core-types` if the
-  persistence surface stays small (<20 queries).
-- Define Drizzle tables mapped to each Zod schema:
-  - users → users
-  - organizations → organizations
-  - workspaces → workspaces
-  - workspace_members → workspace_members
-  - roles / permissions → roles (with JSONB permission set)
-  - projects → projects
-  - tasks → tasks
-  - generation_runs → generation_runs
-  - artifacts → artifacts
-  - audit_log → audit_log
-- First migration via `drizzle-kit generate`
-- Add `db:migrate`, `db:migrate:generate`, `db:migrate:reset` scripts
-- Verify migration applies cleanly against the Postgres 15 container
-  from Task 3
-- Wire a minimal query client into `apps/web` API routes (Phase 1.6)
+3. **Optional graphify refresh** for heynxt-core — the persistence package +
+   9 tables + first migration are substantial structural additions that the
+   current graph (still marked "Phase 0 scaffold only") doesn't capture.
+   See `graphify/README.md` for refresh procedure.
 
-### Risks when Task 4 lands
-- Table naming consistency with Vercel template schema (`lib/db/schema.ts`)
-  is important — mirror where possible to ease future agent-adapter
-  integration (ADR-0002 / hard rule #1)
-- Decide whether `packages/persistence` is a new package or folded into
-  `packages/core-types` — document the decision in a new ADR or as a
-  comment in `packages/persistence/README.md`
+4. **Next task**: Phase 1.6 — wire `db` client into `apps/web` API routes
+   - Add the Drizzle client factory in `packages/persistence/src/client.ts`
+   - Export from `@heynxt/persistence` alongside the schemas
+   - Pick one minimal API route to wire up first (e.g., `POST /api/users` for
+     user registration, or `GET /api/workspaces/:id` for workspace lookup)
+   - Implement the route handler in `apps/web/src/app/api/...` using the db
+     client from persistence
+   - Verify end-to-end: API receives request → persistence layer runs query →
+     result returns through the Zod schema
+
+### Risks / Open Questions when Phase 1.6 lands
+
+- **Neon vs. local driver split**: the Drizzle client factory needs to pick the
+  right driver based on `DATABASE_URL` — `postgres` (postgres.js) for local dev
+  vs. `@neondatabase/serverless` for production. Consider using
+  `drizzle-orm/postgres-js` for both when possible (postgres.js works as a
+  generic Postgres driver) and conditionally import Neon only in production.
+- **Transaction boundary**: decide at what layer transactions run (API handler
+  vs. persistence service). Recommend: persistence service exposes
+  transactional methods; API handler calls them. This keeps the DB coupling
+  at the package boundary.
+- **Test fixtures for persistence**: consider adding a lightweight Vitest harness
+  that uses postgres.js against the local container, OR an in-memory SQLite
+  adapter for unit tests that don't need Postgres-specific features.
 
 ---
 
-## Decisions Locked In
+## Decisions Locked In (This Session)
 
 These decisions should NOT be reopened without explicit justification and a new ADR:
 
-| Decision | Value | ADR / Source |
+| Decision | Value | Rationale |
 |---|---|---|
-| ORM | Drizzle | ADR-0004 |
-| Database | Neon Serverless Postgres | ADR-0004 |
-| Schema naming (control plane) | User / Organization / Workspace | Task 1 |
-| Test framework | Vitest ^2.0.0 | Task 1 |
-| Test config location | `packages/core-types/vitest.config.ts` | Task 1 |
-| TaskStatus FSM | draft → queued → running → succeeded\|failed\|cancelled | Task 2 |
-| GenerationRunStatus FSM | pending → running → succeeded\|failed\|cancelled | Task 2 |
-| Artifact immutability | re-runs produce new artifacts, never mutate old | Task 2 |
-| Artifact denormalization | store parent chain workspaceId/projectId/taskId/generationRunId | Task 2 |
-| Audit log immmutability | append-only, never update/delete | Task 2 |
-| Audit snapshot discipline | store only relevant fields, not full entity rows | Task 2 |
-| Local DB image | postgres:15-alpine (matches Neon's supported major version) | Task 3 / ADR-0004 |
-| Local DB credentials | heynxt / heynxt / heynxt | Task 3 |
-| Local DB binding | 127.0.0.1:5432 only (never exposed to LAN) | Task 3 |
-| Local DB collation | UTF8 + C (matches Neon serverless defaults) | Task 3 |
+| Persistence package location | `packages/persistence` (new 6th package) | `@heynxt/core-types` is leaf; breaking that contract would ripple through the dep graph |
+| Column naming | camelCase (TS key = DB column) | 1:1 mapping with Zod field names; no transform layer |
+| ID column type | `text()`, not `uuid()` | IDs are client-generated via `z.string().uuid()`, matching Zod contract |
+| Timestamp mode | `timestamp({ mode: 'date' })` | Returns JS `Date` objects matching `z.coerce.date()` |
+| JSONB typing | `$type<T>()` generic | Typed at the Drizzle layer without a transform; T comes from Zod-inferred types |
+| Migration output | `drizzle/` dir in `packages/persistence` | Single source of truth co-located with schema |
+| Migration script chain | `pnpm build && drizzle-kit generate` | drizzle-kit needs compiled `.js` output |
+| drizzle-kit target | Postgres 15 via `dialect: 'postgresql'` | Matches local dev container from Task 3; production Neon serverless is Postgres-compatible |
+| Role-assignments PK | Composite UNIQUE (nullable workspaceId) + API-layer enforcement | Postgres TRUE PRK requires NOT NULL on all cols; business key has a nullable col |
 
-All earlier reference-repo decisions remain locked:
-- Vercel coding-agent-template as agent substrate reference (ADR-0002)
-- FactoryNXT_PY_v2_Extrusion + FactoryNXT_PY_V2 as industrial blueprint sources (ADR-0003)
-- pnpm + Turbo monorepo with 5-package boundary set (ADR-0001)
+All earlier decisions from prior sessions remain locked — see prior handovers
+for the full table (ORM=Drizzle, DB=Neon, schema naming=User/Org/Workspace,
+test=Vitest, TaskStatus FSM, GenerationRunStatus FSM, etc.) and Task 3 decisions
+(Postgres 15 alpine, local creds, 127.0.0.1 binding, UTF8+C collation).
 
 ---
 
 ## Session-Ready Checklist for New Session
 
 - [x] Read `CLAUDE.md` — instructions confirmed
-- [x] Read `graphify/heynxt-core/GRAPH_REPORT.md` — pre-Task 1 graph (now stale)
-- [x] Read `docs/gap-analysis.md` — gap analysis + Task 1/2/3 proposals (all ✅)
-- [x] Graphify reports exist for all 4 repos under `graphify/`
-- [ ] **Stale graph**: heynxt-core graph still says "Phase 0 scaffold only" —
-      needs refresh after Tasks 1-2 (9 schemas added, 61 tests added)
-- [ ] **Commit pending**: Task 3 work is complete and verified but UNCOMMITTED.
+- [x] Read `buildplan.md` — Phase 1.4-5-6 context
+- [x] Read `HANDOVER.md` (previous) — Tasks 1-3 context
+- [x] Read `docs/gap-analysis.md` — closed blockers 1-3; next is Phase 1.6
+- [ ] **Commit pending**: Task 4 work is complete and verified but UNCOMMITTED.
       See commit message block above.
 
 Paste into your prompt before continuing:
 
 ```
-You are resuming heynxt-core after Task 3 completed.
+You are resuming heynxt-core after Task 4 completed.
 
 Current state:
 - Phase 0 (foundation) ✅ complete
-- Phase 1 (control plane) 🟡 substantial — 9 control-plane schemas exist:
+- Phase 1 (control plane) 🟡 substantial — near complete:
   Task 1: User, Organization, Workspace, RBAC (5 roles, ~30 permissions)
   Task 2: Project, Task, GenerationRun, Artifact, AuditLogEntry
   Task 3: docker-compose.yml with Postgres 15 mirroring Neon serverless
+  Task 4: @heynxt/persistence — 9 Drizzle tables, 12 enums, first migration
+    - 9 pgTable definitions 1:1 with Zod schemas
+    - 19 indexes, composite uniques, FK constraints
+    - drizzle.config.ts pointing at dist/schema/index.js
+    - First migration: drizzle/0000_great_sunspot.sql
   All 9 schemas tested via 61 vitest cases in control-plane.test.ts
-- Task 3 implementation is complete and verified but UNCOMMITTED.
-  See handover.md for the exact commit message.
-- pnpm install has been run (lockfile exists).
-- Toolchain: pnpm 9 + Turbo 2 + TypeScript 5.9 + Vitest 2.1.9
-- ORM/DB chosen: Drizzle + Neon serverless (see docs/adr/0004-orm-and-database.md)
-- Local DB: Postgres 15 via docker-compose.yml (heynxt/heynxt/heynxt)
-- Gap analysis: see docs/gap-analysis.md (Task 1 ✅ closed all 3 blockers)
+- Task 4 implementation is complete and verified but UNCOMMITTED.
+  See HANDOVER.md for the exact commit message.
+- pnpm install has been run (lockfile updated with drizzle-orm,
+  drizzle-kit, postgres deps)
+- Toolchain: pnpm 9 + Turbo 2 + TypeScript 5.5 + Vitest 2
+- pnpm --filter @heynxt/persistence typecheck+build: PASS
+- Full monorepo typecheck: 12/12; build: 7/7
+- Migration generated but NOT applied to DB (docker daemon not in sandbox)
+- Local Homebrew Postgres on 5432 uses different credentials; user must
+  start docker-compose container for Task 3 creds
+- ORM/DB chosen: Drizzle + Neon serverless (see docs/adr/0004)
+- Gap analysis: see docs/gap-analysis.md (Tasks 1-4 all ✅)
+- 6 packages now exist: core-types, persistence, prompt-spec,
+  agent-adapter, blueprint-registry, domain-models (plus apps/web)
 
 First actions after resuming:
-1. git status — confirm handover.md state matches working tree
-2. Commit Task 3 (message in handover.md)
-3. Verify pnpm dev:db starts container locally (docker not in sandbox)
-4. Optional: refresh graphify graph for heynxt-core (still stale, see
-   graphify/README.md)
-5. Start Task 4: Drizzle persistence layer (new packages/persistence pkg
-   OR add drizzle to packages/core-types; see ADR-0004 consequences
-   section and Task 4 notes in handover.md)
+1. git status — confirm working tree matches HANDOVER.md state
+2. Commit Task 4 (message in HANDOVER.md)
+3. Verify pnpm dev:db starts container locally; then pnpm db:migrate
+   applies 0000_great_sunspot.sql cleanly against Postgres 15
+4. Optional: refresh graphify graph for heynxt-core (stale since Task 4)
+5. Start Phase 1.6: wire db client into apps/web API routes
+   - Add packages/persistence/src/client.ts (Drizzle client factory)
+   - Wire one minimal API route (e.g. users or workspaces CRUD)
 
 Hard rules:
-- Don't redo Tasks 1-3 (already done, Task 3 uncommitted — just commit + verify)
-- Follow CLAUDE.md for process (work order, reporting format, safety rules)
+- Don't redo Tasks 1-4 (Task 4 uncommitted — just commit + verify)
+- Follow CLAUDE.md for process (work order, reporting format, safety)
 ```
