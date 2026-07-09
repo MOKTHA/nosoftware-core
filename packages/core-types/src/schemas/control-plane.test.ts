@@ -11,8 +11,12 @@ import {
   getRolePermissions,
   // Execution domain
   Project,
+  ProjectStatus,
   ProjectSlug,
   CreateProjectInput,
+  UpdateProjectStatusInput,
+  isProjectStatusTransitionAllowed,
+  ALLOWED_PROJECT_STATUS_TRANSITIONS,
   Task,
   TaskType,
   TaskStatus,
@@ -649,5 +653,107 @@ describe('createStatusChangeEntry helper', () => {
     });
 
     expect(entry.reason).toBe('agent timeout after 300s');
+  });
+});
+
+// ──────────────────────────────────────────────────────────────────────
+// Phase 1 — Task 21 (project status transition rules + UpdateProjectStatusInput)
+// ──────────────────────────────────────────────────────────────────────
+
+describe('ALLOWED_PROJECT_STATUS_TRANSITIONS', () => {
+  it('covers every ProjectStatus value (exhaustive graph)', () => {
+    for (const status of ProjectStatus.options) {
+      expect(ALLOWED_PROJECT_STATUS_TRANSITIONS).toHaveProperty(status);
+    }
+    // Sanity: the graph has no extra keys beyond the schema's options.
+    expect(Object.keys(ALLOWED_PROJECT_STATUS_TRANSITIONS).sort()).toEqual(
+      [...ProjectStatus.options].sort(),
+    );
+  });
+
+  it('every transition target is itself a valid ProjectStatus', () => {
+    const validSet = new Set(ProjectStatus.options);
+    for (const targets of Object.values(ALLOWED_PROJECT_STATUS_TRANSITIONS)) {
+      for (const t of targets) {
+        expect(validSet.has(t)).toBe(true);
+      }
+    }
+  });
+});
+
+describe('isProjectStatusTransitionAllowed', () => {
+  // Same-status transitions are idempotent no-ops — always allowed.
+  it('allows every status to transition to itself (idempotent)', () => {
+    for (const status of ProjectStatus.options) {
+      expect(isProjectStatusTransitionAllowed(status, status)).toBe(true);
+    }
+  });
+
+  it('allows draft → active', () => {
+    expect(isProjectStatusTransitionAllowed('draft', 'active')).toBe(true);
+  });
+
+  it('allows active → archived', () => {
+    expect(isProjectStatusTransitionAllowed('active', 'archived')).toBe(true);
+  });
+
+  it('blocks draft → archived (must go through active first)', () => {
+    expect(isProjectStatusTransitionAllowed('draft', 'archived')).toBe(false);
+  });
+
+  it('blocks active → draft (no backward transitions in v1)', () => {
+    expect(isProjectStatusTransitionAllowed('active', 'draft')).toBe(false);
+  });
+
+  it('blocks archived → draft (archived is terminal for v1)', () => {
+    expect(isProjectStatusTransitionAllowed('archived', 'draft')).toBe(false);
+  });
+
+  it('blocks archived → active (archived is terminal for v1)', () => {
+    expect(isProjectStatusTransitionAllowed('archived', 'active')).toBe(false);
+  });
+});
+
+describe('UpdateProjectStatusInput', () => {
+  it('accepts a status-only body', () => {
+    const input = UpdateProjectStatusInput.parse({ status: 'active' });
+    expect(input.status).toBe('active');
+    expect(input.reason).toBeUndefined();
+  });
+
+  it('accepts status + reason', () => {
+    const input = UpdateProjectStatusInput.parse({
+      status: 'archived',
+      reason: 'Project shipped; archiving per Phase 9 policy',
+    });
+    expect(input.status).toBe('archived');
+    expect(input.reason).toBe('Project shipped; archiving per Phase 9 policy');
+  });
+
+  it('accepts explicit null reason (caller passed null)', () => {
+    const input = UpdateProjectStatusInput.parse({
+      status: 'active',
+      reason: null,
+    });
+    expect(input.reason).toBeNull();
+  });
+
+  it('rejects a body with no status', () => {
+    expect(() => UpdateProjectStatusInput.parse({})).toThrow();
+  });
+
+  it('rejects an invalid status value', () => {
+    expect(() =>
+      UpdateProjectStatusInput.parse({ status: 'flying' })
+    ).toThrow();
+  });
+
+  it('rejects a reason that exceeds the max length', () => {
+    expect(() =>
+      UpdateProjectStatusInput.parse({
+        status: 'active',
+        reason: 'x'.repeat(2001),
+      })
+    ).toThrow();
   });
 });

@@ -100,3 +100,60 @@ export const CreateProjectInput = Project.omit({
 });
 
 export type CreateProjectInput = z.infer<typeof CreateProjectInput>;
+
+/**
+ * Allowed status transitions for the project lifecycle.
+ *
+ * The FSM is intentionally small and forward-only:
+ *   draft  → active  (project is being configured → ready for work)
+ *   active → archived (project is finished → read-only, pending Phase 9 purge)
+ *
+ * `archived` is terminal for v1 — restoration is a governance concern that
+ * belongs to Phase 9. If a future phase wants to support reactivation
+ * (archived → active), add the entry here and document the audit trail
+ * requirement; no other code will need to change.
+ *
+ * Same-status transitions (`draft` → `draft`, etc.) are treated as
+ * idempotent no-ops at the API layer — the route will still 200 with the
+ * current project, but no UPDATE is issued and no audit entry is emitted.
+ * Kept here (rather than in the route) so the rule is co-located with
+ * the transition graph itself.
+ */
+export const ALLOWED_PROJECT_STATUS_TRANSITIONS: Readonly<
+  Record<ProjectStatus, ReadonlyArray<ProjectStatus>>
+> = {
+  draft: ['draft', 'active'],
+  active: ['active', 'archived'],
+  archived: ['archived'],
+} as const;
+
+/**
+ * Returns true when `fromStatus` → `toStatus` is an allowed project state
+ * transition (or a no-op same-status). Use this at the API boundary to
+ * reject illegal transitions with 400 before touching the database.
+ */
+export function isProjectStatusTransitionAllowed(
+  fromStatus: ProjectStatus,
+  toStatus: ProjectStatus,
+): boolean {
+  return ALLOWED_PROJECT_STATUS_TRANSITIONS[fromStatus].includes(toStatus);
+}
+
+/**
+ * Input schema for `PATCH /api/projects/[id]` — currently status-only.
+ *
+ * We deliberately do NOT accept the full `Project` here. A partial update
+ * of arbitrary fields belongs in a separate `UpdateProjectInput` when the
+ * product needs it; mixing status FSM with generic updates muddies both
+ * validation and audit semantics. A status transition is its own concern
+ * with its own audit action (`status-changed`).
+ *
+ * `reason` is optional. Callers may attach a human-readable note that
+ * ends up in the audit log (e.g., "Ready for dev work" when activating).
+ */
+export const UpdateProjectStatusInput = z.object({
+  status: ProjectStatus,
+  reason: z.string().max(2000).nullish(),
+});
+
+export type UpdateProjectStatusInput = z.infer<typeof UpdateProjectStatusInput>;
