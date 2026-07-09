@@ -1,7 +1,7 @@
 # Handover — Task 22 complete; RBAC runtime enforcement wired into write routes
 
 **Date**: 2026-07-09
-**Status**: Task 22 code-complete and ready to commit on `main`.
+**Status**: Task 22 committed to `main`.
 Build + typecheck + core-types tests pass.
 
 ---
@@ -193,10 +193,10 @@ Out of scope reminders (recurring):
 Paste into your prompt before continuing:
 
 ```
-You are resuming heynxt-core after Task 22 code-complete.
+You are resuming heynxt-core after Task 22 committed.
 
 Commits on main (most recent first):
-  <new sha> feat(web): Task 22 — RBAC runtime enforcement (write-route gates + 403 path)
+  e2a2030   feat(web): Task 22 — RBAC runtime enforcement (write-route gates + 403 path)
   b5661ac   feat(web): Task 21 — PATCH route (project status transition) + transition graph
   aa04f1d   feat(web): Task 20 — activity log writes on entity creation
   4815845   feat(web): Task 19 — session context for UI forms (live dropdowns)
