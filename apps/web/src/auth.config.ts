@@ -38,6 +38,31 @@ export const authConfig: NextAuthConfig = {
       }
       return session;
     },
+
+    // The `authorized` callback is consulted by the Auth.js middleware
+    // (`src/middleware.ts`) to decide whether a request is allowed
+    // through. Returning `false` causes Auth.js to redirect to the
+    // sign-in page with a `callbackUrl` query param so the user lands
+    // back on the original page after signing in.
+    //
+    // Public routes in Phase 1 — no auth required for these:
+    //   - `/`            landing page
+    //   - `/api/auth/*`  Auth.js endpoints (CSRF, providers, sign-in,
+    //                    callback, session, signout)
+    //   - `/api/health`  uptime probe (used by load balancers / k8s)
+    //
+    // Everything else requires a valid session. Phase 9 will replace
+    // this simple boolean with workspace-scoped RBAC checks.
+    async authorized({ auth, request }) {
+      const { pathname } = request.nextUrl;
+
+      if (pathname === '/') return true;
+      if (pathname === '/api/health') return true;
+      if (pathname.startsWith('/api/auth')) return true;
+
+      // Logged in → allow. Otherwise Auth.js redirects to /api/auth/signin.
+      return !!auth;
+    },
   },
 
   // Trust the request host for callback URLs in dev (local + behind
