@@ -35,6 +35,7 @@ import {
 import { db, projects } from '@heynxt/persistence';
 
 import { badRequest, errorResponse, parseJsonBody } from '@/lib/api';
+import { insertAuditEntry } from '@/lib/audit';
 import { requireAuth } from '@/lib/session';
 
 export const dynamic = 'force-dynamic';
@@ -105,6 +106,23 @@ export async function POST(req: NextRequest) {
     if (!created) throw new Error('INSERT returned zero rows');
 
     const project = Project.parse(created);
+
+    // Record the creation in the audit log. Best-effort: failures are
+    // logged but do not undo the primary INSERT.
+    await insertAuditEntry({
+      workspaceId: input.workspaceId,
+      entityType: 'project',
+      entityId: project.id,
+      action: 'created',
+      actorId: createdBy,
+      after: {
+        id: project.id,
+        name: project.name,
+        slug: project.slug,
+        status: project.status,
+      },
+    });
+
     return NextResponse.json({ project }, { status: 201 });
   } catch (err) {
     // Translate (workspaceId, slug) unique violation → friendly error.

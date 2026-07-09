@@ -28,6 +28,7 @@ import {
 import { db, artifacts } from '@heynxt/persistence';
 
 import { badRequest, errorResponse, parseJsonBody } from '@/lib/api';
+import { insertAuditEntry } from '@/lib/audit';
 import { requireAuth } from '@/lib/session';
 
 export const dynamic = 'force-dynamic';
@@ -118,6 +119,21 @@ export async function POST(req: NextRequest) {
     if (!created) throw new Error('INSERT returned zero rows');
 
     const artifact = Artifact.parse(created);
+
+    // Record the creation in the audit log. Best-effort.
+    await insertAuditEntry({
+      workspaceId: input.workspaceId,
+      entityType: 'artifact',
+      entityId: artifact.id,
+      action: 'created',
+      actorId: createdBy,
+      after: {
+        id: artifact.id,
+        name: artifact.name,
+        kind: artifact.kind,
+      },
+    });
+
     return NextResponse.json({ artifact }, { status: 201 });
   } catch (err) {
     if (

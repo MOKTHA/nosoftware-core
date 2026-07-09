@@ -27,6 +27,7 @@ import {
 import { db, generationRuns } from '@heynxt/persistence';
 
 import { badRequest, errorResponse, parseJsonBody } from '@/lib/api';
+import { insertAuditEntry } from '@/lib/audit';
 import { requireAuth } from '@/lib/session';
 
 export const dynamic = 'force-dynamic';
@@ -128,6 +129,21 @@ export async function POST(req: NextRequest) {
     if (!created) throw new Error('INSERT returned zero rows');
 
     const run = GenerationRun.parse(created);
+
+    // Record the creation in the audit log. Best-effort.
+    await insertAuditEntry({
+      workspaceId: input.workspaceId,
+      entityType: 'generation-run',
+      entityId: run.id,
+      action: 'created',
+      actorId: createdBy,
+      after: {
+        id: run.id,
+        runNumber: run.runNumber,
+        status: run.status,
+      },
+    });
+
     return NextResponse.json({ generationRun: run }, { status: 201 });
   } catch (err) {
     if (

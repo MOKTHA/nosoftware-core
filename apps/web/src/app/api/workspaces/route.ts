@@ -38,6 +38,8 @@ import {
   errorResponse,
   parseJsonBody,
 } from '@/lib/api';
+import { insertAuditEntry } from '@/lib/audit';
+import { getSession } from '@/lib/session';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -116,6 +118,28 @@ export async function POST(req: NextRequest) {
     // shape matches the documented contract (defence in depth against
     // driver/DB surprises).
     const workspace = Workspace.parse(created);
+
+    // Record the creation in the audit log. Best-effort: the insert itself
+    // already succeeded, so a broken audit path must not break the user's
+    // response. `actorId` is the session user when available, otherwise
+    // "system" (the workspace POST currently has no auth requirement — see
+    // the note in the route's header docblock).
+    const session = await getSession();
+    const actorId = session?.user?.id ?? 'system';
+    await insertAuditEntry({
+      organizationId: input.organizationId,
+      workspaceId: workspace.id,
+      entityType: 'workspace',
+      entityId: workspace.id,
+      action: 'created',
+      actorId,
+      after: {
+        id: workspace.id,
+        name: workspace.name,
+        slug: workspace.slug,
+        status: workspace.status,
+      },
+    });
 
     return NextResponse.json({ workspace }, { status: 201 });
   } catch (err) {
