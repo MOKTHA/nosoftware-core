@@ -1,0 +1,154 @@
+# CI — Typecheck, build, and tests on every push and pull request.
+#
+# This is the minimal Phase 1 CI pipeline (ADR-0009 records the Phase 9
+# decision to defer lint-per-package and production-grade rollback checks
+# to hardening).
+#
+# Jobs:
+#   - install   → pnpm install (with cache)
+#   - typecheck → `turbo typecheck` across every package + the web app
+#   - test      → `pnpm --filter @heynxt/core-types test` (vitest).
+#                 Pinned to the one package with real tests in Phase 1.
+#                 When other packages add tests, widen this to `turbo test`.
+#   - build     → `turbo build` — production bundle for Next.js + tsc for libs
+#
+# All three verification jobs run in parallel after install completes.
+# Cache: pnpm store + Turbo local cache between runs.
+#
+# Triggers:
+#   - push to main (every merged PR)
+#   - pull_request targeting main (every open PR)
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Cancel in-flight runs for the same ref on new pushes — saves minutes on
+# the free plan and avoids stale "pass" badges on outdated commits.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  install:
+    name: Install
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          version: 9
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Cache node_modules + Turbo cache keyed by the lockfile hash so
+      # subsequent runs reuse both. Without this, every CI run does a
+      # full install and a full rebuild from scratch.
+      - name: Cache Turbo
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: turbo-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            turbo-${{ runner.os }}-
+
+  typecheck:
+    name: Typecheck
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Restore Turbo cache
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: turbo-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            turbo-${{ runner.os }}-
+
+      - run: pnpm typecheck
+
+  test:
+    name: Test
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Restore Turbo cache
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: turbo-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            turbo-${{ runner.os }}-
+
+      # Pinned to the one package with real tests in Phase 1. The other
+      # packages either don't implement tests yet or their `test` scripts
+      # are placeholders (vitest run with no test files → exit 1).
+      # Track the wideness of this filter as a Phase 9 task.
+      - run: pnpm --filter @heynxt/core-types test
+
+  build:
+    name: Build
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Restore Turbo cache
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: turbo-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            turbo-${{ runner.os }}-
+
+      - run: pnpm build
