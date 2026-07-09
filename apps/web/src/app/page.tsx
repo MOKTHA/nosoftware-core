@@ -1,9 +1,8 @@
 /**
  * Home page — landing page for the HeyNXT control plane.
  *
- * Status: placeholder. Phase 1.6 wires up API routes; UI pages for
- * workspaces/projects/tasks will follow in later slices. The API is
- * live under /api/* — see route.ts siblings.
+ * Phase 1.6 / Task 6 API status. UI pages for these entities will follow
+ * once the CRUD surface is fully in place.
  */
 
 export default function HomePage() {
@@ -13,8 +12,8 @@ export default function HomePage() {
         Industrial AI App Builder
       </h2>
       <p style={{ color: '#555', lineHeight: 1.5 }}>
-        Control plane is up. Build out is in progress — workspace, project,
-        and task views are coming soon.
+        Control plane API is live. Build out is in progress — UI pages for
+        workspaces, projects, and tasks will follow in later slices.
       </p>
       <section style={{ marginTop: '2rem' }}>
         <h3 style={{ fontSize: '1rem', marginBottom: '0.5rem' }}>
@@ -23,23 +22,40 @@ export default function HomePage() {
         <ul style={{ paddingLeft: '1.25rem', color: '#444' }}>
           <li>
             <a href="/api/health" style={{ color: '#0070f3' }}>
-              /api/health
+              <code>GET /api/health</code>
             </a>{' '}
             — DB connectivity + build info
           </li>
           <li>
-            <code style={{ background: '#eee', padding: '0 0.25rem' }}>
-              GET /api/workspaces
-            </code>{' '}
-            — list workspaces
+            <code>GET /api/workspaces?organizationId=&lt;uuid&gt;</code> —
+            list workspaces
           </li>
           <li>
-            <code style={{ background: '#eee', padding: '0 0.25rem' }}>
-              POST /api/workspaces
-            </code>{' '}
-            — create a workspace
+            <code>POST /api/workspaces</code> — create a workspace
+          </li>
+          <li>
+            <code>GET /api/projects?workspaceId=&lt;uuid&gt;</code> —
+            list projects in a workspace
+          </li>
+          <li>
+            <code>POST /api/projects</code> — create a project
+          </li>
+          <li>
+            <code>GET /api/tasks?workspaceId=&lt;uuid&gt;</code> — list tasks
+          </li>
+          <li>
+            <code>POST /api/tasks</code> — create a task
           </li>
         </ul>
+      </section>
+      <section style={{ marginTop: '2rem' }}>
+        <h3 style={{ fontSize: '1rem', marginBottom: '0.5rem' }}>
+          Next
+        </h3>
+        <p style={{ color: '#555', lineHeight: 1.5 }}>
+          Workspace / project / task CRUD pages (React Server Components),
+          OAuth auth scaffold, RBAC middleware, generation-run + artifact APIs.
+        </p>
       </section>
     </div>
   );

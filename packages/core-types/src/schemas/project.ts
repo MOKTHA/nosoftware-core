@@ -76,3 +76,26 @@ export const ProjectLookupKey = z.object({
 });
 
 export type ProjectLookupKey = z.infer<typeof ProjectLookupKey>;
+
+/**
+ * Input schema for creating a new Project.
+ *
+ * Omits server-generated fields:
+ *   - `id` (UUID, server-assigned)
+ *   - `createdAt` / `updatedAt` (timestamps, server-assigned)
+ *   - `status` (server-defaults to `'draft'`)
+ *
+ * `createdBy` is temporarily required from the caller — once RBAC middleware
+ * is in place (Phase 1 follow-up), it will be supplied from the session
+ * context and moved out of the public input schema.
+ */
+export const CreateProjectInput = Project.omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  status: true,
+}).partial({
+  description: true,
+});
+
+export type CreateProjectInput = z.infer<typeof CreateProjectInput>;

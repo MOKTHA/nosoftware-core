@@ -36,11 +36,10 @@ export default defineConfig({
   out: './drizzle',
   dialect: 'postgresql',
 
-  // drizzle-kit picks up DATABASE_URL from the environment at CLI runtime.
-  // Uncomment the `dbCredentials` block below for explicit wiring when
-  // you want type-checked config / env-file support:
-  //
-  // dbCredentials: {
-  //   url: process.env.DATABASE_URL!,
-  // },
+  // drizzle-kit requires explicit `dbCredentials` — it does NOT auto-read
+  // DATABASE_URL. Wire the env var through here so `pnpm db:migrate` works
+  // after setting DATABASE_URL in the shell (or via .env / dotenv in CI).
+  dbCredentials: {
+    url: process.env.DATABASE_URL ?? 'postgresql://heynxt:heynxt@127.0.0.1:5432/heynxt',
+  },
 });

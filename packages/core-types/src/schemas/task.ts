@@ -102,3 +102,32 @@ export type TaskSummary = z.infer<typeof TaskSummary>;
 export function isTaskTerminal(status: TaskStatus): boolean {
   return status === 'succeeded' || status === 'failed' || status === 'cancelled';
 }
+
+/**
+ * Input schema for creating a new Task.
+ *
+ * Omits server-generated fields:
+ *   - `id` (UUID, server-assigned)
+ *   - `createdAt` / `updatedAt` (timestamps, server-assigned)
+ *   - `status` (server-defaults to `'draft'`)
+ *   - `completedAt` (set when the task reaches a terminal status)
+ *
+ * `createdBy` is temporarily required from the caller — once RBAC middleware
+ * is in place, it will be supplied from the session context.
+ *
+ * `inputPrompt` is optional here — draft tasks may omit it until submission.
+ * Enforcement that submitted tasks have an inputPrompt happens at the API
+ * transition layer, not in this create schema.
+ */
+export const CreateTaskInput = Task.omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  status: true,
+  completedAt: true,
+}).partial({
+  description: true,
+  inputPrompt: true,
+});
+
+export type CreateTaskInput = z.infer<typeof CreateTaskInput>;

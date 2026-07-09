@@ -12,15 +12,27 @@ This is the control plane UI that allows users to:
 
 ## Status
 
-**Phase 1.6 — API routes live, DB client wired**
+**Phase 1.6 — Task 6: workspaces, projects, and tasks APIs live**
 
-The app now runs as a real Next.js 14 App Router application (not a stub).
-Landing page, `/api/health`, and `/api/workspaces` (GET list + POST create)
-are wired through the new `@heynxt/persistence` Drizzle client. Endpoints
-query and insert against the local Postgres 15 container from `docker-compose.yml`.
+The Next.js 14 App Router app exposes seven live API endpoints wired through
+`@heynxt/persistence` against local Postgres 15:
 
-Auth, RBAC enforcement, and full CRUD pages for workspaces/projects/tasks
-will follow in later slices.
+| Endpoint | Purpose |
+|---|---|
+| `GET /api/health` | DB connectivity + timestamp |
+| `GET /api/workspaces` | list workspaces for an organization |
+| `POST /api/workspaces` | create a workspace |
+| `GET /api/projects` | list projects in a workspace |
+| `POST /api/projects` | create a project |
+| `GET /api/tasks` | list tasks in a workspace (optional project filter) |
+| `POST /api/tasks` | create a task |
+
+A seed script (`pnpm db:seed`, lives in `packages/persistence/scripts/seed.ts`)
+inserts a starting user, org, workspace, projects, and tasks so the API is
+usable without hand-`INSERT`ing rows.
+
+Auth, RBAC enforcement, and full React Server Component CRUD pages will
+follow in later slices.
 
 ## Scripts
 
@@ -54,29 +66,31 @@ pnpm typecheck  # Type-check without emitting
 
 ## API Contract
 
-### GET /api/workspaces?organizationId=<uuid>
-List workspaces for an organization. Returns `{ workspaces: Workspace[] }`.
+All endpoints return JSON. Error responses follow `{ error, code, fields? }`.
 
-### POST /api/workspaces
-Create a workspace. Body:
-```json
-{
-  "organizationId": "<uuid>",
-  "name": "My Workspace",
-  "slug": "my-workspace",
-  "description": "optional",
-  "status": "active"  // optional; defaults to "active"
-}
-```
-Returns 201 with `{ workspace: Workspace }`.
+### Health
+- `GET /api/health` → `{ status: "ok" | "degraded", dbConnected: boolean, timestamp }`
 
-### GET /api/health
-Liveness + DB connectivity probe. Returns `{ status: "ok" | "degraded", dbConnected: boolean, timestamp }`.
+### Workspaces
+- `GET /api/workspaces?organizationId=<uuid>` → `{ workspaces: Workspace[] }`
+- `POST /api/workspaces`
+  Body: `{ organizationId, name, slug, description?, status? }` → 201 `{ workspace }`
+  400 `WORKSPACE_SLUG_CONFLICT` when `(organizationId, slug)` already exists.
 
-Error responses follow a consistent shape:
-```json
-{ "error": "...", "code": "ERROR_CODE", "fields": { ... } }
-```
+### Projects
+- `GET /api/projects?workspaceId=<uuid>` → `{ projects: Project[] }`
+- `POST /api/projects`
+  Body: `{ workspaceId, name, slug, description?, createdBy }` → 201 `{ project }`
+  400 `PROJECT_SLUG_CONFLICT` when `(workspaceId, slug)` already exists.
+  `status` defaults to `'draft'`; `createdBy` will move to auth session later.
+
+### Tasks
+- `GET /api/tasks?workspaceId=<uuid>[&projectId=<uuid>]` → `{ tasks: Task[] }`
+- `POST /api/tasks`
+  Body: `{ workspaceId, projectId, type, title, description?, inputPrompt?, createdBy }`
+  → 201 `{ task }`
+  400 `FOREIGN_KEY_VIOLATION` when a referenced FK does not exist.
+  `status` defaults to `'draft'`.
 
 ## Package Dependencies (runtime)
 
