@@ -178,7 +178,7 @@ Paste into your prompt before continuing:
 You are resuming heynxt-core after Phase 1 sign-off.
 
 Commits on main (most recent first):
-  <SHA_ADR_CI>  docs(Phase 1): Phase 1 sign-off (ADR-0009 + CI workflow)
+  4c69953       docs(Phase 1): Phase 1 sign-off (ADR-0009 + minimal CI)
   60fc310       docs: Task 23 — update HANDOVER.md with commit SHA
   fb4785a       feat(web): Task 23 — user invitation flow (POST + accept + invitations table)
   33217f3       docs: Task 22 — update HANDOVER.md with commit SHA
