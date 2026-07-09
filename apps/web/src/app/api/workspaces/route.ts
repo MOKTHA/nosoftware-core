@@ -1,10 +1,11 @@
 /**
  * /api/workspaces — workspace CRUD API.
  *
- *   GET  /api/workspaces?organizationId=<uuid>
- *     List workspaces owned by the given organization.
- *     Empty array (200) when the organization has no workspaces.
- *     400 when `organizationId` is missing or invalid.
+ *   GET  /api/workspaces
+ *     List all workspaces. Optional `organizationId` query parameter
+ *     filters to workspaces belonging to the given organization.
+ *     Empty array (200) when no workspaces match.
+ *     400 when `organizationId` is present but invalid.
  *
  *   POST /api/workspaces
  *     Create a workspace. Body: CreateWorkspaceInput (from core-types).
@@ -42,28 +43,30 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 // ---------------------------------------------------------------------------
-// GET /api/workspaces?organizationId=<uuid>
+// GET /api/workspaces[?organizationId=<uuid>]
 // ---------------------------------------------------------------------------
 
 export async function GET(req: NextRequest) {
   try {
     const orgIdRaw = req.nextUrl.searchParams.get('organizationId');
 
-    if (!orgIdRaw) {
-      throw badRequest(
-        '`organizationId` query parameter is required',
-        'MISSING_ORGANIZATION_ID',
-      );
+    let rows;
+    if (orgIdRaw) {
+      // Validate the UUID via Zod before sending it to the DB.
+      const organizationId = WorkspaceId.parse(orgIdRaw);
+      rows = await db
+        .select()
+        .from(workspaces)
+        .where(eq(workspaces.organizationId, organizationId))
+        .orderBy(workspaces.createdAt);
+    } else {
+      // No filter — return all workspaces. This is how forms populate
+      // the workspace selector without needing to know an org ID.
+      rows = await db
+        .select()
+        .from(workspaces)
+        .orderBy(workspaces.createdAt);
     }
-
-    // Validate the UUID via Zod before sending it to the DB.
-    const organizationId = WorkspaceId.parse(orgIdRaw);
-
-    const rows = await db
-      .select()
-      .from(workspaces)
-      .where(eq(workspaces.organizationId, organizationId))
-      .orderBy(workspaces.createdAt);
 
     return NextResponse.json({ workspaces: rows }, { status: 200 });
   } catch (err) {

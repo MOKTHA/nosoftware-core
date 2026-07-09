@@ -1,153 +1,78 @@
-# Handover — Tasks 16 + 17 complete; Phase 1 RBAC foundations landed
+# Handover — Task 19 complete; forms now use live data dropdowns
 
 **Date**: 2026-07-09
-**Status**: Tasks 16 + 17 code-complete and committed on `main`.
+**Status**: Task 19 code-complete and ready to commit on `main`.
 Build + typecheck + core-types tests pass.
 
 ---
 
 ## What Was Done (this session)
 
-### Task 16 — Session-aware header (UserMenu + sign-in/out)
+### Task 19 — Session context for UI forms (lift hardcoded seed IDs)
 
-**Files created (1):**
-- `apps/web/src/components/UserMenu.tsx` — client component that
-  renders either a signed-out "Sign in" link or a signed-in
-  avatar (GitHub image + initials fallback) + name + "Sign out"
-  button (via `next-auth/react`'s `signOut`).
+Replaced the hardcoded `SEED_WORKSPACE_ID` / `SEED_WS_ID` /
+`SEED_PROJECT_ID` constants embedded in `CreateProjectForm` and
+`CreateTaskForm` with live dropdowns populated from the DB via
+`/api/workspaces` and `/api/projects`.
 
-**Files modified (1):**
-- `apps/web/src/app/layout.tsx` — root layout is now `async`,
-  calls `getSession()` server-side, extracts a slim user slice
-  (`id`/`name`/`email`/`image`) and passes it into `<UserMenu>`.
-  Nav and UserMenu now live side-by-side inside a flex wrapper in
-  the header.
+**API routes updated (2):**
 
-**Server/client boundary:**
-- `getSession()` is server-only (RSC) — no leakage into the
-  client bundle.
-- The user slice crossing the boundary contains only display
-  fields, no internal Auth.js state.
-- Only the sign-out action runs client-side (via a real
-  `<button onClick>` that calls `signOut`), which keeps the
-  client component minimal.
+- `apps/web/src/app/api/workspaces/route.ts` — `GET /api/workspaces`
+  no longer requires an `organizationId` query param. When omitted,
+  it returns **all** workspaces; when provided, it returns the org
+  scope (same as before). 400 behavior preserved for invalid UUIDs.
+- `apps/web/src/app/api/projects/route.ts` — `GET /api/projects`
+  now behaves the same way: optional `workspaceId` filter returns
+  all projects when omitted (400 on invalid UUID still works).
 
-**Verification:**
-- `pnpm typecheck` → 13/13 ✅ (one TS false-positive on
-  `user.email[0]` caught and handled with `?? '?'`).
-- `pnpm build` → 7/7 ✅.
+**Forms updated (2):**
 
-**Commit:** `d65cff6`.
-
----
-
-### Task 17 — ADR-0006 `createdBy` session sweep
-
-Coordinated breaking change: `createdBy` is no longer a
-caller-supplied field on any `Create*Input` schema. The server
-now derives it from the authenticated session, closing the
-audit-trail weakness tracked since Task 5.
-
-**Scope correction (vs. ADR-0006 text):**
-- The ADR originally referenced "five schemas". `CreateWorkspaceInput`
-  never had a `createdBy` field (workspaces track membership via
-  org, not an audit user). The actual affected count is **four**, not
-  five. The ADR has been updated with this clarification.
-
-**Schemas updated (4):**
-- `packages/core-types/src/schemas/project.ts` —
-  `CreateProjectInput` now omits `createdBy`.
-- `packages/core-types/src/schemas/task.ts` —
-  `CreateTaskInput` now omits `createdBy`.
-- `packages/core-types/src/schemas/artifact.ts` —
-  `CreateArtifactInput` now omits `createdBy`.
-- `packages/core-types/src/schemas/generation-run.ts` —
-  `CreateGenerationRunInput` now omits `createdBy`.
-
-Each schema's JSDoc was updated to document that `createdBy`
-is server-derived.
-
-**API helper changes (2 files):**
-- `apps/web/src/lib/session.ts`:
-  - New `AuthenticatedSession` type narrows `session.user` and
-    `session.user.id` to non-null so route handlers can read
-    `session.user.id` without extra guards.
-  - `requireAuth()` now returns `Promise<AuthenticatedSession>`,
-    asserting the narrow type after the guard.
-- `apps/web/src/lib/api.ts`:
-  - `errorResponse()` now maps `NotAuthenticatedError` →
-    `401 UNAUTHENTICATED`. This is the shared error boundary
-    that turns `requireAuth()` failures into clean HTTP
-    responses for every POST route.
-
-**API routes updated (4):**
-- `apps/web/src/app/api/projects/route.ts` — POST calls
-  `requireAuth()` first, reads `session.user.id` as `createdBy`.
-  FK-violation error message simplified (no longer mentions
-  "user" since user is now session-derived).
-- `apps/web/src/app/api/tasks/route.ts` — same pattern.
-- `apps/web/src/app/api/artifacts/route.ts` — same pattern.
-- `apps/web/src/app/api/generation-runs/route.ts` — same pattern.
-
-**UI forms updated (2):**
 - `apps/web/src/app/components/CreateProjectForm.tsx` — removed
-  `SEED_USER_ID` constant, `createdBy` state, the "Created By
-  (User ID)" `<input>`, and the field from the safeParse payload.
-- `apps/web/src/app/components/CreateTaskForm.tsx` — same.
+  `SEED_WORKSPACE_ID`. On mount, fetches `/api/workspaces` and
+  populates a `<select>`. Honors `?workspaceId=` URL param for
+  preselection; otherwise defaults to the first workspace.
+- `apps/web/src/app/components/CreateTaskForm.tsx` — removed
+  `SEED_WS_ID` and `SEED_PROJECT_ID`. On mount, fetches both
+  `/api/workspaces` and `/api/projects` in parallel. Workspace
+  dropdown defaults to `?workspaceId=` from URL or first available.
+  Project dropdown is filtered to the currently selected workspace;
+  switches retarget `projectId` to the first project in the new
+  workspace (clears when none exist).
 
-**Tests:**
-- `packages/core-types/src/schemas/control-plane.test.ts` — added
-  8 new assertions (one per input shape: accepts payload without
-  `createdBy`, rejects when a required field is missing; existing
-  `Project`/`Task`/`GenerationRun`/`Artifact` canonical row
-  tests untouched, since the canonical rows still carry `createdBy`).
-- `pnpm --filter @heynxt/core-types test` → 68/68 passed ✅.
+**Loading / empty states:**
+- Loading placeholder shown while the dropdown data is being fetched.
+- Empty-state message shown when no options exist in the selected
+  scope (e.g., "No projects in this workspace").
 
-**Docs:**
-- `docs/adr/0006-createdby-session-sweep.md` — status bumped to
-  "Accepted · Implemented", added the scope correction (four
-  schemas, not five), and marked every exit criterion as `[x]`.
+**Pre-existing behavior preserved:**
+- `?workspaceId=` query param on `/projects` still preselects the
+  workspace (e.g., for deep links from workspace listings).
+- Inline Zod validation via `fieldErrors` still renders correctly
+  for `workspaceId` and `projectId`.
+- `createdBy` is still not accepted by any Create*Input schema
+  (ADR-0006 invariant intact).
 
 **Verification:**
 - `pnpm typecheck` → 13/13 ✅
 - `pnpm build` → 7/7 ✅
-- `pnpm test` (core-types only — that's the only package with
-  tests) → 68/68 ✅
+- `pnpm --filter @heynxt/core-types test` → 68/68 ✅
 
 **Pre-existing failure (not a regression):** `@heynxt/persistence`'s
-`test` script fails with "No test files found" because the package
-has no tests yet. This existed before the sweep; not touched.
+`test` script still fails with "No test files found" — the package
+has no tests yet. Existed before this slice; left alone.
 
 ---
 
-## Files Changed (this session, total)
+## Files Changed (this session)
 
-**Task 16 — Session banner:**
-- New: `apps/web/src/components/UserMenu.tsx`
-- Modified: `apps/web/src/app/layout.tsx`
-
-**Task 17 — ADR-0006 sweep:**
-- Modified (schemas):
-  - `packages/core-types/src/schemas/project.ts`
-  - `packages/core-types/src/schemas/task.ts`
-  - `packages/core-types/src/schemas/artifact.ts`
-  - `packages/core-types/src/schemas/generation-run.ts`
-- Modified (tests):
-  - `packages/core-types/src/schemas/control-plane.test.ts`
-- Modified (helpers):
-  - `apps/web/src/lib/session.ts` (new `AuthenticatedSession`
-    type, narrowed `requireAuth()` return)
-  - `apps/web/src/lib/api.ts` (401 mapping)
-- Modified (routes):
-  - `apps/web/src/app/api/projects/route.ts`
-  - `apps/web/src/app/api/tasks/route.ts`
-  - `apps/web/src/app/api/artifacts/route.ts`
-  - `apps/web/src/app/api/generation-runs/route.ts`
-- Modified (forms):
-  - `apps/web/src/app/components/CreateProjectForm.tsx`
-  - `apps/web/src/app/components/CreateTaskForm.tsx`
-- Modified (docs):
-  - `docs/adr/0006-createdby-session-sweep.md`
+- Modified: `apps/web/src/app/api/workspaces/route.ts` (GET no
+  longer requires `organizationId`; optional filter)
+- Modified: `apps/web/src/app/api/projects/route.ts` (GET no longer
+  requires `workspaceId`; optional filter)
+- Modified: `apps/web/src/app/components/CreateProjectForm.tsx`
+  (workspace dropdown instead of hardcoded ID)
+- Modified: `apps/web/src/app/components/CreateTaskForm.tsx`
+  (workspace + project dropdowns instead of hardcoded IDs)
 
 ---
 
@@ -171,15 +96,7 @@ Immediate next steps (ordered):
    Document the result under ADR-0008 Consequences. This is the
    final piece that makes Task 14 100% verified end-to-end.
 
-2. **(Task 19-ish) Session context for UI forms.** The Create*
-   forms now don't send `createdBy` (Task 17). When a signed-in
-   user submits, the server populates `createdBy` from the session
-   — **but the form currently shows stale hardcoded seed workspace/
-   project IDs**. Lift those hardcodeds out so the form reads
-   real values from the signed-in user's context (e.g. list the
-   user's workspaces/projects, populate the dropdown).
-
-3. **(Task 20-ish) Per-route permission checks on POST.** The
+2. **(Task 20-ish) Per-route permission checks on POST.** The
    middleware blocks unauthenticated requests globally, but
    authenticated users can still hit any route without RBAC
    gating. Next step: read the user's `RoleName` from
@@ -187,12 +104,12 @@ Immediate next steps (ordered):
    the INSERT (e.g. `project:create` for `/api/projects` POST).
    Phase 1 exit criterion: "Basic RBAC gates access".
 
-4. **(Task 21-ish) Workspace-scoped listing.** All GET
-   list-endpoints currently require the client to pass
-   `workspaceId` (or `organizationId`, `projectId`) as a query
-   param. Once per-row workspace ownership is settled via RBAC,
-   the server could derive the scope from the session to prevent
-   a signed-in user from listing other users' data.
+3. **(Task 21-ish) Workspace-scoped listing.** The GET endpoints
+   now support listing without a scope filter (to populate
+   dropdowns). For listing pages, the server should derive the
+   scope from the session/RBAC to prevent a signed-in user from
+   seeing data they shouldn't. Currently, listing is intentionally
+   wide-open within a scope (anyone who passes a workspace ID).
 
 Out of scope reminders (recurring):
 - **Do NOT** revise ADR-0005 (Server Actions) — revisit triggers
@@ -209,44 +126,41 @@ Out of scope reminders (recurring):
 - [x] Read `CLAUDE.md`
 - [x] Read `buildplan.md`
 - [x] Read prior `HANDOVER.md`
-- [x] Task 16 — session banner wired
-- [x] Task 17 — ADR-0006 sweep complete (4 schemas, 4 routes, 2 forms, 8 new tests)
+- [x] Task 19 — forms use live DB-backed dropdowns
 - [x] `pnpm typecheck` → 13/13 ✅
 - [x] `pnpm build` → 7/7 ✅
 - [x] `pnpm --filter @heynxt/core-types test` → 68/68 ✅
 - [x] HANDOVER.md updated
-- [x] Both commits on `main`
+- [ ] Commit on `main` (pending — commit before ending session)
 
 Paste into your prompt before continuing:
 
 ```
-You are resuming heynxt-core after Tasks 16 + 17 code-complete.
+You are resuming heynxt-core after Task 19 code-complete.
 
 Commits on main (most recent first):
-  <new sha> feat: Task 17 — ADR-0006 createdBy session sweep
+  <new sha> feat(web): Task 19 — session context for UI forms (live dropdowns)
+  ba7af8b   feat: Task 17 — ADR-0006 createdBy session sweep
   d65cff6   feat(web): Task 16 — session-aware header (UserMenu + sign-in/out)
   dc09eb2   feat(web): Task 15 — middleware scaffold (auth gate)
   208c870   feat(web): Task 14 — auth scaffold (NextAuth v5 + Drizzle)
 
 Current state:
-  - createdBy no longer accepted on any Create*Input (4 schemas; see ADR-
-    0006 scope correction — workspaces never had the field).
-  - All 4 POST routes call requireAuth() and derive createdBy from
-    session.user.id; 401 UNAUTHENTICATED on auth failure.
-  - CreateProjectForm + CreateTaskForm no longer collect createdBy.
-  - UserMenu component renders sign-in / sign-out state in the header.
-  - core-types tests: 68 passed (8 new ADR-0006 assertions).
-  - pnpm typecheck 13/13 ✅ ; pnpm build 7/7 ✅.
+  - CreateProjectForm and CreateTaskForm no longer have hardcoded seed IDs.
+  - Workspaces and projects are fetched from /api/workspaces and
+    /api/projects on form mount; dropdown defaults honor URL params.
+  - /api/workspaces GET no longer requires organizationId filter.
+  - /api/projects GET no longer requires workspaceId filter.
+  - createdBy still server-derived from session (ADR-0006 intact).
+  - core-types tests: 68 passed; typecheck 13/13; build 7/7.
 
 Next recommended task:
-  Task 18-ish — real GitHub OAuth round-trip (create OAuth App,
-    set AUTH_GITHUB_ID/AUTH_GITHUB_SECRET, verify full cycle).
-  Task 19-ish — lift hardcoded seed workspace/project IDs from forms.
-  Task 20-ish — per-route RBAC permission gates on POST routes.
+  Task 18 — real GitHub OAuth round-trip (create OAuth App, verify
+    full sign-in/out cycle).
+  Task 20 — per-route RBAC permission gates on POST routes.
 
 Hard rules (from CLAUDE.md):
-  - Don't redo Tasks 1-17.
+  - Don't redo Tasks 1-19.
   - Follow small-slice principle.
   - Verify after each step.
-  - Read ADR-0006 before touching the createdBy area again.
 ```

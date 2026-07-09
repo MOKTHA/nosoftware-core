@@ -8,24 +8,32 @@
  *
  * Everything else on the tasks page is a Server Component — this
  * file is the only one marked "use client".
+ *
+ * Workspace + project dropdowns: on mount we GET /api/workspaces and
+ * /api/projects to populate real values from the DB. The project
+ * dropdown filters by the currently selected workspace.
  */
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 
 import { CreateTaskInput, TaskType } from '@heynxt/core-types';
 
-const SEED_WS_ID = '00000000-0000-0000-0000-000000000100';
-const SEED_PROJECT_ID = '00000000-0000-0000-0000-000000010001';
+type WorkspaceOption = { id: string; name: string; slug: string };
+type ProjectOption = { id: string; name: string; slug: string; workspaceId: string };
 
 export function CreateTaskForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const wsIdFromUrl = searchParams.get('workspaceId') ?? '';
 
-  const [workspaceId, setWorkspaceId] = useState(wsIdFromUrl || SEED_WS_ID);
-  const [projectId, setProjectId] = useState(SEED_PROJECT_ID);
+  const [workspaces, setWorkspaces] = useState<WorkspaceOption[]>([]);
+  const [allProjects, setAllProjects] = useState<ProjectOption[]>([]);
+  const [loadingWorkspaces, setLoadingWorkspaces] = useState(true);
+  const [loadingProjects, setLoadingProjects] = useState(true);
+  const [workspaceId, setWorkspaceId] = useState('');
+  const [projectId, setProjectId] = useState('');
   const [type, setType] = useState<TaskType>(TaskType.options[0]!);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -33,6 +41,55 @@ export function CreateTaskForm() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+
+  // Project options filtered to the currently selected workspace.
+  const projectsForWorkspace = allProjects.filter((p) => p.workspaceId === workspaceId);
+
+  // Fetch workspaces + projects on mount. If URL carries workspaceId, preselect it.
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([
+      fetch('/api/workspaces').then((r) => (r.ok ? r.json() : { workspaces: [] })),
+      fetch('/api/projects').then((r) => (r.ok ? r.json() : { projects: [] })),
+    ])
+      .then(([wsBody, projBody]) => {
+        if (cancelled) return;
+        const wsList = (wsBody as { workspaces?: WorkspaceOption[] }).workspaces ?? [];
+        const projList = (projBody as { projects?: ProjectOption[] }).projects ?? [];
+        setWorkspaces(wsList);
+        setAllProjects(projList);
+
+        const initialWs =
+          wsIdFromUrl && wsList.some((w) => w.id === wsIdFromUrl)
+            ? wsIdFromUrl
+            : wsList[0]?.id ?? '';
+        setWorkspaceId(initialWs);
+
+        // Preselect the first project under the chosen workspace.
+        const firstProj = projList.find((p) => p.workspaceId === initialWs);
+        setProjectId(firstProj?.id ?? '');
+
+        setLoadingWorkspaces(false);
+        setLoadingProjects(false);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setLoadingWorkspaces(false);
+          setLoadingProjects(false);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [wsIdFromUrl]);
+
+  // When the workspace changes, retarget projectId to the first project
+  // in the new workspace (clearing if none exist).
+  function onWorkspaceChange(newWsId: string) {
+    setWorkspaceId(newWsId);
+    const firstInWs = allProjects.find((p) => p.workspaceId === newWsId);
+    setProjectId(firstInWs?.id ?? '');
+  }
 
   function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -114,27 +171,54 @@ export function CreateTaskForm() {
       </h3>
 
       <label style={{ display: 'flex', flexDirection: 'column', fontSize: 13 }}>
-        Workspace ID
-        <input
-          value={workspaceId}
-          onChange={(e) => setWorkspaceId(e.target.value)}
-          required
-          style={inputStyle}
-        />
+        Workspace
+        {loadingWorkspaces ? (
+          <span style={{ ...inputStyle, color: '#888' }}>Loading…</span>
+        ) : workspaces.length === 0 ? (
+          <span style={{ ...inputStyle, color: '#888' }}>
+            No workspaces available
+          </span>
+        ) : (
+          <select
+            value={workspaceId}
+            onChange={(e) => onWorkspaceChange(e.target.value)}
+            required
+            style={inputStyle}
+          >
+            {workspaces.map((ws) => (
+              <option key={ws.id} value={ws.id}>
+                {ws.name} ({ws.slug})
+              </option>
+            ))}
+          </select>
+        )}
         {fieldErrors.workspaceId && (
           <span style={errStyle}>{fieldErrors.workspaceId.join(', ')}</span>
         )}
       </label>
 
       <label style={{ display: 'flex', flexDirection: 'column', fontSize: 13 }}>
-        {/* TODO: Replace with project dropdown once projects are loaded per workspace. */}
-        Project ID
-        <input
-          value={projectId}
-          onChange={(e) => setProjectId(e.target.value)}
-          required
-          style={inputStyle}
-        />
+        Project
+        {loadingProjects ? (
+          <span style={{ ...inputStyle, color: '#888' }}>Loading…</span>
+        ) : projectsForWorkspace.length === 0 ? (
+          <span style={{ ...inputStyle, color: '#888' }}>
+            {workspaceId ? 'No projects in this workspace' : 'Select a workspace first'}
+          </span>
+        ) : (
+          <select
+            value={projectId}
+            onChange={(e) => setProjectId(e.target.value)}
+            required
+            style={inputStyle}
+          >
+            {projectsForWorkspace.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name} ({p.slug})
+              </option>
+            ))}
+          </select>
+        )}
         {fieldErrors.projectId && (
           <span style={errStyle}>{fieldErrors.projectId.join(', ')}</span>
         )}

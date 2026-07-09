@@ -7,30 +7,59 @@
  *
  * Everything else on the projects page is a Server Component — this
  * file is the only one marked "use client".
+ *
+ * Workspace dropdown: on mount we GET /api/workspaces to populate real
+ * values from the DB, replacing the previous hardcoded seed UUID.
  */
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 
 import { CreateProjectInput } from '@heynxt/core-types';
 
-const SEED_WORKSPACE_ID = '00000000-0000-0000-0000-000000000100';
+type WorkspaceOption = { id: string; name: string; slug: string };
 
 export function CreateProjectForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const workspaceIdFromUrl = searchParams.get('workspaceId') ?? '';
 
-  const [workspaceId, setWorkspaceId] = useState(
-    workspaceIdFromUrl || SEED_WORKSPACE_ID,
-  );
+  const [workspaces, setWorkspaces] = useState<WorkspaceOption[]>([]);
+  const [loadingWorkspaces, setLoadingWorkspaces] = useState(true);
+  const [workspaceId, setWorkspaceId] = useState('');
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
   const [description, setDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+
+  // Fetch workspaces to populate the dropdown. If the URL carries a
+  // `workspaceId`, use it as the preselected value; otherwise default
+  // to the first workspace the server returns.
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/workspaces')
+      .then((res) => (res.ok ? res.json() : { workspaces: [] }))
+      .then((body) => {
+        if (cancelled) return;
+        const list = (body as { workspaces?: WorkspaceOption[] }).workspaces ?? [];
+        setWorkspaces(list);
+        if (workspaceIdFromUrl && list.some((w) => w.id === workspaceIdFromUrl)) {
+          setWorkspaceId(workspaceIdFromUrl);
+        } else if (list.length > 0) {
+          setWorkspaceId(list[0]!.id);
+        }
+        setLoadingWorkspaces(false);
+      })
+      .catch(() => {
+        if (!cancelled) setLoadingWorkspaces(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [workspaceIdFromUrl]);
 
   function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -109,13 +138,27 @@ export function CreateProjectForm() {
       </h3>
 
       <label style={{ display: 'flex', flexDirection: 'column', fontSize: 13 }}>
-        Workspace ID
-        <input
-          value={workspaceId}
-          onChange={(e) => setWorkspaceId(e.target.value)}
-          required
-          style={inputStyle}
-        />
+        Workspace
+        {loadingWorkspaces ? (
+          <span style={{ ...inputStyle, color: '#888' }}>Loading…</span>
+        ) : workspaces.length === 0 ? (
+          <span style={{ ...inputStyle, color: '#888' }}>
+            No workspaces available
+          </span>
+        ) : (
+          <select
+            value={workspaceId}
+            onChange={(e) => setWorkspaceId(e.target.value)}
+            required
+            style={inputStyle}
+          >
+            {workspaces.map((ws) => (
+              <option key={ws.id} value={ws.id}>
+                {ws.name} ({ws.slug})
+              </option>
+            ))}
+          </select>
+        )}
         {fieldErrors.workspaceId && (
           <span style={errStyle}>{fieldErrors.workspaceId.join(', ')}</span>
         )}

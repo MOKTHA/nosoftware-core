@@ -1,9 +1,10 @@
 /**
  * /api/projects — project CRUD API (Phase 1.6 — Task 6 slice).
  *
- *   GET  /api/projects?workspaceId=<uuid>
- *     List projects in the given workspace.
- *     Empty array (200) when no projects exist, 400 when workspaceId missing.
+ *   GET  /api/projects
+ *     List projects. Optional `workspaceId` query parameter filters to
+ *     projects in the given workspace. Empty array (200) when none match.
+ *     400 when `workspaceId` is present but invalid.
  *
  *   POST /api/projects
  *     Create a project. Body: CreateProjectInput (from core-types).
@@ -40,27 +41,29 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 // ---------------------------------------------------------------------------
-// GET /api/projects?workspaceId=<uuid>
+// GET /api/projects[?workspaceId=<uuid>]
 // ---------------------------------------------------------------------------
 
 export async function GET(req: NextRequest) {
   try {
     const workspaceIdRaw = req.nextUrl.searchParams.get('workspaceId');
 
-    if (!workspaceIdRaw) {
-      throw badRequest(
-        '`workspaceId` query parameter is required',
-        'MISSING_WORKSPACE_ID',
-      );
+    let rows;
+    if (workspaceIdRaw) {
+      const workspaceId = WorkspaceId.parse(workspaceIdRaw);
+      rows = await db
+        .select()
+        .from(projects)
+        .where(eq(projects.workspaceId, workspaceId))
+        .orderBy(projects.createdAt);
+    } else {
+      // No filter — list all projects. Used by forms populating the
+      // project selector when no workspace scope is known yet.
+      rows = await db
+        .select()
+        .from(projects)
+        .orderBy(projects.createdAt);
     }
-
-    const workspaceId = WorkspaceId.parse(workspaceIdRaw);
-
-    const rows = await db
-      .select()
-      .from(projects)
-      .where(eq(projects.workspaceId, workspaceId))
-      .orderBy(projects.createdAt);
 
     return NextResponse.json({ projects: rows }, { status: 200 });
   } catch (err) {
