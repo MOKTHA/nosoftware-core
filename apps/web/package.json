@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
+    "dev": "echo '[Phase 6] Next.js dev server. Replace this echo with: next dev'",
+    "build": "echo '[Phase 6] Next.js production build. Replace this echo with: next build'",
+    "start": "echo '[Phase 6] Replace with: next start'",
+    "lint": "echo '[Phase 6] Replace with: next lint'",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
