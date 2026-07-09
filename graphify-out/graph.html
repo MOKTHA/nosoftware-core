@@ -2,19 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>HeyNXT Core — Graphify Knowledge Graph</title>
+<title>HeyNXT Core — Graphify Knowledge Graph (post-Task 4)</title>
 <style>
   :root {
-    --bg: #0f1115;
-    --panel: #181b22;
-    --text: #e6e8ec;
-    --muted: #8892a6;
-    --accent: #6aa9ff;
-    --app: #3b82f6;
-    --package: #22c55e;
-    --doc: #9ca3af;
-    --config: #f59e0b;
-    --file: #a78bfa;
+    --bg: #0f1115; --panel: #181b22; --text: #e6e8ec; --muted: #8892a6;
+    --accent: #6aa9ff; --critical: #ef4444; --high: #f59e0b; --medium: #6aa9ff;
+    --low: #22c55e; --schema: #a78bfa; --table: #06b6d4; --migration: #f472b6;
+    --test: #84cc16; --file: #a78bfa; --doc: #9ca3af; --config: #f59e0b;
+    --app: #3b82f6; --package: #22c55e; --placeholder: #6b7280;
     --border: #2a2f3a;
   }
   * { box-sizing: border-box; }
@@ -23,278 +18,389 @@
   #main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
   #toolbar { display: flex; gap: 12px; align-items: center; padding: 10px 16px; background: var(--panel); border-bottom: 1px solid var(--border); flex-wrap: wrap; }
   #toolbar h1 { font-size: 14px; margin: 0 8px 0 0; font-weight: 600; }
-  #toolbar .legend { display: flex; gap: 10px; font-size: 12px; align-items: center; }
+  #toolbar a { color: var(--accent); text-decoration: none; font-size: 12px; }
+  #toolbar .legend { display: flex; gap: 10px; font-size: 12px; align-items: center; flex-wrap: wrap; }
   .swatch { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
-  #filters { display: flex; gap: 8px; font-size: 12px; align-items: center; }
+  #filters { display: flex; gap: 8px; font-size: 12px; align-items: center; flex-wrap: wrap; }
   #filters label { color: var(--muted); }
-  #filters select { background: var(--bg); color: var(--text); border: 1px solid var(--border); padding: 3px 6px; border-radius: 4px; font-size: 12px; }
+  #filters select, #filters input { background: var(--bg); color: var(--text); border: 1px solid var(--border); padding: 3px 6px; border-radius: 4px; font-size: 12px; }
   #graph-wrap { flex: 1; position: relative; overflow: hidden; }
   svg { width: 100%; height: 100%; display: block; }
   .link { stroke: #3a4250; stroke-width: 1; stroke-opacity: 0.7; }
-  .link.workspace-dep { stroke: #6aa9ff; stroke-opacity: 0.55; }
+  .link.workspace-dep { stroke: #6aa9ff; stroke-opacity: 0.6; }
   .link.extends { stroke: #f59e0b; stroke-dasharray: 3 3; }
   .link.references { stroke: #9ca3af; }
   .link.documented-in { stroke: #22c55e; stroke-dasharray: 2 2; }
+  .link.imports { stroke: #a78bfa; stroke-width: 1.2; stroke-opacity: 0.7; }
+  .link.re-exports { stroke: #06b6d4; stroke-dasharray: 4 2; }
+  .link.maps-to { stroke: #06b6d4; stroke-width: 2; stroke-opacity: 0.85; }
+  .link.generated-from { stroke: #f472b6; stroke-dasharray: 6 2; }
+  .link.applies-to { stroke: #f472b6; }
+  .link.tests { stroke: #84cc16; stroke-dasharray: 1 2; }
   .node circle { stroke: #000; stroke-width: 1; cursor: pointer; }
-  .node text { font-size: 11px; fill: var(--text); pointer-events: none; text-shadow: 0 1px 2px #000, 0 0 3px #000; }
-  #panel { width: 320px; background: var(--panel); border-left: 1px solid var(--border); padding: 14px; overflow-y: auto; font-size: 13px; }
-  #panel h2 { margin: 0 0 8px; font-size: 14px; word-break: break-all; }
+  .node text { font-size: 11px; fill: var(--text); pointer-events: none; text-shadow: 0 1px 2px #000; }
+  .node.dim circle { opacity: 0.2; }
+  .node.dim text { opacity: 0.2; }
+  .link.dim { opacity: 0.05; }
+  #panel { width: 340px; background: var(--panel); border-left: 1px solid var(--border); padding: 14px; overflow-y: auto; font-size: 13px; }
+  #panel h2 { margin: 0 0 8px; font-size: 14px; word-break: break-all; color: var(--accent); }
   #panel .row { margin-bottom: 6px; }
   #panel .k { color: var(--muted); margin-right: 6px; }
   #panel .tag { display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 11px; background: #2a2f3a; margin-right: 4px; }
+  #panel pre { background: #0b0d12; border: 1px solid var(--border); padding: 8px; border-radius: 4px; overflow-x: auto; font-size: 11px; white-space: pre-wrap; max-height: 300px; color: var(--muted); }
+  .panel-list { list-style: none; padding: 0; margin: 8px 0; font-size: 12px; }
+  .panel-list li { margin: 4px 0; padding: 4px 6px; background: #0b0d12; border-radius: 3px; font-family: monospace; font-size: 11px; color: var(--muted); word-break: break-all; }
   #memory { background: var(--panel); border-bottom: 1px solid var(--border); padding: 10px 16px; font-size: 12px; }
   #memory > summary { cursor: pointer; color: var(--accent); font-weight: 600; }
-  #memory pre { background: #0b0d12; border: 1px solid var(--border); padding: 10px; border-radius: 4px; overflow-x: auto; font-size: 11px; white-space: pre-wrap; max-height: 300px; margin-top: 8px; }
-  .edge-label { font-size: 9px; fill: #6b7280; }
+  #memory pre { background: #0b0d12; border: 1px solid var(--border); padding: 10px; border-radius: 4px; overflow-x: auto; font-size: 11px; white-space: pre-wrap; max-height: 400px; margin-top: 8px; }
+  .stale-warn { background: #451a03; border: 1px solid #92400e; color: #fed7aa; padding: 6px 10px; border-radius: 4px; font-size: 12px; margin: 6px 16px; }
+  .stale-warn code { color: #fdba74; }
+  .stats { color: var(--muted); font-size: 12px; }
 </style>
 </head>
 <body>
-
-<details id="memory">
-  <summary>Session Memory — paste into next Claude Code session</summary>
-  <pre>You are working in /Users/pskbmohan/Documents/GitHub/heynxt-core — an
-industrial AI app builder monorepo. Phase 0 (foundation) is complete;
-NO implementations exist yet — only stubs.
-
-CURRENT STATE (2026-07-09):
-- 33 files total. 1 app (apps/web/ — no src/ dir), 5 packages
-  (core-types, prompt-spec, agent-adapter, blueprint-registry,
-  domain-models). Every package's src/index.ts is a stub (export {}).
-- Toolchain: pnpm 9 workspaces + Turbo 2 + TypeScript 5.5 strict.
-- pnpm install has NOT been run; no node_modules, no pnpm-lock.yaml.
-- Zod ^3.23.0 declared as the only runtime dep (unused).
-- No schemas, no routes, no DB, no tests, no CI.
-
-PACKAGE BOUNDARIES (acyclic, core-types is leaf):
-  web → {prompt-spec, agent-adapter, blueprint-registry, domain-models, core-types}
-  agent-adapter → {prompt-spec, core-types}
-  blueprint-registry → {domain-models, core-types}
-  prompt-spec → {core-types}
-  domain-models → {core-types}
-  core-types → (none)
-
-READ FIRST: CLAUDE.md → buildplan.md → README.md → package.json
-READ WHEN IMPLEMENTING: docs/adr/0001, 0002, 0003 (in that order)
-DO NOT TOUCH: turbo.json, tsconfig.base.json, pnpm-workspace.yaml,
-              root package.json (structural — edits cascade widely)
-NEXT PHASE: Phase 1 — Product Control Plane Foundation. Pick an ORM
-(Drizzle vs Prisma) and DB (Neon vs local Postgres). Define first
-control-plane Zod schemas in packages/core-types/src/schemas/.
-
-CONTRACT-FIRST RULE: every new type/schema goes in @heynxt/core-types
-first. Cross-package imports must use bare @heynxt/xxx, never
-@heynxt/xxx/src/... or dist/.... Verify with pnpm typecheck before
-claiming done.</pre>
-</details>
-
 <div id="layout">
   <div id="main">
+    <details id="memory">
+      <summary>📋 Session Memory (paste into prompt before opening files)</summary>
+      <pre>You are working in /Users/pskbmohan/Documents/GitHub/heynxt-core — an
+industrial AI app builder monorepo. Phase 0 foundation is complete; Phase 1
+is substantial with Tasks 1-4 done.
+
+CURRENT STATE (2026-07-09, post-Task-4):
+- 86 tracked files. 1 app (apps/web/) — placeholder src/index.ts.
+  6 packages: core-types, persistence, prompt-spec, agent-adapter,
+  blueprint-registry, domain-models.
+- @heynxt/core-types (LEAF package): 9 Zod schemas, 61 vitest cases
+  (User, Organization, Workspace, RBAC, Project, Task, GenerationRun,
+  Artifact, AuditLogEntry). Tests: control-plane.test.ts. Helpers:
+  getRolePermissions, isTaskTerminal, isGenerationRunTerminal,
+  hasInlineContent, createStatusChangeEntry.
+- @heynxt/persistence: 9 pgTable definitions 1:1 with Zod schemas,
+  12 pgEnum, 19 indexes, composite uniques, FK constraints. First
+  migration: drizzle/0000_great_sunspot.sql (341 lines, idempotent).
+  drizzle.config.ts points at dist/schema/index.js (drizzle-kit CJS).
+  db client not yet wired (Phase 1.6).
+- Stub packages: prompt-spec (Phase 4), agent-adapter (Phase 2),
+  blueprint-registry (Phase 3), domain-models (Phase 3).
+- Toolchain: pnpm 9 + Turbo 2.10 + TS 5.5 + Vitest 2 + drizzle-orm ^0.33 +
+  postgres ^3.4 + drizzle-kit ^0.24. pnpm install already run.
+- Local dev Postgres: postgres:15-alpine via docker-compose.yml,
+  creds heynxt/heynxt/heynxt on 127.0.0.1:5432.
+- pnpm typecheck 12/12 PASS. pnpm build 7/7 PASS.
+
+PACKAGE BOUNDARIES (acyclic, core-types is leaf):
+  web → {core-types, prompt-spec, agent-adapter, blueprint-registry, domain-models}
+  persistence → {core-types}
+  agent-adapter → {core-types, prompt-spec}
+  blueprint-registry → {core-types, domain-models}
+  prompt-spec → {core-types}
+  domain-models → {core-types}
+
+READ FIRST:
+  1. CLAUDE.md, 2. buildplan.md, 3. HANDOVER.md,
+  4. graphify-out/GRAPH_REPORT.md, 5. core-types/src/index.ts,
+  6. persistence/src/index.ts, 7. docs/adr/0004-orm-and-database.md
+
+NEXT: Phase 1.6 — wire db client into apps/web API routes.</pre>
+    </details>
+    <div class="stale-warn">⚠️ Reference-repo graphs (<code>graphify/coding-agent-template/</code>, <code>graphify/FactoryNXT_PY_V2/</code>, <code>graphify/FactoryNXT_PY_v2_Extrusion/</code>) are pre-Phase-0 — refresh before Phase 3 blueprint extraction.</div>
     <div id="toolbar">
-      <h1>HeyNXT Core · Knowledge Graph</h1>
+      <h1>HeyNXT Core — Dependency Graph</h1>
+      <span class="stats" id="stats"></span>
+      <a href="GRAPH_REPORT.md" target="_blank">📄 Report</a>
+      <a href="graph.json" target="_blank">🗃️ JSON</a>
       <div class="legend">
         <span><span class="swatch" style="background: var(--app)"></span>app</span>
-        <span><span class="swatch" style="background: var(--package)"></span>package</span>
+        <span><span class="swatch" style="background: var(--schema)"></span>schema</span>
+        <span><span class="swatch" style="background: var(--table)"></span>table</span>
+        <span><span class="swatch" style="background: var(--migration)"></span>migration</span>
+        <span><span class="swatch" style="background: var(--test)"></span>test</span>
         <span><span class="swatch" style="background: var(--file)"></span>file</span>
-        <span><span class="swatch" style="background: var(--config)"></span>config</span>
         <span><span class="swatch" style="background: var(--doc)"></span>doc</span>
+        <span><span class="swatch" style="background: var(--config)"></span>config</span>
+        <span><span class="swatch" style="background: var(--placeholder)"></span>placeholder</span>
       </div>
       <div id="filters">
-        <label>Type:</label>
-        <select id="filter-type"><option value="">all</option><option>app</option><option>package</option><option>file</option><option>config</option><option>doc</option></select>
-        <label>Status:</label>
-        <select id="filter-status"><option value="">all</option><option>stub</option><option>scaffolded</option><option>complete</option><option>empty</option></select>
-        <label>Edge:</label>
-        <select id="filter-edge"><option value="">all</option><option>workspace-dep</option><option>extends</option><option>references</option><option>documented-in</option></select>
+        <label>Edge type:</label>
+        <select id="edge-filter">
+          <option value="">(all)</option>
+          <option value="workspace-dep">workspace-dep</option>
+          <option value="imports">imports</option>
+          <option value="re-exports">re-exports</option>
+          <option value="maps-to">maps-to</option>
+          <option value="documented-in">documented-in</option>
+          <option value="references">references</option>
+          <option value="extends">extends</option>
+          <option value="generated-from">generated-from</option>
+          <option value="applies-to">applies-to</option>
+          <option value="tests">tests</option>
+        </select>
+        <label>Cluster:</label>
+        <select id="cluster-filter">
+          <option value="">(all)</option>
+        </select>
+        <label>Search:</label>
+        <input type="text" id="search" placeholder="file or id..." />
       </div>
     </div>
-    <div id="graph-wrap"><svg id="graph"></svg></div>
+    <div id="graph-wrap"><svg id="svg"></svg></div>
   </div>
   <div id="panel">
-    <h2 id="p-title">Click a node</h2>
-    <div class="row"><span class="k">Path:</span><span id="p-id">—</span></div>
-    <div class="row"><span class="k">Type:</span><span id="p-type">—</span></div>
-    <div class="row"><span class="k">Status:</span><span id="p-status">—</span></div>
-    <div class="row"><span class="k">Lang:</span><span id="p-lang">—</span></div>
-    <div class="row"><span class="k">Blast radius:</span><span id="p-blast">—</span></div>
-    <div class="row"><span class="k">Purpose:</span><span id="p-purpose">—</span></div>
-    <div class="row"><span class="k">Cluster:</span><span id="p-cluster">—</span></div>
-    <div class="row"><span class="k">In-edges:</span><span id="p-in">—</span></div>
-    <div class="row"><span class="k">Out-edges:</span><span id="p-out">—</span></div>
+    <h2 id="panel-title">Click a node</h2>
+    <div id="panel-body"><p style="color: var(--muted); font-size: 12px;">Select a node in the graph to see details.</p></div>
   </div>
 </div>
 
 <script src="https://d3js.org/d3.v7.min.js"></script>
+<script id="embedded-data" type="application/json">{
+  "phase": 1,
+  "status": "control-plane-implementation",
+  "totalFiles": 86,
+  "totalModules": 7,
+  "generated": "2026-07-09T12:15:00Z",
+  "notes": "Refreshed post-Task 4. Reference-repo graphs are STALE (pre-Phase-0).",
+  "clusters": [
+    {"id": "toolchain", "label": "toolchain", "description": "Monorepo infrastructure", "color": "#f59e0b", "nodeIds": ["package.json","pnpm-workspace.yaml","turbo.json","tsconfig.base.json","tsconfig.json","pnpm-lock.yaml","docker-compose.yml",".env.example",".gitignore"]},
+    {"id": "apps-web", "label": "apps/web", "description": "Next.js UI — placeholder", "color": "#3b82f6", "nodeIds": ["apps/web"]},
+    {"id": "core-types", "label": "core-types (LEAF)", "description": "Zod schemas — 9 schema files, 61 tests", "color": "#ef4444", "nodeIds": ["packages/core-types/src/index.ts","packages/core-types/src/schemas/user.ts","packages/core-types/src/schemas/organization.ts","packages/core-types/src/schemas/workspace.ts","packages/core-types/src/schemas/rbac.ts","packages/core-types/src/schemas/project.ts","packages/core-types/src/schemas/task.ts","packages/core-types/src/schemas/generation-run.ts","packages/core-types/src/schemas/artifact.ts","packages/core-types/src/schemas/audit-log.ts","packages/core-types/src/schemas/control-plane.test.ts"]},
+    {"id": "persistence", "label": "persistence (Drizzle ORM)", "description": "Drizzle tables 1:1 with Zod + migrations", "color": "#06b6d4", "nodeIds": ["packages/persistence/src/index.ts","packages/persistence/src/schema/index.ts","packages/persistence/src/schema/users.ts","packages/persistence/src/schema/organizations.ts","packages/persistence/src/schema/workspaces.ts","packages/persistence/src/schema/role-assignments.ts","packages/persistence/src/schema/projects.ts","packages/persistence/src/schema/tasks.ts","packages/persistence/src/schema/generation-runs.ts","packages/persistence/src/schema/artifacts.ts","packages/persistence/src/schema/audit-log.ts","packages/persistence/drizzle/0000_great_sunspot.sql","packages/persistence/drizzle.config.ts"]},
+    {"id": "stub-packages", "label": "stub packages", "description": "prompt-spec, agent-adapter, blueprint-registry, domain-models — deferred", "color": "#6b7280", "nodeIds": ["packages/prompt-spec/src/index.ts","packages/agent-adapter/src/index.ts","packages/blueprint-registry/src/index.ts","packages/domain-models/src/index.ts"]},
+    {"id": "docs", "label": "docs & planning", "description": "Build plan, ADRs, session handover", "color": "#9ca3af", "nodeIds": ["CLAUDE.md","buildplan.md","README.md","HANDOVER.md","docs/adr/0004-orm-and-database.md","docs/architecture/overview.md","docs/gap-analysis.md","docs/dev-setup.md"]}
+  ],
+  "nodes": [
+    {"id": "CLAUDE.md", "type": "doc", "label": "CLAUDE.md", "blast": "critical", "status": "complete", "cluster": "docs"},
+    {"id": "buildplan.md", "type": "doc", "label": "buildplan.md", "blast": "high", "status": "complete", "cluster": "docs"},
+    {"id": "README.md", "type": "doc", "label": "README.md", "blast": "low", "status": "complete", "cluster": "docs"},
+    {"id": "HANDOVER.md", "type": "doc", "label": "HANDOVER.md", "blast": "high", "status": "complete", "cluster": "docs"},
+    {"id": "docs/adr/0004-orm-and-database.md", "type": "doc", "label": "ADR-0004 (Drizzle+Neon)", "blast": "medium", "status": "complete", "cluster": "docs"},
+    {"id": "docs/architecture/overview.md", "type": "doc", "label": "docs/architecture/overview", "blast": "low", "status": "complete", "cluster": "docs"},
+    {"id": "docs/gap-analysis.md", "type": "doc", "label": "docs/gap-analysis", "blast": "medium", "status": "complete", "cluster": "docs"},
+    {"id": "docs/dev-setup.md", "type": "doc", "label": "docs/dev-setup", "blast": "low", "status": "complete", "cluster": "docs"},
+
+    {"id": "package.json", "type": "config", "label": "root package.json", "blast": "high", "status": "implemented", "cluster": "toolchain"},
+    {"id": "pnpm-workspace.yaml", "type": "config", "label": "pnpm-workspace.yaml", "blast": "high", "status": "implemented", "cluster": "toolchain"},
+    {"id": "turbo.json", "type": "config", "label": "turbo.json", "blast": "high", "status": "implemented", "cluster": "toolchain"},
+    {"id": "tsconfig.base.json", "type": "config", "label": "tsconfig.base.json", "blast": "high", "status": "implemented", "cluster": "toolchain"},
+    {"id": "docker-compose.yml", "type": "config", "label": "docker-compose.yml (Postgres 15)", "blast": "medium", "status": "implemented", "cluster": "toolchain"},
+    {"id": ".env.example", "type": "config", "label": ".env.example", "blast": "low", "status": "implemented", "cluster": "toolchain"},
+
+    {"id": "apps/web", "type": "app", "label": "apps/web (placeholder)", "blast": "medium", "status": "placeholder", "cluster": "apps-web"},
+
+    {"id": "packages/core-types/src/index.ts", "type": "file", "label": "core-types/index.ts", "blast": "critical", "status": "implemented", "cluster": "core-types", "detail": "Public surface re-exports 9 Zod schemas + helpers"},
+    {"id": "packages/core-types/src/schemas/user.ts", "type": "schema", "label": "User schema", "blast": "high", "status": "implemented", "cluster": "core-types"},
+    {"id": "packages/core-types/src/schemas/organization.ts", "type": "schema", "label": "Organization schema", "blast": "high", "status": "implemented", "cluster": "core-types"},
+    {"id": "packages/core-types/src/schemas/workspace.ts", "type": "schema", "label": "Workspace schema", "blast": "high", "status": "implemented", "cluster": "core-types"},
+    {"id": "packages/core-types/src/schemas/rbac.ts", "type": "schema", "label": "RBAC schema (Permission, RoleName, RoleAssignment)", "blast": "high", "status": "implemented", "cluster": "core-types"},
+    {"id": "packages/core-types/src/schemas/project.ts", "type": "schema", "label": "Project schema", "blast": "high", "status": "implemented", "cluster": "core-types"},
+    {"id": "packages/core-types/src/schemas/task.ts", "type": "schema", "label": "Task schema (FSM: draft→queued→running→*)", "blast": "high", "status": "implemented", "cluster": "core-types"},
+    {"id": "packages/core-types/src/schemas/generation-run.ts", "type": "schema", "label": "GenerationRun schema", "blast": "high", "status": "implemented", "cluster": "core-types"},
+    {"id": "packages/core-types/src/schemas/artifact.ts", "type": "schema", "label": "Artifact schema", "blast": "high", "status": "implemented", "cluster": "core-types"},
+    {"id": "packages/core-types/src/schemas/audit-log.ts", "type": "schema", "label": "AuditLogEntry schema (append-only)", "blast": "high", "status": "implemented", "cluster": "core-types"},
+    {"id": "packages/core-types/src/schemas/control-plane.test.ts", "type": "test", "label": "control-plane.test.ts (61 cases)", "blast": "low", "status": "implemented", "cluster": "core-types"},
+
+    {"id": "packages/persistence/src/index.ts", "type": "file", "label": "persistence/index.ts", "blast": "high", "status": "implemented", "cluster": "persistence", "detail": "Public surface re-exports schema/*"},
+    {"id": "packages/persistence/src/schema/index.ts", "type": "file", "label": "persistence/schema/index.ts", "blast": "high", "status": "implemented", "cluster": "persistence", "detail": "Barrel re-exports 9 tables + 12 enums"},
+    {"id": "packages/persistence/src/schema/users.ts", "type": "table", "label": "table: users", "blast": "medium", "status": "implemented", "cluster": "persistence"},
+    {"id": "packages/persistence/src/schema/organizations.ts", "type": "table", "label": "table: organizations", "blast": "medium", "status": "implemented", "cluster": "persistence"},
+    {"id": "packages/persistence/src/schema/workspaces.ts", "type": "table", "label": "table: workspaces", "blast": "medium", "status": "implemented", "cluster": "persistence"},
+    {"id": "packages/persistence/src/schema/role-assignments.ts", "type": "table", "label": "table: role_assignments (composite UNIQUE)", "blast": "medium", "status": "implemented", "cluster": "persistence", "detail": "NOT true PK because workspaceId is nullable"},
+    {"id": "packages/persistence/src/schema/projects.ts", "type": "table", "label": "table: projects", "blast": "medium", "status": "implemented", "cluster": "persistence"},
+    {"id": "packages/persistence/src/schema/tasks.ts", "type": "table", "label": "table: tasks", "blast": "medium", "status": "implemented", "cluster": "persistence"},
+    {"id": "packages/persistence/src/schema/generation-runs.ts", "type": "table", "label": "table: generation_runs (JSONB snapshot)", "blast": "medium", "status": "implemented", "cluster": "persistence"},
+    {"id": "packages/persistence/src/schema/artifacts.ts", "type": "table", "label": "table: artifacts", "blast": "medium", "status": "implemented", "cluster": "persistence"},
+    {"id": "packages/persistence/src/schema/audit-log.ts", "type": "table", "label": "table: audit_log (append-only)", "blast": "medium", "status": "implemented", "cluster": "persistence"},
+    {"id": "packages/persistence/drizzle/0000_great_sunspot.sql", "type": "migration", "label": "0000_great_sunspot.sql (341 lines)", "blast": "high", "status": "implemented", "cluster": "persistence", "detail": "12 enums + 9 tables + 21 FK + 19 indexes. Idempotent."},
+    {"id": "packages/persistence/drizzle.config.ts", "type": "config", "label": "drizzle.config.ts", "blast": "high", "status": "implemented", "cluster": "persistence", "detail": "schema entry = dist/schema/index.js"},
+
+    {"id": "packages/prompt-spec/src/index.ts", "type": "file", "label": "prompt-spec (stub)", "blast": "medium", "status": "placeholder", "cluster": "stub-packages"},
+    {"id": "packages/agent-adapter/src/index.ts", "type": "file", "label": "agent-adapter (stub)", "blast": "medium", "status": "placeholder", "cluster": "stub-packages"},
+    {"id": "packages/blueprint-registry/src/index.ts", "type": "file", "label": "blueprint-registry (stub)", "blast": "medium", "status": "placeholder", "cluster": "stub-packages"},
+    {"id": "packages/domain-models/src/index.ts", "type": "file", "label": "domain-models (stub)", "blast": "medium", "status": "placeholder", "cluster": "stub-packages"}
+  ],
+  "edges": [
+    {"from": "apps/web", "to": "packages/core-types/src/index.ts", "kind": "workspace-dep"},
+    {"from": "apps/web", "to": "packages/prompt-spec/src/index.ts", "kind": "workspace-dep"},
+    {"from": "apps/web", "to": "packages/agent-adapter/src/index.ts", "kind": "workspace-dep"},
+    {"from": "apps/web", "to": "packages/blueprint-registry/src/index.ts", "kind": "workspace-dep"},
+    {"from": "apps/web", "to": "packages/domain-models/src/index.ts", "kind": "workspace-dep"},
+    {"from": "packages/persistence/src/index.ts", "to": "packages/core-types/src/index.ts", "kind": "workspace-dep"},
+    {"from": "packages/prompt-spec/src/index.ts", "to": "packages/core-types/src/index.ts", "kind": "workspace-dep"},
+    {"from": "packages/agent-adapter/src/index.ts", "to": "packages/core-types/src/index.ts", "kind": "workspace-dep"},
+    {"from": "packages/agent-adapter/src/index.ts", "to": "packages/prompt-spec/src/index.ts", "kind": "workspace-dep"},
+    {"from": "packages/blueprint-registry/src/index.ts", "to": "packages/core-types/src/index.ts", "kind": "workspace-dep"},
+    {"from": "packages/blueprint-registry/src/index.ts", "to": "packages/domain-models/src/index.ts", "kind": "workspace-dep"},
+    {"from": "packages/domain-models/src/index.ts", "to": "packages/core-types/src/index.ts", "kind": "workspace-dep"},
+
+    {"from": "packages/persistence/src/index.ts", "to": "packages/persistence/src/schema/index.ts", "kind": "re-exports"},
+    {"from": "packages/persistence/src/schema/index.ts", "to": "packages/persistence/src/schema/users.ts", "kind": "re-exports"},
+    {"from": "packages/persistence/src/schema/index.ts", "to": "packages/persistence/src/schema/organizations.ts", "kind": "re-exports"},
+    {"from": "packages/persistence/src/schema/index.ts", "to": "packages/persistence/src/schema/workspaces.ts", "kind": "re-exports"},
+    {"from": "packages/persistence/src/schema/index.ts", "to": "packages/persistence/src/schema/role-assignments.ts", "kind": "re-exports"},
+    {"from": "packages/persistence/src/schema/index.ts", "to": "packages/persistence/src/schema/projects.ts", "kind": "re-exports"},
+    {"from": "packages/persistence/src/schema/index.ts", "to": "packages/persistence/src/schema/tasks.ts", "kind": "re-exports"},
+    {"from": "packages/persistence/src/schema/index.ts", "to": "packages/persistence/src/schema/generation-runs.ts", "kind": "re-exports"},
+    {"from": "packages/persistence/src/schema/index.ts", "to": "packages/persistence/src/schema/artifacts.ts", "kind": "re-exports"},
+    {"from": "packages/persistence/src/schema/index.ts", "to": "packages/persistence/src/schema/audit-log.ts", "kind": "re-exports"},
+
+    {"from": "packages/core-types/src/index.ts", "to": "packages/core-types/src/schemas/user.ts", "kind": "re-exports"},
+    {"from": "packages/core-types/src/index.ts", "to": "packages/core-types/src/schemas/organization.ts", "kind": "re-exports"},
+    {"from": "packages/core-types/src/index.ts", "to": "packages/core-types/src/schemas/workspace.ts", "kind": "re-exports"},
+    {"from": "packages/core-types/src/index.ts", "to": "packages/core-types/src/schemas/rbac.ts", "kind": "re-exports"},
+    {"from": "packages/core-types/src/index.ts", "to": "packages/core-types/src/schemas/project.ts", "kind": "re-exports"},
+    {"from": "packages/core-types/src/index.ts", "to": "packages/core-types/src/schemas/task.ts", "kind": "re-exports"},
+    {"from": "packages/core-types/src/index.ts", "to": "packages/core-types/src/schemas/generation-run.ts", "kind": "re-exports"},
+    {"from": "packages/core-types/src/index.ts", "to": "packages/core-types/src/schemas/artifact.ts", "kind": "re-exports"},
+    {"from": "packages/core-types/src/index.ts", "to": "packages/core-types/src/schemas/audit-log.ts", "kind": "re-exports"},
+
+    {"from": "packages/persistence/src/schema/users.ts", "to": "packages/core-types/src/schemas/user.ts", "kind": "maps-to"},
+    {"from": "packages/persistence/src/schema/organizations.ts", "to": "packages/core-types/src/schemas/organization.ts", "kind": "maps-to"},
+    {"from": "packages/persistence/src/schema/workspaces.ts", "to": "packages/core-types/src/schemas/workspace.ts", "kind": "maps-to"},
+    {"from": "packages/persistence/src/schema/role-assignments.ts", "to": "packages/core-types/src/schemas/rbac.ts", "kind": "maps-to"},
+    {"from": "packages/persistence/src/schema/projects.ts", "to": "packages/core-types/src/schemas/project.ts", "kind": "maps-to"},
+    {"from": "packages/persistence/src/schema/tasks.ts", "to": "packages/core-types/src/schemas/task.ts", "kind": "maps-to"},
+    {"from": "packages/persistence/src/schema/generation-runs.ts", "to": "packages/core-types/src/schemas/generation-run.ts", "kind": "maps-to"},
+    {"from": "packages/persistence/src/schema/artifacts.ts", "to": "packages/core-types/src/schemas/artifact.ts", "kind": "maps-to"},
+    {"from": "packages/persistence/src/schema/audit-log.ts", "to": "packages/core-types/src/schemas/audit-log.ts", "kind": "maps-to"},
+
+    {"from": "packages/persistence/drizzle/0000_great_sunspot.sql", "to": "packages/persistence/src/schema/index.ts", "kind": "generated-from"},
+    {"from": "packages/persistence/drizzle/0000_great_sunspot.sql", "to": "docker-compose.yml", "kind": "applies-to"},
+    {"from": "packages/persistence/drizzle.config.ts", "to": "packages/persistence/src/schema/index.ts", "kind": "references"},
+    {"from": "packages/persistence/drizzle.config.ts", "to": "packages/persistence/drizzle/0000_great_sunspot.sql", "kind": "references"},
+    {"from": "packages/core-types/src/schemas/control-plane.test.ts", "to": "packages/core-types/src/index.ts", "kind": "tests"},
+
+    {"from": "package.json", "to": "pnpm-workspace.yaml", "kind": "references"},
+    {"from": "package.json", "to": "turbo.json", "kind": "references"},
+    {"from": "package.json", "to": "docker-compose.yml", "kind": "references"},
+    {"from": "package.json", "to": ".env.example", "kind": "references"},
+    {"from": "CLAUDE.md", "to": "buildplan.md", "kind": "references"},
+    {"from": "CLAUDE.md", "to": "docs/adr/0004-orm-and-database.md", "kind": "documented-in"},
+    {"from": "CLAUDE.md", "to": "docs/architecture/overview.md", "kind": "documented-in"},
+    {"from": "buildplan.md", "to": "docs/adr/0004-orm-and-database.md", "kind": "documented-in"},
+    {"from": "docs/gap-analysis.md", "to": "buildplan.md", "kind": "documented-in"},
+    {"from": "docs/dev-setup.md", "to": "docker-compose.yml", "kind": "documented-in"},
+    {"from": "HANDOVER.md", "to": "buildplan.md", "kind": "documented-in"}
+  ]
+}</script>
 <script>
-(function () {
-  const data = {
-    nodes: [
-      { id: "package.json", type: "config", status: "scaffolded", lang: "json", blastRadius: "high", purpose: "Root workspace config, dev deps, engines, scripts", cluster: "toolchain" },
-      { id: "pnpm-workspace.yaml", type: "config", status: "scaffolded", lang: "yaml", blastRadius: "high", purpose: "pnpm workspace member globs (apps/*, packages/*)", cluster: "toolchain" },
-      { id: "turbo.json", type: "config", status: "scaffolded", lang: "json", blastRadius: "high", purpose: "Turbo task pipeline (build/dev/lint/typecheck/test/clean)", cluster: "toolchain" },
-      { id: "tsconfig.base.json", type: "config", status: "scaffolded", lang: "json", blastRadius: "high", purpose: "Base TS strict config inherited by all packages", cluster: "toolchain" },
-      { id: "tsconfig.json", type: "config", status: "scaffolded", lang: "json", blastRadius: "medium", purpose: "Root tsconfig (noEmit, excludes apps/packages)", cluster: "toolchain" },
-      { id: "apps/web", type: "app", status: "scaffolded", lang: "ts", blastRadius: "medium", purpose: "Next.js control plane UI (src/ not yet created)", cluster: "apps" },
-      { id: "apps/web/package.json", type: "config", status: "scaffolded", lang: "json", blastRadius: "medium", purpose: "@heynxt/web Next.js app dependencies and scripts", cluster: "apps" },
-      { id: "apps/web/README.md", type: "doc", status: "scaffolded", lang: "md", blastRadius: "low", purpose: "Control plane UI app docs", cluster: "apps" },
-      { id: "packages/core-types/src/index.ts", type: "file", status: "stub", lang: "ts", blastRadius: "high", purpose: "Public surface of core-types — stub", cluster: "packages" },
-      { id: "packages/core-types/package.json", type: "config", status: "scaffolded", lang: "json", blastRadius: "high", purpose: "@heynxt/core-types deps (only zod)", cluster: "packages" },
-      { id: "packages/core-types/tsconfig.json", type: "config", status: "scaffolded", lang: "json", blastRadius: "low", purpose: "core-types ts build config", cluster: "packages" },
-      { id: "packages/prompt-spec/src/index.ts", type: "file", status: "stub", lang: "ts", blastRadius: "medium", purpose: "Public surface of prompt-spec — stub", cluster: "packages" },
-      { id: "packages/prompt-spec/package.json", type: "config", status: "scaffolded", lang: "json", blastRadius: "medium", purpose: "@heynxt/prompt-spec deps", cluster: "packages" },
-      { id: "packages/prompt-spec/tsconfig.json", type: "config", status: "scaffolded", lang: "json", blastRadius: "low", purpose: "prompt-spec ts build config", cluster: "packages" },
-      { id: "packages/agent-adapter/src/index.ts", type: "file", status: "stub", lang: "ts", blastRadius: "medium", purpose: "Public surface of agent-adapter — stub", cluster: "packages" },
-      { id: "packages/agent-adapter/package.json", type: "config", status: "scaffolded", lang: "json", blastRadius: "medium", purpose: "@heynxt/agent-adapter deps", cluster: "packages" },
-      { id: "packages/blueprint-registry/src/index.ts", type: "file", status: "stub", lang: "ts", blastRadius: "medium", purpose: "Public surface of blueprint-registry — stub", cluster: "packages" },
-      { id: "packages/blueprint-registry/package.json", type: "config", status: "scaffolded", lang: "json", blastRadius: "medium", purpose: "@heynxt/blueprint-registry deps", cluster: "packages" },
-      { id: "packages/domain-models/src/index.ts", type: "file", status: "stub", lang: "ts", blastRadius: "medium", purpose: "Public surface of domain-models — stub", cluster: "packages" },
-      { id: "packages/domain-models/package.json", type: "config", status: "scaffolded", lang: "json", blastRadius: "medium", purpose: "@heynxt/domain-models deps", cluster: "packages" },
-      { id: "CLAUDE.md", type: "doc", status: "complete", lang: "md", blastRadius: "high", purpose: "Claude Code session guide", cluster: "docs" },
-      { id: "buildplan.md", type: "doc", status: "complete", lang: "md", blastRadius: "medium", purpose: "9-phase build plan", cluster: "docs" },
-      { id: "README.md", type: "doc", status: "complete", lang: "md", blastRadius: "low", purpose: "Top-level repo readme", cluster: "docs" },
-      { id: "FOUNDATION.md", type: "doc", status: "complete", lang: "md", blastRadius: "low", purpose: "Foundation summary", cluster: "docs" },
-      { id: "docs/architecture/overview.md", type: "doc", status: "complete", lang: "md", blastRadius: "low", purpose: "Architecture overview", cluster: "docs" },
-      { id: "docs/adr/0001-monorepo-and-boundaries.md", type: "doc", status: "complete", lang: "md", blastRadius: "low", purpose: "ADR: monorepo + boundaries", cluster: "docs" },
-      { id: "docs/adr/0002-agent-substrate.md", type: "doc", status: "complete", lang: "md", blastRadius: "low", purpose: "ADR: agent substrate choice", cluster: "docs" },
-      { id: "docs/adr/0003-industrial-blueprint-sources.md", type: "doc", status: "complete", lang: "md", blastRadius: "low", purpose: "ADR: blueprint sources", cluster: "docs" }
-    ],
-    edges: [
-      { from: "apps/web", to: "packages/core-types/src/index.ts", kind: "workspace-dep" },
-      { from: "apps/web", to: "packages/prompt-spec/src/index.ts", kind: "workspace-dep" },
-      { from: "apps/web", to: "packages/agent-adapter/src/index.ts", kind: "workspace-dep" },
-      { from: "apps/web", to: "packages/blueprint-registry/src/index.ts", kind: "workspace-dep" },
-      { from: "apps/web", to: "packages/domain-models/src/index.ts", kind: "workspace-dep" },
-      { from: "packages/agent-adapter/src/index.ts", to: "packages/core-types/src/index.ts", kind: "workspace-dep" },
-      { from: "packages/agent-adapter/src/index.ts", to: "packages/prompt-spec/src/index.ts", kind: "workspace-dep" },
-      { from: "packages/blueprint-registry/src/index.ts", to: "packages/core-types/src/index.ts", kind: "workspace-dep" },
-      { from: "packages/blueprint-registry/src/index.ts", to: "packages/domain-models/src/index.ts", kind: "workspace-dep" },
-      { from: "packages/prompt-spec/src/index.ts", to: "packages/core-types/src/index.ts", kind: "workspace-dep" },
-      { from: "packages/domain-models/src/index.ts", to: "packages/core-types/src/index.ts", kind: "workspace-dep" },
-      { from: "pnpm-workspace.yaml", to: "package.json", kind: "references" },
-      { from: "turbo.json", to: "package.json", kind: "references" },
-      { from: "tsconfig.json", to: "tsconfig.base.json", kind: "extends" },
-      { from: "packages/core-types/tsconfig.json", to: "tsconfig.base.json", kind: "extends" },
-      { from: "packages/prompt-spec/tsconfig.json", to: "tsconfig.base.json", kind: "extends" },
-      { from: "packages/agent-adapter/tsconfig.json", to: "tsconfig.base.json", kind: "extends" },
-      { from: "packages/blueprint-registry/package.json", to: "tsconfig.base.json", kind: "extends" },
-      { from: "packages/blueprint-registry/package.json", to: "packages/core-types/src/index.ts", kind: "workspace-dep" },
-      { from: "CLAUDE.md", to: "buildplan.md", kind: "references" },
-      { from: "CLAUDE.md", to: "README.md", kind: "references" },
-      { from: "CLAUDE.md", to: "docs/adr/0001-monorepo-and-boundaries.md", kind: "documented-in" },
-      { from: "CLAUDE.md", to: "docs/adr/0002-agent-substrate.md", kind: "documented-in" },
-      { from: "CLAUDE.md", to: "docs/adr/0003-industrial-blueprint-sources.md", kind: "documented-in" },
-      { from: "docs/architecture/overview.md", to: "CLAUDE.md", kind: "documented-in" },
-      { from: "docs/architecture/overview.md", to: "buildplan.md", kind: "documented-in" },
-      { from: "FOUNDATION.md", to: "buildplan.md", kind: "documented-in" }
-    ]
+(function() {
+  const DATA = JSON.parse(document.getElementById('embedded-data').textContent);
+  const stats = document.getElementById('stats');
+  stats.textContent = `${DATA.nodes.length} nodes · ${DATA.edges.length} edges · ${DATA.clusters.length} clusters · Phase ${DATA.phase}`;
+
+  const clusterColors = {};
+  DATA.clusters.forEach(c => { clusterColors[c.id] = c.color; });
+
+  const nodeColor = n => {
+    if (n.status === 'placeholder') return 'var(--placeholder)';
+    switch (n.type) {
+      case 'schema': return 'var(--schema)';
+      case 'table': return 'var(--table)';
+      case 'migration': return 'var(--migration)';
+      case 'test': return 'var(--test)';
+      case 'doc': return 'var(--doc)';
+      case 'config': return 'var(--config)';
+      case 'app': return 'var(--app)';
+      default: return 'var(--file)';
+    }
+  };
+  const nodeRadius = n => {
+    if (n.blast === 'critical') return 10;
+    if (n.blast === 'high') return 7;
+    if (n.blast === 'medium') return 5;
+    return 4;
   };
 
-  const colorByType = {
-    app: "#3b82f6",
-    package: "#22c55e",
-    file: "#a78bfa",
-    config: "#f59e0b",
-    doc: "#9ca3af"
-  };
-  const radiusByBlast = { high: 14, medium: 10, low: 7 };
+  const nodeMap = {};
+  DATA.nodes.forEach(n => { nodeMap[n.id] = n; });
 
-  const svg = d3.select("#graph");
-  const wrap = document.getElementById("graph-wrap");
-  const width = wrap.clientWidth;
-  const height = wrap.clientHeight;
-  svg.attr("viewBox", [0, 0, width, height]);
-
-  const g = svg.append("g");
-
-  // arrow marker
-  svg.append("defs").append("marker")
-    .attr("id", "arrow").attr("viewBox", "0 -5 10 10")
-    .attr("refX", 20).attr("refY", 0)
-    .attr("markerWidth", 6).attr("markerHeight", 6)
-    .attr("orient", "auto")
-    .append("path").attr("d", "M0,-5L10,0L0,5").attr("fill", "#6aa9ff");
-
-  const nodeById = new Map(data.nodes.map(n => [n.id, n]));
-
-  const sim = d3.forceSimulation(data.nodes)
-    .force("link", d3.forceLink(data.edges).id(d => d.id).distance(110))
-    .force("charge", d3.forceManyBody().strength(-420))
-    .force("center", d3.forceCenter(width / 2, height / 2))
-    .force("collide", d3.forceCollide().radius(d => radiusByBlast[d.blastRadius] + 10));
-
-  const linkSel = g.append("g")
-    .attr("class", "links")
-    .selectAll("line")
-    .data(data.edges)
-    .enter().append("line")
-    .attr("class", d => "link " + d.kind)
-    .attr("marker-end", d => d.kind === "workspace-dep" ? "url(#arrow)" : null);
-
-  const nodeSel = g.append("g")
-    .attr("class", "nodes")
-    .selectAll("g")
-    .data(data.nodes)
-    .enter().append("g")
-    .attr("class", "node")
-    .call(d3.drag().on("start", dragstart).on("drag", dragged).on("end", dragend));
-
-  nodeSel.append("circle")
-    .attr("r", d => radiusByBlast[d.blastRadius] || 8)
-    .attr("fill", d => colorByType[d.type] || "#9ca3af")
-    .on("click", (ev, d) => showPanel(d));
-
-  nodeSel.append("text")
-    .attr("dx", d => (radiusByBlast[d.blastRadius] || 8) + 4)
-    .attr("dy", 4)
-    .text(d => {
-      const parts = d.id.split("/");
-      return parts[parts.length - 1] || d.id;
-    });
-
-  sim.on("tick", () => {
-    linkSel.attr("x1", d => d.source.x).attr("y1", d => d.source.y)
-           .attr("x2", d => d.target.x).attr("y2", d => d.target.y);
-    nodeSel.attr("transform", d => `translate(${d.x},${d.y})`);
+  // populate cluster filter
+  const clusterSel = document.getElementById('cluster-filter');
+  DATA.clusters.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.id;
+    opt.textContent = c.label;
+    clusterSel.appendChild(opt);
   });
 
-  function dragstart(ev, d) { if (!ev.active) sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; }
+  const svg = d3.select('#svg');
+  const width = () => document.getElementById('graph-wrap').clientWidth;
+  const height = () => document.getElementById('graph-wrap').clientHeight;
+  const g = svg.append('g');
+
+  const zoom = d3.zoom().scaleExtent([0.2, 3]).on('zoom', ev => g.attr('transform', ev.transform));
+  svg.call(zoom);
+
+  const simulation = d3.forceSimulation(DATA.nodes)
+    .force('link', d3.forceLink(DATA.edges).id(d => d.id).distance(60))
+    .force('charge', d3.forceManyBody().strength(-220))
+    .force('center', d3.forceCenter(width()/2, height()/2))
+    .force('collide', d3.forceCollide().radius(d => nodeRadius(d) + 8));
+
+  const link = g.append('g').selectAll('line').data(DATA.edges).enter().append('line')
+    .attr('class', d => 'link ' + d.kind);
+
+  const node = g.append('g').selectAll('g').data(DATA.nodes).enter().append('g')
+    .attr('class', 'node')
+    .call(d3.drag().on('start', dragStart).on('drag', dragged).on('end', dragEnd));
+
+  node.append('circle')
+    .attr('r', d => nodeRadius(d))
+    .attr('fill', d => nodeColor(d))
+    .on('click', (ev, d) => showPanel(d));
+
+  node.append('text').text(d => d.label).attr('dx', d => nodeRadius(d) + 3).attr('dy', 3);
+
+  simulation.on('tick', () => {
+    link.attr('x1', d => d.source.x).attr('y1', d => d.source.y)
+        .attr('x2', d => d.target.x).attr('y2', d => d.target.y);
+    node.attr('transform', d => `translate(${d.x},${d.y})`);
+  });
+
+  function dragStart(ev, d) { if (!ev.active) simulation.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; }
   function dragged(ev, d) { d.fx = ev.x; d.fy = ev.y; }
-  function dragend(ev, d) { if (!ev.active) sim.alphaTarget(0); d.fx = null; d.fy = null; }
+  function dragEnd(ev, d) { if (!ev.active) simulation.alphaTarget(0); d.fx = null; d.fy = null; }
 
   function showPanel(d) {
-    document.getElementById("p-title").textContent = d.id;
-    document.getElementById("p-id").textContent = d.id;
-    document.getElementById("p-type").textContent = d.type;
-    document.getElementById("p-status").textContent = d.status;
-    document.getElementById("p-lang").textContent = d.lang;
-    document.getElementById("p-blast").textContent = d.blastRadius;
-    document.getElementById("p-purpose").textContent = d.purpose;
-    document.getElementById("p-cluster").textContent = d.cluster || "—";
-    const ins = data.edges.filter(e => e.to === d.id).map(e => `${e.from} [${e.kind}]`);
-    const outs = data.edges.filter(e => e.from === d.id).map(e => `${e.to} [${e.kind}]`);
-    document.getElementById("p-in").textContent = ins.length ? ins.join("; ") : "—";
-    document.getElementById("p-out").textContent = outs.length ? outs.join("; ") : "—";
-    nodeSel.select("circle").attr("stroke", n => n === d ? "#fff" : "#000").attr("stroke-width", n => n === d ? 3 : 1);
+    document.getElementById('panel-title').textContent = d.id;
+    const inEdges = DATA.edges.filter(e => e.to === d.id);
+    const outEdges = DATA.edges.filter(e => e.from === d.id);
+    const cluster = DATA.clusters.find(c => c.nodeIds.includes(d.id));
+    const body = document.getElementById('panel-body');
+    body.innerHTML = `
+    <div class="row"><span class="tag">type: ${d.type}</span><span class="tag">status: ${d.status}</span><span class="tag">blast: ${d.blast}</span></div>
+    <div class="row"><strong>${d.label}</strong></div>
+    ${d.detail ? `<div class="row" style="color:var(--muted);font-size:12px;">${d.detail}</div>` : ''}
+    ${cluster ? `<div class="row"><span class="k">cluster:</span><span style="color:${cluster.color}">${cluster.label}</span> — ${cluster.description}</div>` : ''}
+    <div class="row"><span class="k">in-edges (${inEdges.length}):</span></div>
+    <ul class="panel-list">${inEdges.map(e => `<li>← <a href="#" data-id="${e.from}" class="link-nav" style="color:var(--accent)">${e.from}</a> <span style="color:var(--muted)">[${e.kind}]</span></li>`).join('')}</ul>
+    <div class="row"><span class="k">out-edges (${outEdges.length}):</span></div>
+    <ul class="panel-list">${outEdges.map(e => `<li>→ <a href="#" data-id="${e.to}" class="link-nav" style="color:var(--accent)">${e.to}</a> <span style="color:var(--muted)">[${e.kind}]</span></li>`).join('')}</ul>`;
+    body.querySelectorAll('.link-nav').forEach(a => {
+      a.onclick = ev => { ev.preventDefault(); const target = nodeMap[a.dataset.id]; if (target) showPanel(target); };
+    });
   }
 
   // Filters
   function applyFilters() {
-    const t = document.getElementById("filter-type").value;
-    const s = document.getElementById("filter-status").value;
-    const k = document.getElementById("filter-edge").value;
-    nodeSel.style("display", d => ((!t || d.type === t) && (!s || d.status === s)) ? null : "none");
-    linkSel.style("display", d => {
-      if (k && d.kind !== k) return "none";
-      const srcVis = !t || d.source.type === t;
-      const tgtVis = !t || d.target.type === t;
-      return (srcVis && tgtVis) ? null : "none";
+    var edgeKind = document.getElementById('edge-filter').value;
+    var cluster = document.getElementById('cluster-filter').value;
+    var search = document.getElementById('search').value.toLowerCase().trim();
+    node.classed('dim', d => {
+      const inCluster = !cluster || (d.cluster === cluster);
+      const matchesSearch = !search || d.id.toLowerCase().includes(search) || d.label.toLowerCase().includes(search);
+      return !(inCluster && matchesSearch);
+    });
+    link.classed('dim', d => {
+      if (edgeKind && d.kind !== edgeKind) return true;
+      const sourceHidden = node.filter(n => n === d.source).classed('dim');
+      const targetHidden = node.filter(n => n === d.target).classed('dim');
+      return sourceHidden || targetHidden;
     });
   }
-  ["filter-type", "filter-status", "filter-edge"].forEach(id => {
-    document.getElementById(id).addEventListener("change", applyFilters);
-  });
-
-  // Zoom
-  svg.call(d3.zoom().scaleExtent([0.25, 4]).on("zoom", (ev) => g.attr("transform", ev.transform)));
+  document.getElementById('edge-filter').addEventListener('change', applyFilters);
+  document.getElementById('cluster-filter').addEventListener('change', applyFilters);
+  document.getElementById('search').addEventListener('input', applyFilters);
 })();
 </script>
 </body>
