@@ -1,218 +1,272 @@
-# Handover — Task 8 Risk Mitigations Complete
+# Handover — Phase 1 UI Consolidation Complete (Tasks 9–13)
 
 **Date**: 2026-07-09
-**Status**: All 4 risks from Task 8 HANDOVER mitigated. Commit pending.
-**Context handover**: context window healthy; committing after verification.
+**Status**: Tasks 9–13 complete. Commit pending.
+**Context handover**: healthy. All 3 CRUD pages live + smoke tested; ADR-0007 documents pattern.
 
 ---
 
 ## What Was Done (this session)
 
-User asked to mitigate all 4 risks surfaced in the Task 8 handover.
-Each was closed with concrete evidence, not deferred.
+User asked to "spawn agents for all subtasks" from the Phase 1 UI worklist.
+Five tasks were executed in four phases, all with concrete evidence.
 
-### Risk 1 — No live-DB smoke test of `/workspaces` page
+### Task 9 — `/projects` CRUD page
 
-**Closed**: full smoke suite ran against live Postgres 16.
+**COMPLETE.**
 
-Setup:
-- `psql -h 127.0.0.1 -U pskbmohan -d postgres -c "\l"` confirmed the
-  `heynxt` DB exists locally (Homebrew Postgres 16).
-- `PGPASSWORD=heynxt psql -h 127.0.0.1 -U heynxt -d heynxt -c "\dt"`
-  confirmed all 9 tables exist (artifacts, audit_log, generation_runs,
-  organizations, projects, role_assignments, tasks, users, workspaces).
-- `cp apps/web/.env.example apps/web/.env.local` gave the Next.js app
-  a `DATABASE_URL` so `next dev` connects.
-- `DATABASE_URL=postgresql://heynxt:heynxt@127.0.0.1:5432/heynxt pnpm db:seed`
-  re-ran the seed — output: 1 user, 1 org, 3 workspaces, 3 projects,
-  4 tasks.
-- `pnpm dev` started `http://localhost:3000`.
+- Created `apps/web/src/app/projects/page.tsx` — RSC list page.
+- Created `apps/web/src/app/components/CreateProjectForm.tsx` — client form.
+- Pattern mirrors `/workspaces` page exactly: RSC reads from DB via drizzle,
+  Zod-validates rows through `Project.parse()`, renders `<table>` with Name,
+  Slug, Status (badge), Description, Created By, Updated columns. Form uses
+  `fetch + router.refresh()` per ADR-0005.
+- Soft-redirects missing `workspaceId` to seed workspace
+  `00000000-0000-0000-0000-000000000100`. Invalid UUID shows inline error.
+- Seed IDs used: `SEED_WS_DEFAULT_ID`, `SEED_USER_ID` from seed.ts.
 
-Smoke suite (14 cases, all pass):
+### Task 10 — `/tasks` CRUD page
 
-| # | Case | Expected | Observed |
-|---|---|---|---|
-| 1 | `GET /api/health` | `status:ok, dbConnected:true` | ✓ `{"status":"ok","dbConnected":true,"timestamp":"..."}` |
-| 2 | `GET /api/workspaces?organizationId=<seed-org>` | 3 workspaces (Demo, Default, Playground) | ✓ list of 3 workspaces returned |
-| 3 | `GET /api/workspaces` (no orgId) | 400 MISSING_ORGANIZATION_ID | ✓ HTTP 400 + `{"error":"...","code":"MISSING_ORGANIZATION_ID"}` |
-| 4 | `GET /api/workspaces?organizationId=not-a-uuid` | 400 VALIDATION_ERROR | ✓ HTTP 400 + `{"error":"Validation failed","code":"VALIDATION_ERROR","fields":{"_root":["Invalid uuid"]}}` |
-| 5 | `POST /api/workspaces` valid body | 201 + created workspace | ✓ HTTP 201 + full `workspace` payload |
-| 6 | `POST /api/workspaces` missing `name` | 400 VALIDATION_ERROR with `name:[Required]` | ✓ HTTP 400 + `{"fields":{"name":["Required"]}}` |
-| 7 | `POST /api/workspaces` duplicate slug | 400 WORKSPACE_SLUG_CONFLICT | ✓ HTTP 400 + `{"error":"A workspace with this slug already exists...","code":"WORKSPACE_SLUG_CONFLICT","fields":{"slug":["must be unique within the organization"]}}` |
-| 8 | `GET /workspaces?orgId=<seed-org>` (RSC page) | 200 + HTML lists all workspaces | ✓ HTTP 200, 16 kB page, all 4 workspace names found in HTML + "Create workspace" + "Workspaces" heading |
-| 9 | `GET /workspaces` (no orgId) | 302/307 redirect to seed org | ✓ HTTP 307 → `http://localhost:3000/workspaces?orgId=00000000-0000-0000-0000-000000000010` |
-| 10 | `GET /workspaces?orgId=bad-uuid` | 200 + inline error, no redirect | ✓ HTTP 200, HTML contains `Invalid <code>orgId</code> parameter: <code>bad-uuid</code>.` |
-| 11 | `GET /` (landing page) | Contains `href="/workspaces"` link | ✓ `href="/workspaces"` present |
-| 12 | Form-style POST → follow-up GET (what `router.refresh()` surfaces) | New row visible | ✓ count went 3 → 5; "Form Test" appears in list |
-| 13 | RSC re-render after POST includes new row | Page HTML contains new name+slug | ✓ grep finds "Form Test" + "form-test-..." |
-| 14 | Duplicate slug via form | 400 WORKSPACE_SLUG_CONFLICT with inline error payload | ✓ HTTP 400 + correct body |
+**COMPLETE.**
 
-Cleanup: `DELETE FROM workspaces WHERE slug LIKE 'smoke-test-%' OR slug LIKE 'form-test-%'` → 2 rows deleted. DB returned to seeded state.
+- Created `apps/web/src/app/tasks/page.tsx` — RSC list page.
+- Created `apps/web/src/app/components/CreateTaskForm.tsx` — client form.
+- Two-query approach for project names: fetch tasks, collect unique
+  `projectId`s, fetch matching projects, build `Map<projectId, name>`.
+- Status badges: draft/queued/running/succeeded/failed/cancelled with
+  distinct colour mapping.
+- Form has `type` dropdown (`<select>` from `TaskType.options`) and
+  textarea fields (`description`, `inputPrompt`) spanning 2 grid columns.
+- `projectId` is a free-text input (TODO noted in code — a future session
+  could swap this for a dropdown keyed to real projects).
+- Fixed a strict-null `Record<string, V>[string] → V | undefined` issue
+  by extracting a typed `getStatusColor()` accessor.
 
-One pre-existing extra row noted but **not** cleaned (predates this session by ~40 min): `Demo Workspace / demo / 2026-07-09T02:20:13.080Z`. It's a prior session's test row; out of scope.
+### Task 11 — Navigation wiring + landing page
 
-### Risk 2 — Client form pattern (`fetch + router.refresh()`) not formally justified
+**COMPLETE.**
 
-**Closed**: **ADR-0005** (`docs/adr/0005-client-form-pattern.md`).
+- `apps/web/src/app/layout.tsx`: added `Projects` and `Tasks` nav links
+  alongside the existing `Workspaces` link.
+- `apps/web/src/app/page.tsx`:
+  - Top paragraph updated to reflect current state (CRUD pages now live).
+  - "UI pages" section: added bullets for `/projects` and `/tasks`.
+  - "Next" section: updated roadmap text.
 
-Documents:
-- The two candidate patterns (Server Actions vs fetch+refresh).
-- The choice (fetch+refresh) and rationale: existing API route surface,
-  client-side Zod validation, test reuse, slice size.
-- Costs: not idiomatic Next.js 14; full-page revalidation cost;
-  loading-state flash.
-- Revisit triggers: auth lands, optimistic UI required, or Actions
-  wrapper duplication emerges.
-- Consequences: projects/tasks pages follow the same pattern; future
-  migration cost is per-form, no shared infra to rewrite.
+### Task 12 — Smoke test suite (29 cases)
 
-### Risk 3 — `createdBy` audit concession not swept, could sprawl
+**COMPLETE — 29 of 29 PASS.**
 
-**Closed**: **ADR-0006** (`docs/adr/0006-createdby-session-sweep.md`).
+Setup confirmed:
+- Local Homebrew Postgres 16 on `127.0.0.1:5432` healthy.
+- `apps/web/.env.local` exists with `DATABASE_URL`.
+- Seed script re-applied (idempotent).
+- Dev server `http://localhost:3000` live.
 
-Documents:
-- The concession table: all 5 `Create*Input` schemas that currently take
-  `createdBy` from the body (`CreateWorkspaceInput`,
-  `CreateProjectInput`, `CreateTaskInput`,
-  `CreateGenerationRunInput`, `CreateArtifactInput`).
-- Decision to keep it as a concession until auth lands.
-- Rationale: consistency across all 5 schemas; auth is the enabling
-  prerequisite; breaking change must be coordinated.
-- 7-step sweep plan for when auth lands: middleware, schema update,
-  route update, UI form update, seed note, test update, handover note.
-- Exit criteria for the sweep: 6 checkboxes to confirm completion.
+| Section | Cases | Result |
+|---|---|---|
+| WS (workspaces) | WS-1 … WS-11 | 11/11 PASS |
+| PJ (projects) | PJ-1 … PJ-10 | 10/10 PASS |
+| TK (tasks) | TK-1 … TK-8 | 8/8 PASS |
+| **Total** | **29** | **29/29 PASS** |
 
-### Risk 4 — Phase 1 exit criteria still partially open
+Covered per section:
+- `GET /api/*` happy path, missing parentId (400), invalid UUID (400).
+- `POST /api/*` valid, missing required, duplicate slug.
+- `GET /<page>` list render, missing parentId → 307 redirect, invalid UUID
+  → inline error, form POST + follow-up GET (proves `router.refresh()`).
+- Landing page `/` contains all 3 nav links.
 
-**Partial mitigation, no further work this session**:
-- Smoke test confirms `/workspaces` is now genuinely usable end-to-end.
-- The remaining Phase 1 UI exit criteria (projects page, tasks page,
-  auth, RBAC) are out of scope for "mitigate risks" — they are the
-  **next tasks**, not risks. The HANDOVER reflects them as the next
-  session's worklist.
+Cleanup: 1 task row, 2 project rows, 1 workspace row deleted. DB returned
+to seeded state. Transient WS-9 cold-start 500 → 307 on re-run noted;
+Next.js dev cold start, no source change required.
+
+### Task 13 — ADR-0007 Phase 1 UI consolidation
+
+**COMPLETE.**
+
+Created `docs/adr/0007-phase-1-ui-consolidation.md` (197 lines).
+
+Documents the consolidated pattern across the 3 CRUD pages:
+- 11 conventions locked down as rules (URL shape, redirect behaviour, form
+  POST endpoint, error shape, `createdBy` concession, `force-dynamic`,
+  `thStyle/tdStyle`, `inputStyle/errStyle`, Suspense scope, form reset
+  behaviour).
+- Costs: inline styles duplicated per page; no shared `<Table>` /
+  `<CrudFormShell>` / `<StatusBadge>` components yet.
+- Revisit triggers: 4th CRUD page arrives, theming/dark mode required,
+  optimistic UI required, auth lands.
+- Grounded in the actual files (all 11 conventions verified against the
+  workspaces/projects/tasks page.tsx + form files).
 
 ---
 
-## Files Changed (this risk-mitigation session)
+## Verification
 
-**New:**
-- `docs/adr/0005-client-form-pattern.md` — locks down the fetch+refresh decision
-- `docs/adr/0006-createdby-session-sweep.md` — documents concession + sweep plan
-- `apps/web/.env.local` — copied from `.env.example` (gitignored, won't commit)
+| Command | Result |
+|---|---|
+| `pnpm typecheck` | 13/13 PASS, cached, 1.059s |
+| `pnpm --filter @heynxt/web build` | PASS — all 3 UI pages + 6 API routes wired |
+| 29-case live smoke suite | 29/29 PASS |
+| DB cleanup | 4 smoke rows deleted |
 
-**Modified:**
-- `HANDOVER.md` — this session's record
+Build route inventory (`ƒ = dynamic`):
+```
+ƒ /api/artifacts          ƒ /api/generation-runs   ƒ /api/health
+ƒ /api/projects           ƒ /api/tasks              ƒ /api/workspaces
+ƒ /projects               ƒ /tasks                  ƒ /workspaces
+```
 
-**No source code changes.** The smoke tests were black-box (`curl`), no
-production code needed updating.
+---
+
+## Files Changed (this session)
+
+**New files (7):**
+- `apps/web/src/app/projects/page.tsx`
+- `apps/web/src/app/components/CreateProjectForm.tsx`
+- `apps/web/src/app/tasks/page.tsx`
+- `apps/web/src/app/components/CreateTaskForm.tsx`
+- `docs/adr/0007-phase-1-ui-consolidation.md`
+
+**Modified files (2):**
+- `apps/web/src/app/layout.tsx` (+6 lines — nav links)
+- `apps/web/src/app/page.tsx` (+17/-3 lines — landing page updates)
+
+**Other (not committed):**
+- `apps/web/.env.local` — copied from `.env.example` (gitignored)
 
 ---
 
 ## Recommended Commit Message
 
 ```
-docs: ADR-0005 + ADR-0006 + smoke evidence for Task 8
+feat(web): Tasks 9-13 — /projects + /tasks CRUD pages, nav wiring, ADR-0007, smoke evidence
 
-Risk-mitigation follow-up to Task 8 (commit 6ab0750).
+Task 9 (/projects CRUD page):
+  Created apps/web/src/app/projects/page.tsx (RSC list + Suspense) and
+  apps/web/src/app/components/CreateProjectForm.tsx (client form).
+  Mirrors the /workspaces page pattern exactly: RSC reads from DB via
+  drizzle, Zod-validates rows via Project.parse(), soft-redirects missing
+  workspaceId to seed, shows inline error for invalid UUID, form uses
+  fetch+router.refresh() per ADR-0005.
 
-ADR-0005 — Client Form Pattern (fetch + router.refresh):
-  Records the deliberate choice to use fetch + router.refresh()
-  for Phase 1 CRUD forms instead of Server Actions. Rationale:
-  existing API routes already implement validation+errors; client-side
-  Zod validation reuses the same schema; tests continue to target
-  /api/*; smallest slice. Costs + revisit-when triggers documented.
+Task 10 (/tasks CRUD page):
+  Created apps/web/src/app/tasks/page.tsx and
+  apps/web/src/app/components/CreateTaskForm.tsx. Two-query approach for
+  project names (task list → collect projectIds → fetch projects). Status
+  badge colour mapping for 6 FSM states. TaskType enum drives the <select>
+  dropdown. projectId is a free-text input with a TODO to replace with a
+  project picker later. Fixed strict-null Record<string,V>[string] by
+  extracting typed getStatusColor() accessor.
 
-ADR-0006 — createdBy Session Sweep Plan:
-  Locks in the current createdBy concession (caller-supplied in 5
-  Create*Input schemas) and documents the coordinated sweep that
-  will happen when auth lands. 7-step plan + 6 exit criteria for
-  the sweep. No intermediate state where some routes use session
-  createdBy and others use body createdBy.
+Task 11 (navigation + landing page):
+  Added Projects and Tasks nav links to root layout. Updated landing page
+  top paragraph, "UI pages" list (added /projects and /tasks bullets),
+  and "Next" section roadmap.
 
-Smoke evidence captured against live Postgres 16:
-  14 curl cases — /api/workspaces GET+POST (valid, missing orgId,
-  invalid UUID, duplicate slug, missing required fields); RSC
-  /workspaces page render; redirect on missing orgId; inline error
-  on invalid UUID; landing-page link; form-style POST -> follow-up
-  GET surfaces new row (proves router.refresh() works); duplicate
-  slug via form returns inline error payload. All 14 PASS. Smoke
-  rows deleted from DB after verification.
+Task 12 (live smoke suite):
+  29 curl cases across /workspaces, /projects, /tasks (API + RSC pages +
+  form flows + nav links). 29/29 PASS. Cleanup: 1 task, 2 projects,
+  1 workspace deleted; DB returned to seeded state.
+
+Task 13 (ADR-0007):
+  docs/adr/0007-phase-1-ui-consolidation.md — documents the consolidated
+  pattern across the 3 CRUD pages: 11 conventions locked down as rules,
+  costs (inline style duplication, no shared Table/Form/Badge components
+  yet), revisit triggers (4th page, theming, optimistic UI, auth sweep).
+  Grounded in actual page files (all 11 conventions verified).
 
 Verified:
-  - pnpm typecheck (run in Task 8 commit) → exit=0
-  - pnpm --filter @heynxt/web build (run in Task 8 commit) → exit=0
-  - 14-case live smoke suite → all PASS
+  - pnpm typecheck → 13/13 PASS
+  - pnpm --filter @heynxt/web build → PASS; routes wired:
+      ƒ /api/{artifacts,generation-runs,health,projects,tasks,workspaces}
+      ƒ /projects   ƒ /tasks   ƒ /workspaces
+  - 29-case live smoke suite against Postgres 16 → 29/29 PASS
 ```
 
 ---
 
 ## What the Next Session Should Do
 
-Resume from the post-Task-8 state. No pending follow-up from the
-risk-mitigation slice — all 4 risks are closed with evidence. Order of
-operations:
+Phase 1 control-plane API CRUD surface is now fully UI'd:
+- `/workspaces` + API — live, smoke tested, ADR-0005 + ADR-0006 documented
+- `/projects` + API — live, smoke tested
+- `/tasks` + API — live, smoke tested
+- Pattern consolidated in ADR-0007
+- 6 ADRs in docs/adr/ capture all key decisions (0001-0007)
 
-1. `git pull origin main` — pick up the risk-mitigation commit (when pushed).
-2. Pick the next task from the Phase 1 worklist:
-   - **Projects UI page** (`/projects?workspaceId=<uuid>`) — same RSC+form pattern.
-   - **Tasks UI page** (`/tasks?workspaceId=<uuid>`) — same pattern, more fields.
-   - **Auth scaffold** — NextAuth.js or `arctic` for GitHub OAuth.
-   - **RBAC middleware** — `getRolePermissions()` from `@heynxt/core-types`.
-3. Auth scaffold unlocks ADR-0006; don't start the `createdBy` sweep
-   until auth actually exists — the sweep is a single coordinated
-   commit, see the ADR for the step list.
-4. Server Actions migration (ADR-0005 revisit) only if the specific
-   triggers in the ADR are met.
+Remaining Phase 1 items (per buildplan.md exit criteria):
+
+1. **Auth scaffold** — NextAuth.js or `arctic` for GitHub OAuth. This is the
+   biggest remaining gap; unlocks ADR-0006 (`createdBy` sweep plan).
+2. **RBAC middleware** — `getRolePermissions()` from `@heynxt/core-types`.
+   Gates API routes behind session-derived roles.
+3. **`createdBy` sweep** — ADR-0006's 7-step plan; requires auth first. Do
+   NOT start this until auth actually exists — it's one coordinated commit.
+4. **Workspace switcher in layout** — currently users navigate by URL query.
+   A dropdown reading session user's workspaces would be a quality-of-life.
+5. **Project picker in CreateTaskForm** — free-text now; swap for a
+   `<select>` keyed to workspace's projects.
+
+Out of Phase 1 but noted for later:
+- Server Actions migration (ADR-0005 revisit triggers not yet met)
+- Shared `<DataTable>` / `<StatusBadge>` extraction (ADR-0007 revisit —
+  only when 4th CRUD page arrives)
+- Pagination on list pages (current seed data doesn't need it; real
+  workloads will)
+- Workspace-level breadcrumb nav (once project/task detail pages exist)
+
+Order recommendation: **auth scaffold → RBAC middleware → createdBy sweep**
+(sequential — each enables the next).
 
 ---
 
-## Session-Ready Checklist for New Session
+## Session-Ready Checklist
 
-- [x] Read `CLAUDE.md` — instructions confirmed
-- [x] Read `buildplan.md` — Phase 1 context
-- [x] Read `HANDOVER.md` (Task 8) — Tasks 1-8 context
+- [x] Read `CLAUDE.md` — Phase 0 audit context
+- [x] Read `buildplan.md` — Phase 1 scope
+- [x] Read `HANDOVER.md` (prior state — Task 8 + risk mitigations)
 - [x] Read `docs/gap-analysis.md` — Tasks 1-8 all ✅
-- [ ] **Commit pending**: risk-mitigation work (ADR-0005, ADR-0006, smoke evidence) UNCOMMITTED. See commit message block above.
-- [x] Full smoke suite against live Postgres 16 ran this session (14/14 pass); smoke rows cleaned.
-- [x] Local Homebrew Postgres 16 on 127.0.0.1:5432 confirmed healthy; `heynxt` DB exists with all 9 tables; seed data applied.
-- [x] `apps/web/.env.local` exists (gitignored) — `DATABASE_URL` set to `postgresql://heynxt:heynxt@localhost:5432/heynxt`. Future sessions just need to `pnpm dev` after `pnpm db:seed` (if fresh DB).
-- [x] Toolchain: pnpm 9 + Turbo 2 + TypeScript 5.5 + Vitest 2 + Node 22
-- [x] Full monorepo typecheck+build: PASS (verified in Task 8 commit)
-- [x] ORM/DB chosen: Drizzle + Neon serverless (see docs/adr/0004)
-- [x] Gap analysis: see docs/gap-analysis.md (Tasks 1-8 all ✅)
-- [x] 6 packages + 1 real Next.js app with UI pages + live smoke evidence now
+- [x] Tasks 9-13 COMPLETE — 3 CRUD pages + nav + ADR-0007
+- [x] Smoke suite 29/29 PASS against live Postgres 16
+- [x] Full typecheck + build: PASS
+- [x] Dev server (`localhost:3000`) left RUNNING for next session's verification
+- [x] Commit pending (recommended message above)
+- [ ] `apps/web/.env.local` exists (gitignored) — do NOT commit
+- [x] Toolchain: pnpm 9 + Turbo 2 + TypeScript 5.5 + Next.js 14 + Node 22
+- [x] ORM/DB: Drizzle + local Postgres 16 (docs/adr/0004)
+- [x] 6 ADRs: 0001-0007 (0004 ORM/DB, 0005 client form pattern, 0006 createdBy sweep, 0007 UI consolidation)
 
 Paste into your prompt before continuing:
 
 ```
-You are resuming heynxt-core after Task 8 + risk mitigations completed.
+You are resuming heynxt-core after Phase 1 UI consolidation complete.
 
 Current state:
-- Phase 0 (foundation) ✅ complete
-- Phase 1 (control plane) 🟡 API CRUD + first UI page + smoke tested:
-  Tasks 1-8 complete per buildplan.md; see HANDOVERs for per-task details.
-  - Task 8 (Phase 1.8): /workspaces CRUD page live (RSC list + client form)
-  - Risk-mitigation session: ADR-0005 (client form pattern) + ADR-0006
-    (createdBy sweep plan) + 14-case live smoke suite against Postgres 16,
-    all PASS, cleanup done.
-- Smoke rows cleaned; DB returned to seed state.
-- Task 8 work + risk mitigations are UNCOMMITTED (see HANDOVER.md for
-  the recommended commit message).
-- Toolchain: pnpm 9 + Turbo 2 + TypeScript 5.5 + Vitest 2 + Node 22
-- Full monorepo typecheck+build: PASS (last verified in Task 8 commit)
-- Local Homebrew Postgres 16 on 127.0.0.1:5432 healthy; apps/web/.env.local
-  already in place with DATABASE_URL.
-- ORM/DB: Drizzle + Neon serverless (docs/adr/0004)
-- Gap analysis: Tasks 1-8 all ✅ (docs/gap-analysis.md)
+- Phase 0 (foundation) ✅
+- Phase 1 (control plane) 🟡 API + UI for 3 entities; auth + RBAC pending
+  - Tasks 1-8: prior sessions (foundation → API CRUD → /workspaces page)
+  - Tasks 9-13: this session (/projects + /tasks pages, nav wiring,
+    ADR-0007 UI consolidation, 29-case live smoke suite — all PASS)
+- Tasks 9-13 UNCOMMITTED (see commit message in HANDOVER.md).
+- Toolchain: pnpm 9 + Turbo 2 + TS 5.5 + Next.js 14 + Node 22
+- Full typecheck + build: PASS
+- Local Postgres 16 on 127.0.0.1:5432 healthy; apps/web/.env.local in place.
+- Dev server left RUNNING on localhost:3000.
+- 7 ADRs (0001-0007) lock down all key decisions.
 
-First actions after resuming:
-1. Commit the risk-mitigation slice (message in HANDOVER.md).
-2. Pick next Task: projects UI page / tasks UI page / auth scaffold / RBAC.
-   Recommended order: projects → tasks → auth → RBAC middleware.
-3. Auth scaffold unlocks ADR-0006 (createdBy sweep) — keep as one commit.
+First actions next session:
+1. Verify commit landed (this session's recommended message).
+2. Pick next task:
+   - Auth scaffold (biggest gap): NextAuth.js or arctic for GitHub OAuth
+   - RBAC middleware after auth
+   - createdBy sweep (ADR-0006) — single coordinated commit after auth
+3. DO NOT start ADR-0006 sweep until auth actually exists.
+4. DO NOT revisit ADR-0005 (Server Actions) until triggers are met.
+5. DO NOT extract shared <DataTable>/<StatusBadge> until 4th CRUD page.
 
-Hard rules:
-- Don't redo Tasks 1-8 (committed in 6ab0750)
-- Don't redo ADR-0005 / ADR-0006 / smoke evidence (just commit)
-- Follow CLAUDE.md for process (work order, reporting format, safety)
+Hard rules (from CLAUDE.md):
+- Follow CLAUDE.md work order + reporting format.
+- Don't redo Tasks 1-13.
+- Follow small-slice principle — auth scaffold is the next big slice.
 ```

@@ -12,8 +12,8 @@ export default function HomePage() {
         Industrial AI App Builder
       </h2>
       <p style={{ color: '#555', lineHeight: 1.5 }}>
-        Control plane API is live. Build out is in progress — UI pages for
-        workspaces, projects, and tasks will follow in later slices.
+        Control plane API is live. Workspaces, projects, and tasks CRUD pages
+        are up — see the UI pages list below.
       </p>
       <section style={{ marginTop: '2rem' }}>
         <h3 style={{ fontSize: '1rem', marginBottom: '0.5rem' }}>
@@ -73,6 +73,18 @@ export default function HomePage() {
             </a>{' '}
             — list + create workspaces (requires <code>orgId</code> query param)
           </li>
+          <li>
+            <a href="/projects" style={{ color: '#0070f3' }}>
+              <code>/projects</code>
+            </a>{' '}
+            — list + create projects (requires <code>workspaceId</code> query param)
+          </li>
+          <li>
+            <a href="/tasks" style={{ color: '#0070f3' }}>
+              <code>/tasks</code>
+            </a>{' '}
+            — list + create tasks (requires <code>workspaceId</code> query param)
+          </li>
         </ul>
       </section>
       <section style={{ marginTop: '2rem' }}>
@@ -80,7 +92,9 @@ export default function HomePage() {
           Next
         </h3>
         <p style={{ color: '#555', lineHeight: 1.5 }}>
-          Project + task CRUD pages, OAuth auth scaffold, RBAC middleware.
+          Project, task, and workspace CRUD pages are now live. Next up:
+          auth scaffold (GitHub OAuth via NextAuth.js or arctic), RBAC middleware,
+          then Phase 2 — agent execution integration.
         </p>
       </section>
     </div>

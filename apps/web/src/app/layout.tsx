@@ -55,6 +55,12 @@ export default function RootLayout({
             <a href="/workspaces" style={{ color: '#0070f3' }}>
               Workspaces
             </a>
+            <a href="/projects" style={{ color: '#0070f3' }}>
+              Projects
+            </a>
+            <a href="/tasks" style={{ color: '#0070f3' }}>
+              Tasks
+            </a>
           </nav>
         </header>
         <main>{children}</main>
