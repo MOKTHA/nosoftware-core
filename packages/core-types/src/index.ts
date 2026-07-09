@@ -29,6 +29,9 @@
  *   Audit:
  *     AuditLogEntry, AuditEntityType, AuditAction, createStatusChangeEntry()
  *
+ *   Invitations (Phase 1.8):
+ *     Invitation, InvitationStatus, InvitationSummary, InviteUserInput
+ *
  * TODO: Define remaining core schemas (Phase 4+):
  *   - AgentSpec schema (agent configuration contract)
  *   - PromptSpec schema (prompt-to-spec input/output types)
@@ -43,6 +46,9 @@ export * from './schemas/workspace.js';
 
 // Control plane — RBAC
 export * from './schemas/rbac.js';
+
+// Control plane — invitations (Phase 1.8 — Task 23)
+export * from './schemas/invitation.js';
 
 // Control plane — execution domain
 export * from './schemas/project.js';

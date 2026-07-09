@@ -58,3 +58,6 @@ export {
 export { accounts } from './accounts.js';
 export { sessions } from './sessions.js';
 export { verificationTokens } from './verification-tokens.js';
+
+// Invitation flow (Phase 1.8 — Task 23)
+export { invitations, invitationStatusEnum } from './invitations.js';

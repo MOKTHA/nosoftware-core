@@ -46,10 +46,13 @@ export const authConfig: NextAuthConfig = {
     // back on the original page after signing in.
     //
     // Public routes in Phase 1 — no auth required for these:
-    //   - `/`            landing page
-    //   - `/api/auth/*`  Auth.js endpoints (CSRF, providers, sign-in,
-    //                    callback, session, signout)
-    //   - `/api/health`  uptime probe (used by load balancers / k8s)
+    //   - `/`                        landing page
+    //   - `/api/auth/*`              Auth.js endpoints (CSRF, providers,
+    //                                sign-in, callback, session, signout)
+    //   - `/api/health`              uptime probe (load balancers / k8s)
+    //   - `/api/invitations/accept`  invitation acceptance (invitees
+    //                                aren't yet authenticated — it's the
+    //                                bootstrap entry point)
     //
     // Everything else requires a valid session. Phase 9 will replace
     // this simple boolean with workspace-scoped RBAC checks.
@@ -59,6 +62,7 @@ export const authConfig: NextAuthConfig = {
       if (pathname === '/') return true;
       if (pathname === '/api/health') return true;
       if (pathname.startsWith('/api/auth')) return true;
+      if (pathname === '/api/invitations/accept') return true;
 
       // Logged in → allow. Otherwise Auth.js redirects to /api/auth/signin.
       return !!auth;

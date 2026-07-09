@@ -39,6 +39,7 @@ export const auditEntityTypeEnum = pgEnum('audit_entity_type', [
   'blueprint',
   'user',
   'role-assignment',
+  'invitation',
 ]);
 
 /** audit_log.action — the operation that was performed. */

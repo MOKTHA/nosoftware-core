@@ -50,6 +50,7 @@ export const AuditEntityType = z.enum([
   'blueprint',
   'user',
   'role-assignment',
+  'invitation',
 ]);
 
 /**
