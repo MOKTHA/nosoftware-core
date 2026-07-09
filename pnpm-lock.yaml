@@ -29,9 +29,15 @@ importers:
       '@heynxt/domain-models':
         specifier: workspace:*
         version: link:../../packages/domain-models
+      '@heynxt/persistence':
+        specifier: workspace:*
+        version: link:../../packages/persistence
       '@heynxt/prompt-spec':
         specifier: workspace:*
         version: link:../../packages/prompt-spec
+      drizzle-orm:
+        specifier: ^0.33.0
+        version: 0.33.0(@types/react@18.3.31)(postgres@3.4.9)(react@18.3.1)
       next:
         specifier: ^14.2.0
         version: 14.2.35(react-dom@18.3.1(react@18.3.1))(react@18.3.1)

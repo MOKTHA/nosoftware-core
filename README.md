@@ -1,6 +1,6 @@
 # HeyNXT Core - Industrial AI App Builder Platform
 
-> **Status**: Phase 1 - Product Control Plane (in progress) | **Next**: Wire DB client into API routes
+> **Status**: Phase 1 - Product Control Plane (in progress) | **Next**: Workspace CRUD + RBAC enforcement
 
 HeyNXT Core is the product control plane and orchestration layer for an industrial AI app builder platform. It combines coding-agent execution patterns with industrial manufacturing blueprints to enable AI-driven application generation for industrial use cases.
 
@@ -104,13 +104,13 @@ See [docs/dev-setup.md](docs/dev-setup.md) for the full local setup guide
 
 ## 🎯 Current Phase: Phase 1 — Product Control Plane Foundation
 
-Tasks 1–4 are complete:
+Tasks 1–5 are complete:
 - **Task 1** — First 4 Zod schemas (User, Organization, Workspace, RBAC) in `@heynxt/core-types`
 - **Task 2** — 5 remaining schemas (Project, Task, GenerationRun, Artifact, AuditLogEntry) in `@heynxt/core-types`
 - **Task 3** — Local dev Postgres 15 via `docker-compose.yml`
 - **Task 4** — Drizzle persistence layer in `@heynxt/persistence` (9 tables, 12 enums, first migration)
-
-The next slice is **Phase 1.6**: wire the `db` client into `apps/web` API routes.
+- **Task 5 (Phase 1.6)** — Drizzle client + Next.js app wired with `/api/health` and
+  `/api/workspaces` (GET list + POST create) end-to-end against Postgres
 
 See [buildplan.md](buildplan.md) for the full phase plan, and
 [docs/dev-setup.md](docs/dev-setup.md) for the local development workflow.
@@ -140,4 +140,4 @@ UNLICENSED - Proprietary
 
 ---
 
-**Repository Status**: Phase 1 In Progress — Tasks 1-4 Complete | Next: Wire DB client into API routes
+**Repository Status**: Phase 1 In Progress — Tasks 1-5 Complete | Next: CRUD pages + RBAC + auth

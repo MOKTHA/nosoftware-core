@@ -67,3 +67,24 @@ export const WorkspaceSummary = Workspace.pick({
 });
 
 export type WorkspaceSummary = z.infer<typeof WorkspaceSummary>;
+
+/**
+ * Input schema for creating a new Workspace.
+ *
+ * Omits the fields that the server generates:
+ *   - `id` (UUID, server-assigned)
+ *   - `createdAt` / `updatedAt` (timestamps, server-assigned)
+ *   - `status` (server-defaults to `'active'`)
+ *
+ * The client should not be allowed to set any of these on creation.
+ */
+export const CreateWorkspaceInput = Workspace.omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).partial({
+  description: true,
+  status: true,
+});
+
+export type CreateWorkspaceInput = z.infer<typeof CreateWorkspaceInput>;
