@@ -64,11 +64,23 @@ export default function HomePage() {
       </section>
       <section style={{ marginTop: '2rem' }}>
         <h3 style={{ fontSize: '1rem', marginBottom: '0.5rem' }}>
+          UI pages
+        </h3>
+        <ul style={{ paddingLeft: '1.25rem', color: '#444' }}>
+          <li>
+            <a href="/workspaces" style={{ color: '#0070f3' }}>
+              <code>/workspaces</code>
+            </a>{' '}
+            — list + create workspaces (requires <code>orgId</code> query param)
+          </li>
+        </ul>
+      </section>
+      <section style={{ marginTop: '2rem' }}>
+        <h3 style={{ fontSize: '1rem', marginBottom: '0.5rem' }}>
           Next
         </h3>
         <p style={{ color: '#555', lineHeight: 1.5 }}>
-          Workspace / project / task CRUD pages (React Server Components),
-          OAuth auth scaffold, RBAC middleware.
+          Project + task CRUD pages, OAuth auth scaffold, RBAC middleware.
         </p>
       </section>
     </div>

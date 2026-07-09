@@ -12,10 +12,16 @@ This is the control plane UI that allows users to:
 
 ## Status
 
-**Phase 1.7 — Task 7: generation runs + artifacts APIs live**
+**Phase 1.8 — Task 8: workspaces CRUD page live**
 
 The Next.js 14 App Router app exposes eleven live API endpoints wired through
-`@heynxt/persistence` against local Postgres 15:
+`@heynxt/persistence` against local Postgres 15, plus a first React Server
+Component CRUD page for workspaces:
+
+**UI pages:**
+- `/workspaces?orgId=<uuid>` — workspace list + inline create form (RSC list, client form)
+
+**API endpoints:**
 
 | Endpoint | Purpose |
 |---|---|
@@ -35,8 +41,8 @@ A seed script (`pnpm db:seed`, lives in `packages/persistence/scripts/seed.ts`)
 inserts a starting user, org, workspace, projects, and tasks so the API is
 usable without hand-`INSERT`ing rows.
 
-Auth, RBAC enforcement, and full React Server Component CRUD pages will
-follow in later slices.
+Auth, RBAC enforcement, and project/task CRUD pages will follow in later
+slices.
 
 ## Scripts
 
@@ -65,8 +71,9 @@ pnpm typecheck  # Type-check without emitting
 
 4. Visit:
    - http://localhost:3000 — landing page
+   - http://localhost:3000/workspaces?orgId=00000000-0000-0000-0000-000000000010 — workspaces UI
    - http://localhost:3000/api/health — JSON health probe
-   - http://localhost:3000/api/workspaces — workspace listing
+   - http://localhost:3000/api/workspaces — workspace API listing
 
 ## API Contract
 

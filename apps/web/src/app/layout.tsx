@@ -35,11 +35,27 @@ export default function RootLayout({
             borderBottom: '1px solid #eaeaea',
             paddingBottom: '1rem',
             marginBottom: '2rem',
+            display: 'flex',
+            alignItems: 'baseline',
+            justifyContent: 'space-between',
           }}
         >
           <h1 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 600 }}>
-            HeyNXT
+            <a href="/" style={{ color: 'inherit', textDecoration: 'none' }}>
+              HeyNXT
+            </a>
           </h1>
+          <nav
+            style={{
+              display: 'flex',
+              gap: '1rem',
+              fontSize: '0.875rem',
+            }}
+          >
+            <a href="/workspaces" style={{ color: '#0070f3' }}>
+              Workspaces
+            </a>
+          </nav>
         </header>
         <main>{children}</main>
       </body>
