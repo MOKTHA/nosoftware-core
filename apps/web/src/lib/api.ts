@@ -13,6 +13,8 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { ZodError } from 'zod';
 
+import { NotAuthenticatedError } from './session';
+
 /**
  * Canonical error response body. Matches the shape used across all API routes.
  */
@@ -52,11 +54,18 @@ export const internalError = (message: string, code = 'INTERNAL_ERROR') =>
 
 /**
  * Convert a thrown error into a JSON response.
- *   - NextApiError  → status + body from the error
- *   - ZodError      → 400 with `fields` derived from `error.issues`
- *   - Otherwise     → 500 INTERNAL_ERROR
+ *   - NotAuthenticatedError → 401 UNAUTHENTICATED
+ *   - NextApiError          → status + body from the error
+ *   - ZodError              → 400 with `fields` derived from `error.issues`
+ *   - Otherwise             → 500 INTERNAL_ERROR
  */
 export function errorResponse(err: unknown): NextResponse<ApiErrorBody> {
+  if (err instanceof NotAuthenticatedError) {
+    return NextResponse.json<ApiErrorBody>(
+      { error: err.message, code: 'UNAUTHENTICATED' },
+      { status: 401 },
+    );
+  }
   if (err instanceof NextApiError) {
     return NextResponse.json<ApiErrorBody>(
       { error: err.message, code: err.code, ...(err.fields ? { fields: err.fields } : {}) },

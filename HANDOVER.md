@@ -1,171 +1,153 @@
-# Handover — Task 15 (middleware) complete; Tasks 14 + 15 verified end-to-end
+# Handover — Tasks 16 + 17 complete; Phase 1 RBAC foundations landed
 
 **Date**: 2026-07-09
-**Status**: Tasks 14 + 15 code-complete, committed. DB reset applied. Auth +
-middleware verified live against Postgres. Build + typecheck + core-types tests
-pass.
+**Status**: Tasks 16 + 17 code-complete and committed on `main`.
+Build + typecheck + core-types tests pass.
 
 ---
 
 ## What Was Done (this session)
 
-### Dev-DB reset (manual step from prior HANDOVER.md)
-
-Ran the verbatim sequence the prior session couldn't reach via its tool
-classifier.
-
-```
-# Drop everything + drizzle migration tracking
-DROP TABLE IF EXISTS public.users, public.organizations, … , public.verification_tokens CASCADE;
-DROP TYPE IF EXISTS public.user_status, public.role_name, … CASCADE;
-DROP TABLE IF EXISTS drizzle.__drizzle_migrations; DROP SCHEMA IF EXISTS drizzle CASCADE; CREATE SCHEMA drizzle;
-
-# Apply migration
-pnpm --filter @heynxt/persistence db:migrate
-  → ✓ migrations applied successfully
-
-# Seed deterministic test data (org/seed@heynxt.dev, 2 workspaces,
-# 2 projects, 3 tasks)
-DATABASE_URL=postgresql://heynxt:heynxt@127.0.0.1:5432/heynxt pnpm db:seed
-  → done in 46ms
-```
-
-Schema verification post-reset:
-- `users` table has renamed columns: `emailVerified` (was `emailVerifiedAt`),
-  `image` (was `imageUrl`), `createdAt/updatedAt` default `now()` — Auth.js
-  compatibility is real, not just in Drizzle schema.
-- All 12 tables present (accounts, sessions, verification_tokens added).
-- Seed data: 1 user (`seed@heynxt.dev`), 1 org, 2 workspaces, 2 projects,
-  3 tasks.
-
-### Auth.js smoke test (Task 14 verification)
-
-Started dev server (`pnpm dev` in `apps/web`):
-
-```
-GET /api/auth/csrf       → 200 + csrfToken (AUTH_SECRET wired correctly)
-GET /api/auth/providers  → 200 {github: {id, name, type: oauth, signinUrl, callbackUrl}}
-GET /api/auth/session    → null (no cookie, correct)
-GET /                    → 200 (landing page renders; homepage has a separate 500 issue unrelated to auth — see Risks)
-GET /api/auth/signin     → 200 (Auth.js built-in sign-in page)
-```
-
-Auth.js is fully booted. The `/api/auth/providers` response proves the
-GitHub OAuth config is live (with `AUTH_GITHUB_ID`/`AUTH_GITHUB_SECRET` still
-blank, the provider is registered but sign-in won't complete until they're
-set — that's the documented Phase 1 prerequisite for manual
-OAuth App creation).
-
-Note: actual GitHub sign-in round-trip still not executed — requires creating
-a GitHub OAuth App at https://github.com/settings/developers with callback
-URL `http://localhost:3000/api/auth/callback/github`, then setting
-`AUTH_GITHUB_ID` / `AUTH_GITHUB_SECRET` in `apps/web/.env.local`.
-
-### Task 15 — middleware scaffold
+### Task 16 — Session-aware header (UserMenu + sign-in/out)
 
 **Files created (1):**
-- `apps/web/src/middleware.ts` — exports `auth as middleware` from `./auth`
-  + `config.matcher` that covers all routes except `/_next/static`,
-  `/_next/image`, `/favicon.ico`.
+- `apps/web/src/components/UserMenu.tsx` — client component that
+  renders either a signed-out "Sign in" link or a signed-in
+  avatar (GitHub image + initials fallback) + name + "Sign out"
+  button (via `next-auth/react`'s `signOut`).
 
 **Files modified (1):**
-- `apps/web/src/auth.config.ts` — added `authorized` callback that
-  allows public routes through and requires a session for everything else:
-  - `GET /` → public (landing page)
-  - `GET /api/auth/*` → public (Auth.js endpoints)
-  - `GET /api/health` → public (uptime probe)
-  - Everything else → requires valid session; otherwise 307 → `/api/auth/signin`
-    with `callbackUrl` query so user returns to original page after sign-in.
+- `apps/web/src/app/layout.tsx` — root layout is now `async`,
+  calls `getSession()` server-side, extracts a slim user slice
+  (`id`/`name`/`email`/`image`) and passes it into `<UserMenu>`.
+  Nav and UserMenu now live side-by-side inside a flex wrapper in
+  the header.
+
+**Server/client boundary:**
+- `getSession()` is server-only (RSC) — no leakage into the
+  client bundle.
+- The user slice crossing the boundary contains only display
+  fields, no internal Auth.js state.
+- Only the sign-out action runs client-side (via a real
+  `<button onClick>` that calls `signOut`), which keeps the
+  client component minimal.
 
 **Verification:**
+- `pnpm typecheck` → 13/13 ✅ (one TS false-positive on
+  `user.email[0]` caught and handled with `?? '?'`).
+- `pnpm build` → 7/7 ✅.
 
-```
-pnpm typecheck → 13/13 tasks ✅
-pnpm build     → 7/7 tasks ✅ (including ƒ Middleware 118 kB)
-
-Runtime smoke (dev server on port 3000, no session cookie):
-  GET /              → 200 (public — landing page)
-  GET /workspaces    → 307 Location: /api/auth/signin?callbackUrl=http://localhost:3000/workspaces
-  GET /projects      → 307 Location: /api/auth/signin?callbackUrl=http://localhost:3000/projects
-  GET /tasks         → 307 Location: /api/auth/signin?callbackUrl=http://localhost:3000/tasks
-  GET /api/health    → 200 (public — uptime probe)
-  GET /api/auth/csrf → 200 (public — Auth.js endpoint)
-  GET /api/workspaces → 307 Location: /api/auth/signin?callbackUrl=.../api/workspaces
-```
-
-All protected routes redirect with correct `callbackUrl`. All public routes
-pass through. Middleware wired end-to-end.
-
-**Known build-time warning** (non-blocking):
-`A Node.js module is loaded ('stream' at line 1) which is not supported in
-the Edge Runtime` — this is caused by `auth.ts` importing `@heynxt/persistence`
-(used by the Drizzle adapter). Auth.js's middleware function only reads
-session cookies at runtime and doesn't actually touch the DB driver. The
-middleware bundle compiled and served fine. Phase 9 hardening should revisit
-this — either split `auth.ts` into an Edge-safe config + Node-only adapter
-wiring (already partially done via `auth.config.ts`) or accept the warning
-as-is.
+**Commit:** `d65cff6`.
 
 ---
 
-## Files Changed (this session)
+### Task 17 — ADR-0006 `createdBy` session sweep
 
-**New files (1):**
-- `apps/web/src/middleware.ts`
+Coordinated breaking change: `createdBy` is no longer a
+caller-supplied field on any `Create*Input` schema. The server
+now derives it from the authenticated session, closing the
+audit-trail weakness tracked since Task 5.
 
-**Modified files (2):**
-- `apps/web/src/auth.config.ts` (+authorized callback)
-- `HANDOVER.md` (this file)
+**Scope correction (vs. ADR-0006 text):**
+- The ADR originally referenced "five schemas". `CreateWorkspaceInput`
+  never had a `createdBy` field (workspaces track membership via
+  org, not an audit user). The actual affected count is **four**, not
+  five. The ADR has been updated with this clarification.
+
+**Schemas updated (4):**
+- `packages/core-types/src/schemas/project.ts` —
+  `CreateProjectInput` now omits `createdBy`.
+- `packages/core-types/src/schemas/task.ts` —
+  `CreateTaskInput` now omits `createdBy`.
+- `packages/core-types/src/schemas/artifact.ts` —
+  `CreateArtifactInput` now omits `createdBy`.
+- `packages/core-types/src/schemas/generation-run.ts` —
+  `CreateGenerationRunInput` now omits `createdBy`.
+
+Each schema's JSDoc was updated to document that `createdBy`
+is server-derived.
+
+**API helper changes (2 files):**
+- `apps/web/src/lib/session.ts`:
+  - New `AuthenticatedSession` type narrows `session.user` and
+    `session.user.id` to non-null so route handlers can read
+    `session.user.id` without extra guards.
+  - `requireAuth()` now returns `Promise<AuthenticatedSession>`,
+    asserting the narrow type after the guard.
+- `apps/web/src/lib/api.ts`:
+  - `errorResponse()` now maps `NotAuthenticatedError` →
+    `401 UNAUTHENTICATED`. This is the shared error boundary
+    that turns `requireAuth()` failures into clean HTTP
+    responses for every POST route.
+
+**API routes updated (4):**
+- `apps/web/src/app/api/projects/route.ts` — POST calls
+  `requireAuth()` first, reads `session.user.id` as `createdBy`.
+  FK-violation error message simplified (no longer mentions
+  "user" since user is now session-derived).
+- `apps/web/src/app/api/tasks/route.ts` — same pattern.
+- `apps/web/src/app/api/artifacts/route.ts` — same pattern.
+- `apps/web/src/app/api/generation-runs/route.ts` — same pattern.
+
+**UI forms updated (2):**
+- `apps/web/src/app/components/CreateProjectForm.tsx` — removed
+  `SEED_USER_ID` constant, `createdBy` state, the "Created By
+  (User ID)" `<input>`, and the field from the safeParse payload.
+- `apps/web/src/app/components/CreateTaskForm.tsx` — same.
+
+**Tests:**
+- `packages/core-types/src/schemas/control-plane.test.ts` — added
+  8 new assertions (one per input shape: accepts payload without
+  `createdBy`, rejects when a required field is missing; existing
+  `Project`/`Task`/`GenerationRun`/`Artifact` canonical row
+  tests untouched, since the canonical rows still carry `createdBy`).
+- `pnpm --filter @heynxt/core-types test` → 68/68 passed ✅.
+
+**Docs:**
+- `docs/adr/0006-createdby-session-sweep.md` — status bumped to
+  "Accepted · Implemented", added the scope correction (four
+  schemas, not five), and marked every exit criterion as `[x]`.
+
+**Verification:**
+- `pnpm typecheck` → 13/13 ✅
+- `pnpm build` → 7/7 ✅
+- `pnpm test` (core-types only — that's the only package with
+  tests) → 68/68 ✅
+
+**Pre-existing failure (not a regression):** `@heynxt/persistence`'s
+`test` script fails with "No test files found" because the package
+has no tests yet. This existed before the sweep; not touched.
 
 ---
 
-## Recommended Commit Message
+## Files Changed (this session, total)
 
-```
-feat(web): Task 15 — middleware scaffold (auth gate for protected routes)
+**Task 16 — Session banner:**
+- New: `apps/web/src/components/UserMenu.tsx`
+- Modified: `apps/web/src/app/layout.tsx`
 
-Auth.js middleware wired via `src/middleware.ts` exporting `auth` from
-`./auth`, with matcher covering all routes except /_next/static,
-/_next/image, favicon.ico.
-
-`authorized` callback in `src/auth.config.ts` applies public-route
-allowlist:
-  - `/`             public landing
-  - `/api/auth/*`   Auth.js endpoints (CSRF, providers, sign-in,
-                    callback, session, signout)
-  - `/api/health`   uptime probe (load balancer / k8s)
-  - Everything else → requires valid session; otherwise Auth.js
-                      redirects 307 → /api/auth/signin with callbackUrl.
-
-Dev-DB reset (Tasks 14 prerequisite):
-  DROP all public tables + enums + drizzle schema →
-  pnpm db:migrate (applies 0000_colorful_groot.sql, now with renamed
-   users.image/emailVerified columns + Auth.js tables) →
-  pnpm db:seed (1 org, 2 workspaces, 2 projects, 3 tasks, 1 user).
-
-Verified:
-  - pnpm typecheck → 13/13 ✅
-  - pnpm build     → 7/7 ✅ (ƒ Middleware 118 kB)
-  - Runtime smoke:
-      GET /             → 200 (public)
-      GET /workspaces   → 307 → /api/auth/signin?callbackUrl=...
-      GET /projects     → 307 → /api/auth/signin?callbackUrl=...
-      GET /tasks        → 307 → /api/auth/signin?callbackUrl=...
-      GET /api/health   → 200 (public)
-      GET /api/auth/csrf → 200 (public)
-      GET /api/workspaces → 307 → /api/auth/signin?callbackUrl=...
-
-Known non-blocking warning:
-  Edge Runtime load warning for 'stream' (postgres driver pulled in via
-  @heynxt/persistence). Middleware bundle is functional. Phase 9 revisit.
-
-Out of scope (per CLAUDE.md):
-  - Do NOT revise ADR-0005 (Server Actions) — revisit triggers not met.
-  - Do NOT split DataTable/StatusBadge shared components — revisit only
-    when a 4th CRUD page lands (ADR-0007).
-  - Do NOT add workspace-level RBAC — open sign-up in Phase 1, gating
-    deferred to Phase 9.
-```
+**Task 17 — ADR-0006 sweep:**
+- Modified (schemas):
+  - `packages/core-types/src/schemas/project.ts`
+  - `packages/core-types/src/schemas/task.ts`
+  - `packages/core-types/src/schemas/artifact.ts`
+  - `packages/core-types/src/schemas/generation-run.ts`
+- Modified (tests):
+  - `packages/core-types/src/schemas/control-plane.test.ts`
+- Modified (helpers):
+  - `apps/web/src/lib/session.ts` (new `AuthenticatedSession`
+    type, narrowed `requireAuth()` return)
+  - `apps/web/src/lib/api.ts` (401 mapping)
+- Modified (routes):
+  - `apps/web/src/app/api/projects/route.ts`
+  - `apps/web/src/app/api/tasks/route.ts`
+  - `apps/web/src/app/api/artifacts/route.ts`
+  - `apps/web/src/app/api/generation-runs/route.ts`
+- Modified (forms):
+  - `apps/web/src/app/components/CreateProjectForm.tsx`
+  - `apps/web/src/app/components/CreateTaskForm.tsx`
+- Modified (docs):
+  - `docs/adr/0006-createdby-session-sweep.md`
 
 ---
 
@@ -173,36 +155,52 @@ Out of scope (per CLAUDE.md):
 
 Immediate next steps (ordered):
 
-1. **(Task 16-ish) UI session banner + sign-in/out button.** Add to `apps/web/src/app/layout.tsx` header:
-   - Read `getSession()` in the RSC header.
-   - If signed in: show `user.name` + `user.image` avatar + "Sign out" button
-     that posts to `/api/auth/signout`.
-   - If signed out: show "Sign in" link to `/api/auth/signin`.
-   - Note: requires `getSession` to not pull server-only code into the client
-     boundary; split the header so the server-only `getSession` call stays
-     in a Server Component that renders a client `<UserMenu>` shell.
-
-2. **(Optional: GitHub OAuth App)** create an OAuth App at
+1. **(Task 18-ish) Real GitHub OAuth sign-in round-trip.** Create
+   a GitHub OAuth App at
    https://github.com/settings/developers with callback URL
-   `http://localhost:3000/api/auth/callback/github`, set `AUTH_GITHUB_ID` +
-   `AUTH_GITHUB_SECRET` in `apps/web/.env.local`, restart dev server, complete
-   a real sign-in round-trip. This would verify the full
-   sign-in → `createUser` (via Drizzle adapter) → session-cookie →
-   `/api/auth/session` path, making Task 14 100% verified end-to-end. Document
-   the result under ADR-0008 Consequences.
+   `http://localhost:3000/api/auth/callback/github`. Set
+   `AUTH_GITHUB_ID` + `AUTH_GITHUB_SECRET` in
+   `apps/web/.env.local`. Restart dev server. Complete a real
+   sign-in flow to verify:
+   - Auth.js `createUser` fires via the Drizzle adapter on first
+     sign-in.
+   - Session cookie is set.
+   - `/api/auth/session` returns the user.
+   - `<UserMenu>` avatar renders on subsequent page loads.
+   - Sign-out clears the cookie.
+   Document the result under ADR-0008 Consequences. This is the
+   final piece that makes Task 14 100% verified end-to-end.
 
-3. **(Task 17-ish) ADR-0006 createdBy sweep.** Single coordinated commit that
-   removes `createdBy` from the 5 `Create*Input` schemas, updates the 5 POST
-   routes to read from session (`requireAuth()`), updates 3 UI forms to stop
-   sending it, updates the test file. Per ADR-0006 § sweep plan (7 numbered
-   steps).
+2. **(Task 19-ish) Session context for UI forms.** The Create*
+   forms now don't send `createdBy` (Task 17). When a signed-in
+   user submits, the server populates `createdBy` from the session
+   — **but the form currently shows stale hardcoded seed workspace/
+   project IDs**. Lift those hardcodeds out so the form reads
+   real values from the signed-in user's context (e.g. list the
+   user's workspaces/projects, populate the dropdown).
 
-Out of scope reminders:
-- **Do NOT** revise ADR-0005 (Server Actions) — revisit triggers not met.
-- **Do NOT** extract shared `<DataTable>`/`<StatusBadge>` — revisit only when
-  a 4th CRUD page arrives per ADR-0007.
-- **Do NOT** gate by org — open sign-up is Phase 1's explicit decision;
-  org-gating is Phase 9.
+3. **(Task 20-ish) Per-route permission checks on POST.** The
+   middleware blocks unauthenticated requests globally, but
+   authenticated users can still hit any route without RBAC
+   gating. Next step: read the user's `RoleName` from
+   `role_assignments` and enforce per-route permissions before
+   the INSERT (e.g. `project:create` for `/api/projects` POST).
+   Phase 1 exit criterion: "Basic RBAC gates access".
+
+4. **(Task 21-ish) Workspace-scoped listing.** All GET
+   list-endpoints currently require the client to pass
+   `workspaceId` (or `organizationId`, `projectId`) as a query
+   param. Once per-row workspace ownership is settled via RBAC,
+   the server could derive the scope from the session to prevent
+   a signed-in user from listing other users' data.
+
+Out of scope reminders (recurring):
+- **Do NOT** revise ADR-0005 (Server Actions) — revisit triggers
+  not met.
+- **Do NOT** extract shared `<DataTable>`/`<StatusBadge>` — revisit
+  only when a 4th CRUD page arrives per ADR-0007.
+- **Do NOT** add workspace-level org gating — open sign-up is
+  Phase 1's explicit decision; org-gating is Phase 9.
 
 ---
 
@@ -210,43 +208,45 @@ Out of scope reminders:
 
 - [x] Read `CLAUDE.md`
 - [x] Read `buildplan.md`
-- [x] Read prior `HANDOVER.md` (Tasks 1-14)
-- [x] Dev-DB reset: drop all + drizzle schema → migrate → seed ✅
-  - `users.image` / `users.emailVerified` columns real in DB (not just in schema)
-  - `accounts`, `sessions`, `verification_tokens` tables exist
-  - Seed data loaded (1 user, 1 org, 2 workspaces, 2 projects, 3 tasks)
-- [x] Auth.js smoke test passed (csrf + providers + session endpoints)
-- [x] Task 15 middleware scaffold implemented + wired
-- [x] pnpm typecheck → 13/13 ✅
-- [x] pnpm build → 7/7 ✅
-- [x] Runtime smoke: public routes pass 200; protected routes 307 → sign-in
+- [x] Read prior `HANDOVER.md`
+- [x] Task 16 — session banner wired
+- [x] Task 17 — ADR-0006 sweep complete (4 schemas, 4 routes, 2 forms, 8 new tests)
+- [x] `pnpm typecheck` → 13/13 ✅
+- [x] `pnpm build` → 7/7 ✅
+- [x] `pnpm --filter @heynxt/core-types test` → 68/68 ✅
 - [x] HANDOVER.md updated
-- [x] Commit message drafted
+- [x] Both commits on `main`
 
 Paste into your prompt before continuing:
 
 ```
-You are resuming heynxt-core after Task 15 (middleware) code-complete.
+You are resuming heynxt-core after Tasks 16 + 17 code-complete.
+
+Commits on main (most recent first):
+  <new sha> feat: Task 17 — ADR-0006 createdBy session sweep
+  d65cff6   feat(web): Task 16 — session-aware header (UserMenu + sign-in/out)
+  dc09eb2   feat(web): Task 15 — middleware scaffold (auth gate)
+  208c870   feat(web): Task 14 — auth scaffold (NextAuth v5 + Drizzle)
 
 Current state:
-- Tasks 1-14: committed
-- Task 15 (middleware): code-complete, NOT YET COMMITTED (see HANDOVER.md)
-  - apps/web/src/middleware.ts wired (export auth as middleware + matcher)
-  - auth.config.ts gained `authorized` callback (public: /, /api/auth/*, /api/health; else 307 → sign-in)
-  - Dev-DB reset applied (drop + migrate + seed) — schema is Auth.js-compatible
-  - Auth.js smoke: csrf/providers/session all live against Postgres
-  - Build ✅, typecheck ✅, runtime smoke ✅ (protected routes 307 → sign-in w/ callbackUrl)
-  - Known: real GitHub sign-in round-trip not yet executed; requires
-    creating GitHub OAuth App with callback
-    http://localhost:3000/api/auth/callback/github and setting
-    AUTH_GITHUB_ID/AUTH_GITHUB_SECRET in apps/web/.env.local.
+  - createdBy no longer accepted on any Create*Input (4 schemas; see ADR-
+    0006 scope correction — workspaces never had the field).
+  - All 4 POST routes call requireAuth() and derive createdBy from
+    session.user.id; 401 UNAUTHENTICATED on auth failure.
+  - CreateProjectForm + CreateTaskForm no longer collect createdBy.
+  - UserMenu component renders sign-in / sign-out state in the header.
+  - core-types tests: 68 passed (8 new ADR-0006 assertions).
+  - pnpm typecheck 13/13 ✅ ; pnpm build 7/7 ✅.
 
 Next recommended task:
-  Task 16-ish — UI session banner (sign-in/out button, user avatar)
-  Then Task 17-ish — ADR-0006 createdBy sweep (remove createdBy from 5 Create*Input schemas, wire requireAuth() in POST routes)
+  Task 18-ish — real GitHub OAuth round-trip (create OAuth App,
+    set AUTH_GITHUB_ID/AUTH_GITHUB_SECRET, verify full cycle).
+  Task 19-ish — lift hardcoded seed workspace/project IDs from forms.
+  Task 20-ish — per-route RBAC permission gates on POST routes.
 
 Hard rules (from CLAUDE.md):
-- Don't redo Tasks 1-15.
-- Follow small-slice principle.
-- Verify after each step.
+  - Don't redo Tasks 1-17.
+  - Follow small-slice principle.
+  - Verify after each step.
+  - Read ADR-0006 before touching the createdBy area again.
 ```

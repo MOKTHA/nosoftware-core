@@ -9,10 +9,10 @@
  *     Create an artifact. Body: CreateArtifactInput.
  *       { workspaceId, projectId, taskId, generationRunId, kind, storageKind,
  *         name, mimeType?, textContent?, storageUrl?, storageRef?,
- *         contentHash?, byteSize?, createdBy }
+ *         contentHash?, byteSize? }
+ *     `createdBy` is derived from the authenticated session.
  *     Returns 201 with the created artifact.
- *
- * Auth / RBAC is deferred to a later slice.
+ *     401 when the request is not authenticated.
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'node:crypto';
@@ -28,6 +28,7 @@ import {
 import { db, artifacts } from '@heynxt/persistence';
 
 import { badRequest, errorResponse, parseJsonBody } from '@/lib/api';
+import { requireAuth } from '@/lib/session';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -82,6 +83,9 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const session = await requireAuth();
+    const createdBy = session.user.id;
+
     const body = await parseJsonBody(req);
 
     const input = CreateArtifactInput.parse(body);
@@ -106,7 +110,7 @@ export async function POST(req: NextRequest) {
         storageRef: input.storageRef ?? null,
         contentHash: input.contentHash ?? null,
         byteSize: input.byteSize ?? null,
-        createdBy: input.createdBy,
+        createdBy,
         createdAt: now,
       })
       .returning();

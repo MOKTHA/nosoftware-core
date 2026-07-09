@@ -18,7 +18,6 @@ import { CreateTaskInput, TaskType } from '@heynxt/core-types';
 
 const SEED_WS_ID = '00000000-0000-0000-0000-000000000100';
 const SEED_PROJECT_ID = '00000000-0000-0000-0000-000000010001';
-const SEED_USER_ID = '00000000-0000-0000-0000-000000000001';
 
 export function CreateTaskForm() {
   const router = useRouter();
@@ -31,7 +30,6 @@ export function CreateTaskForm() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [inputPrompt, setInputPrompt] = useState('');
-  const [createdBy, setCreatedBy] = useState(SEED_USER_ID);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
@@ -42,6 +40,8 @@ export function CreateTaskForm() {
     setFieldErrors({});
 
     // Client-side parse so we can surface Zod errors inline.
+    // `createdBy` is no longer accepted by the schema — the API
+    // reads it from the authenticated session (see ADR-0006).
     const parsed = CreateTaskInput.safeParse({
       workspaceId,
       projectId,
@@ -49,7 +49,6 @@ export function CreateTaskForm() {
       title,
       description: description || undefined,
       inputPrompt: inputPrompt || undefined,
-      createdBy,
     });
     if (!parsed.success) {
       const fields: Record<string, string[]> = {};
@@ -156,19 +155,6 @@ export function CreateTaskForm() {
         </select>
         {fieldErrors.type && (
           <span style={errStyle}>{fieldErrors.type.join(', ')}</span>
-        )}
-      </label>
-
-      <label style={{ display: 'flex', flexDirection: 'column', fontSize: 13 }}>
-        Created By (User ID)
-        <input
-          value={createdBy}
-          onChange={(e) => setCreatedBy(e.target.value)}
-          required
-          style={inputStyle}
-        />
-        {fieldErrors.createdBy && (
-          <span style={errStyle}>{fieldErrors.createdBy.join(', ')}</span>
         )}
       </label>
 

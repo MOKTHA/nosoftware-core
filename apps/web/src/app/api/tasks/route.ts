@@ -8,10 +8,10 @@
  *   POST /api/tasks
  *     Create a task. Body: CreateTaskInput.
  *       { workspaceId, projectId, type, title,
- *         description?, inputPrompt?, createdBy }
+ *         description?, inputPrompt? }
+ *     `createdBy` is derived from the authenticated session.
  *     Returns 201 with the created task.
- *
- * Auth / RBAC is deferred to a later slice.
+ *     401 when the request is not authenticated.
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'node:crypto';
@@ -26,6 +26,7 @@ import {
 import { db, tasks } from '@heynxt/persistence';
 
 import { badRequest, errorResponse, parseJsonBody } from '@/lib/api';
+import { requireAuth } from '@/lib/session';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -74,6 +75,9 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const session = await requireAuth();
+    const createdBy = session.user.id;
+
     const body = await parseJsonBody(req);
 
     const input = CreateTaskInput.parse(body);
@@ -91,7 +95,7 @@ export async function POST(req: NextRequest) {
         title: input.title,
         description: input.description ?? null,
         inputPrompt: input.inputPrompt ?? null,
-        createdBy: input.createdBy,
+        createdBy,
         status: 'draft',
         completedAt: null,
         createdAt: now,

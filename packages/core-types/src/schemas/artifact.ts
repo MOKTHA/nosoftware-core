@@ -152,12 +152,14 @@ export function hasInlineContent(a: Artifact): boolean {
  * client-side (e.g., SHA-256 of textContent before upload), or leave them
  * null and rely on the server to fill them for inline artifacts.
  *
- * `createdBy` is temporarily required from the caller — same concession as
- * CreateProjectInput; see the design note in generation-run.ts.
+ * `createdBy` is omitted from the input — the API derives it from the
+ * authenticated session (see `apps/web/src/app/api/artifacts/route.ts`).
+ * Callers cannot set it directly; the server enforces the audit trail.
  */
 export const CreateArtifactInput = Artifact.omit({
   id: true,
   createdAt: true,
+  createdBy: true,
 }).partial({
   mimeType: true,
   textContent: true,

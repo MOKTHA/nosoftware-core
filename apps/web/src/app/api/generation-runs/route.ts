@@ -7,11 +7,11 @@
  *
  *   POST /api/generation-runs
  *     Create a generation run. Body: CreateGenerationRunInput.
- *       { workspaceId, projectId, taskId, snapshot?, createdBy }
+ *       { workspaceId, projectId, taskId, snapshot? }
+ *     `createdBy` is derived from the authenticated session.
  *     Server auto-computes `runNumber` as MAX(runNumber)+1 within the task.
  *     Returns 201 with the created run.
- *
- * Auth / RBAC is deferred to a later slice.
+ *     401 when the request is not authenticated.
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'node:crypto';
@@ -27,6 +27,7 @@ import {
 import { db, generationRuns } from '@heynxt/persistence';
 
 import { badRequest, errorResponse, parseJsonBody } from '@/lib/api';
+import { requireAuth } from '@/lib/session';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -81,6 +82,9 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const session = await requireAuth();
+    const createdBy = session.user.id;
+
     const body = await parseJsonBody(req);
 
     const input = CreateGenerationRunInput.parse(body);
@@ -113,7 +117,7 @@ export async function POST(req: NextRequest) {
           blueprintPlanHash: null,
         },
         agentSessionId: null,
-        createdBy: input.createdBy,
+        createdBy,
         startedAt: null,
         completedAt: null,
         createdAt: now,

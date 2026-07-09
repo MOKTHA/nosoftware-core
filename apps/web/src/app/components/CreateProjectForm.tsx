@@ -16,7 +16,6 @@ import { useState, type FormEvent } from 'react';
 import { CreateProjectInput } from '@heynxt/core-types';
 
 const SEED_WORKSPACE_ID = '00000000-0000-0000-0000-000000000100';
-const SEED_USER_ID = '00000000-0000-0000-0000-000000000001';
 
 export function CreateProjectForm() {
   const router = useRouter();
@@ -29,7 +28,6 @@ export function CreateProjectForm() {
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
   const [description, setDescription] = useState('');
-  const [createdBy, setCreatedBy] = useState(SEED_USER_ID);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
@@ -40,12 +38,13 @@ export function CreateProjectForm() {
     setFieldErrors({});
 
     // Client-side parse so we can surface Zod errors inline.
+    // `createdBy` is no longer accepted by the schema — the API
+    // reads it from the authenticated session (see ADR-0006).
     const parsed = CreateProjectInput.safeParse({
       workspaceId,
       name,
       slug,
       description: description || undefined,
-      createdBy,
     });
     if (!parsed.success) {
       const fields: Record<string, string[]> = {};
@@ -119,19 +118,6 @@ export function CreateProjectForm() {
         />
         {fieldErrors.workspaceId && (
           <span style={errStyle}>{fieldErrors.workspaceId.join(', ')}</span>
-        )}
-      </label>
-
-      <label style={{ display: 'flex', flexDirection: 'column', fontSize: 13 }}>
-        Created By (User ID)
-        <input
-          value={createdBy}
-          onChange={(e) => setCreatedBy(e.target.value)}
-          required
-          style={inputStyle}
-        />
-        {fieldErrors.createdBy && (
-          <span style={errStyle}>{fieldErrors.createdBy.join(', ')}</span>
         )}
       </label>
 

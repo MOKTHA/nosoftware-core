@@ -138,9 +138,9 @@ export function isGenerationRunTerminal(status: GenerationRunStatus): boolean {
  * no blueprint plan referenced). Callers can provide explicit spec/blueprint
  * identifiers and hashes for full traceability.
  *
- * `createdBy` is temporarily required from the caller — once RBAC middleware
- * is in place (Phase 1 follow-up), it will be supplied from the session
- * context and moved out of the public input schema.
+ * `createdBy` is omitted from the input — the API derives it from the
+ * authenticated session (see `apps/web/src/app/api/generation-runs/route.ts`).
+ * Callers cannot set it directly; the server enforces the audit trail.
  */
 export const CreateGenerationRunInput = GenerationRun.omit({
   id: true,
@@ -151,6 +151,7 @@ export const CreateGenerationRunInput = GenerationRun.omit({
   agentSessionId: true,
   startedAt: true,
   completedAt: true,
+  createdBy: true,
 }).partial({
   snapshot: true,
 });

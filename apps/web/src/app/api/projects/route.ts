@@ -7,18 +7,20 @@
  *
  *   POST /api/projects
  *     Create a project. Body: CreateProjectInput (from core-types).
- *       { workspaceId, name, slug, description?, createdBy }
+ *       { workspaceId, name, slug, description? }
+ *     `createdBy` is derived from the authenticated session — not accepted
+ *     in the body (see ADR-0006).
  *     Returns 201 with the created project (200 for the initial slice — see
  *     comments in the POST handler).
  *     400 when body fails validation or (workspaceId, slug) already exists.
+ *     401 when the request is not authenticated.
  *
  * Conventions:
  *   - JSON request + JSON responses only.
  *   - Errors follow `{ error, code, fields? }` via `errorResponse()`.
  *   - Server generates `id` (UUID v4), `createdAt`, `updatedAt`.
  *   - `status` defaults to `'draft'` server-side if omitted.
- *
- * Auth / RBAC is deferred to a later slice.
+ *   - `createdBy` is read from the session; the caller cannot override it.
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'node:crypto';
@@ -32,6 +34,7 @@ import {
 import { db, projects } from '@heynxt/persistence';
 
 import { badRequest, errorResponse, parseJsonBody } from '@/lib/api';
+import { requireAuth } from '@/lib/session';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -71,6 +74,9 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const session = await requireAuth();
+    const createdBy = session.user.id;
+
     const body = await parseJsonBody(req);
 
     const input = CreateProjectInput.parse(body);
@@ -86,7 +92,7 @@ export async function POST(req: NextRequest) {
         name: input.name,
         slug: input.slug,
         description: input.description ?? null,
-        createdBy: input.createdBy,
+        createdBy,
         status: 'draft',
         createdAt: now,
         updatedAt: now,
@@ -117,10 +123,12 @@ export async function POST(req: NextRequest) {
       'code' in err &&
       (err as { code: string }).code === '23503'
     ) {
-      // FK violation — caller passed a workspaceId or createdBy that doesn't exist.
+      // FK violation — caller passed a workspaceId that doesn't exist (the
+      // user FK is satisfied by the session user, but the workspace must
+      // exist in the DB).
       return errorResponse(
         badRequest(
-          'The referenced workspace or user does not exist',
+          'The referenced workspace does not exist',
           'FOREIGN_KEY_VIOLATION',
         ),
       );

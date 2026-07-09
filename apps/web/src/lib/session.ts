@@ -7,10 +7,10 @@
  *     from anywhere that has a request context (RSCs, route handlers,
  *     Server Actions). Never throws.
  *
- *   - `requireAuth()` — returns the session if one is present, otherwise
- *     throws a typed error. Used by API routes that must be
- *     authenticated — routes can catch and convert the error to a 401
- *     response, or let it propagate to a global error handler.
+ *   - `requireAuth()` — returns the session with a guaranteed non-null
+ *     `user` object (plus a non-null `user.id`) when authenticated.
+ *     Throws `NotAuthenticatedError` otherwise; API routes catch this
+ *     via `errorResponse()` and turn it into a 401 response.
  *
  * These are the abstraction boundary that insulates HeyNXT code from
  * Auth.js internals. All future code that needs the current user
@@ -19,6 +19,7 @@
  *
  * See docs/adr/0008-auth-library-and-provider.md for background.
  */
+import type { Session } from 'next-auth';
 import { auth } from '../auth';
 
 /**
@@ -50,6 +51,9 @@ export async function getSession() {
  * Thrown error shape is kept minimal by design — the 401-ness is the
  * important part, not the message. Routes that want a richer error
  * should call getSession() and build their own response.
+ *
+ * Return type narrows `user` (and `user.id`) to non-null so callers
+ * can read `session.user.id` without extra guards.
  */
 export class NotAuthenticatedError extends Error {
   constructor() {
@@ -58,10 +62,15 @@ export class NotAuthenticatedError extends Error {
   }
 }
 
-export async function requireAuth() {
+export type AuthenticatedSession = Session & {
+  user: NonNullable<Session['user']> & { id: string };
+};
+
+export async function requireAuth(): Promise<AuthenticatedSession> {
   const session = await getSession();
-  if (!session?.user) {
+  if (!session?.user?.id) {
     throw new NotAuthenticatedError();
   }
-  return session;
+  // The guard above establishes the narrow type; assert at the boundary.
+  return session as AuthenticatedSession;
 }

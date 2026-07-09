@@ -12,18 +12,22 @@ import {
   // Execution domain
   Project,
   ProjectSlug,
+  CreateProjectInput,
   Task,
   TaskType,
   TaskStatus,
   isTaskTerminal,
+  CreateTaskInput,
   GenerationRun,
   GenerationRunStatus,
   GenerationRunSnapshot,
   isGenerationRunTerminal,
+  CreateGenerationRunInput,
   Artifact,
   ArtifactKind,
   ArtifactStorageKind,
   hasInlineContent,
+  CreateArtifactInput,
   // Audit
   AuditLogEntry,
   AuditEntityType,
@@ -242,6 +246,23 @@ describe('Project schema', () => {
     expect(() => Project.parse({ ...base(), createdBy: undefined })).toThrow();
   });
 
+  it('CreateProjectInput accepts input without createdBy (ADR-0006)', () => {
+    // `createdBy` is derived from the session server-side, so the input
+    // shape deliberately excludes it.
+    const input = CreateProjectInput.parse({
+      workspaceId: WORKSPACE_ID,
+      name: 'Work-Order App',
+      slug: 'work-order-app-2',
+    });
+    expect(input).not.toHaveProperty('createdBy');
+  });
+
+  it('CreateProjectInput rejects a project missing workspaceId', () => {
+    expect(() =>
+      CreateProjectInput.parse({ name: 'x', slug: 'x' })
+    ).toThrow();
+  });
+
   it('ProjectSlug rejects an overlong slug', () => {
     expect(() => ProjectSlug.parse('a'.repeat(65))).toThrow();
   });
@@ -282,6 +303,16 @@ describe('Task schema', () => {
   it('accepts an inputPrompt up to the size limit', () => {
     const t = Task.parse({ ...base(), inputPrompt: 'Build the thing'.repeat(10) });
     expect(t.inputPrompt).toBeDefined();
+  });
+
+  it('CreateTaskInput accepts input without createdBy (ADR-0006)', () => {
+    const input = CreateTaskInput.parse({
+      workspaceId: WORKSPACE_ID,
+      projectId: PROJECT_ID,
+      type: 'generate-app',
+      title: 'Draft task',
+    });
+    expect(input).not.toHaveProperty('createdBy');
   });
 });
 
@@ -352,6 +383,21 @@ describe('GenerationRun schema', () => {
     const parsed = GenerationRunSnapshot.parse({});
     expect(parsed.specId).toBeUndefined();
     expect(parsed.specHash).toBeUndefined();
+  });
+
+  it('CreateGenerationRunInput accepts input without createdBy (ADR-0006)', () => {
+    const input = CreateGenerationRunInput.parse({
+      workspaceId: WORKSPACE_ID,
+      projectId: PROJECT_ID,
+      taskId: TASK_ID,
+    });
+    expect(input).not.toHaveProperty('createdBy');
+  });
+
+  it('CreateGenerationRunInput rejects input missing workspaceId', () => {
+    expect(() =>
+      CreateGenerationRunInput.parse({ projectId: PROJECT_ID, taskId: TASK_ID })
+    ).toThrow();
   });
 });
 
@@ -437,6 +483,32 @@ describe('Artifact schema', () => {
 
   it('all ArtifactStorageKind values are recognized', () => {
     expect(ArtifactStorageKind.options).toEqual(['inline', 'url', 'git']);
+  });
+
+  it('CreateArtifactInput accepts input without createdBy (ADR-0006)', () => {
+    const input = CreateArtifactInput.parse({
+      workspaceId: WORKSPACE_ID,
+      projectId: PROJECT_ID,
+      taskId: TASK_ID,
+      generationRunId: RUN_ID,
+      kind: 'code',
+      storageKind: 'inline',
+      name: 'src/routes/work-orders.ts',
+    });
+    expect(input).not.toHaveProperty('createdBy');
+  });
+
+  it('CreateArtifactInput rejects input missing generationRunId', () => {
+    expect(() =>
+      CreateArtifactInput.parse({
+        workspaceId: WORKSPACE_ID,
+        projectId: PROJECT_ID,
+        taskId: TASK_ID,
+        kind: 'code',
+        storageKind: 'inline',
+        name: 'x',
+      })
+    ).toThrow();
   });
 });
 

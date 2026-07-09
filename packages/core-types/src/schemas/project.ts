@@ -85,15 +85,16 @@ export type ProjectLookupKey = z.infer<typeof ProjectLookupKey>;
  *   - `createdAt` / `updatedAt` (timestamps, server-assigned)
  *   - `status` (server-defaults to `'draft'`)
  *
- * `createdBy` is temporarily required from the caller — once RBAC middleware
- * is in place (Phase 1 follow-up), it will be supplied from the session
- * context and moved out of the public input schema.
+ * `createdBy` is omitted from the input — the API derives it from the
+ * authenticated session (see `apps/web/src/app/api/projects/route.ts`).
+ * Callers cannot set it directly; the server enforces the audit trail.
  */
 export const CreateProjectInput = Project.omit({
   id: true,
   createdAt: true,
   updatedAt: true,
   status: true,
+  createdBy: true,
 }).partial({
   description: true,
 });

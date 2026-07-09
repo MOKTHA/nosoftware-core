@@ -1,6 +1,6 @@
 # ADR-0006 — `createdBy` Session Sweep Plan
 
-- **Status**: Accepted
+- **Status**: Accepted · **Implemented** (Task 17, 2026-07-09)
 - **Date**: 2026-07-09
 - **Deciders**: @pskbmohan (session decision, pending team review)
 - **Supersedes**: N/A
@@ -37,14 +37,27 @@ session context."
 
 ## Decision
 
-**Keep `createdBy` as a required caller-supplied field until auth
-lands.** When auth lands, remove `createdBy` from all five input
-schemas in a single breaking change and migrate existing callers to
-derive it from the session instead.
+**`createdBy` is no longer a caller-supplied field on any
+`Create*Input` schema.** When auth landed (ADR-0008 / Task 14), the
+field was removed from every create schema in a single breaking
+change (Task 17), and callers now derive it from the authenticated
+session instead.
 
-The sweep is scoped as a single coordinated change, not five
+**Scope correction (noted post-sweep):** the ADR originally listed
+"five" input schemas. `CreateWorkspaceInput` never had a `createdBy`
+field (workspaces track membership via the org, not an audit user),
+so the actual affected schemas were four:
+
+| Schema | File |
+|---|---|
+| `CreateProjectInput` | `packages/core-types/src/schemas/project.ts` |
+| `CreateTaskInput` | `packages/core-types/src/schemas/task.ts` |
+| `CreateArtifactInput` | `packages/core-types/src/schemas/artifact.ts` |
+| `CreateGenerationRunInput` | `packages/core-types/src/schemas/generation-run.ts` |
+
+The sweep is scoped as a single coordinated change, not four
 independent ones, because the contract change affects all callers of
-all five `Create*Input` schemas at once.
+all four `Create*Input` schemas at once.
 
 ---
 
@@ -149,13 +162,19 @@ sweep is a single coordinated commit:
 
 The sweep is complete when:
 
-- [ ] `createdBy` is no longer a field in any `Create*Input` schema
-      (5 schemas updated).
-- [ ] All five API routes derive `createdBy` from the session.
-- [ ] Unauthenticated requests to any of the five routes get
-      401 `UNAUTHENTICATED`.
-- [ ] UI forms have stopped sending `createdBy`.
-- [ ] Seed script still works (it bypasses the API; no change needed).
-- [ ] `pnpm test` passes with the updated input shapes.
-- [ ] A brief changelog entry or handover note records the breaking
-      change + commit sha.
+- [x] `createdBy` is no longer a field in any `Create*Input` schema
+      (4 schemas updated — see scope correction above).
+- [x] All four API routes (`/api/projects`, `/api/tasks`,
+      `/api/artifacts`, `/api/generation-runs`) derive `createdBy`
+      from the session via `requireAuth()`.
+- [x] Unauthenticated requests to any of the four routes get
+      401 `UNAUTHENTICATED` (via `errorResponse()` mapping
+      `NotAuthenticatedError`).
+- [x] UI forms (`CreateProjectForm`, `CreateTaskForm`) have stopped
+      sending `createdBy`.
+- [x] Seed script still works (it bypasses the API; no change needed —
+      the DB row still requires `createdBy`, which the seed script
+      supplies as `SEED_USER_ID`).
+- [x] `pnpm test` passes with the updated input shapes (68 tests in
+      `@heynxt/core-types`, including new ADR-0006 assertions).
+- [x] Commit sha recorded in Task 17 handover.

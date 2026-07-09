@@ -112,8 +112,9 @@ export function isTaskTerminal(status: TaskStatus): boolean {
  *   - `status` (server-defaults to `'draft'`)
  *   - `completedAt` (set when the task reaches a terminal status)
  *
- * `createdBy` is temporarily required from the caller — once RBAC middleware
- * is in place, it will be supplied from the session context.
+ * `createdBy` is omitted from the input — the API derives it from the
+ * authenticated session (see `apps/web/src/app/api/tasks/route.ts`).
+ * Callers cannot set it directly; the server enforces the audit trail.
  *
  * `inputPrompt` is optional here — draft tasks may omit it until submission.
  * Enforcement that submitted tasks have an inputPrompt happens at the API
@@ -125,6 +126,7 @@ export const CreateTaskInput = Task.omit({
   updatedAt: true,
   status: true,
   completedAt: true,
+  createdBy: true,
 }).partial({
   description: true,
   inputPrompt: true,
