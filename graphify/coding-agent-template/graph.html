@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>coding-agent-template · Knowledge Graph</title>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+  :root {
+    --bg: #0b0d12;
+    --panel: #12151d;
+    --border: #1f2330;
+    --text: #e5e7eb;
+    --muted: #9aa3b2;
+    --accent: #60a5fa;
+    --component: #3b82f6;
+    --api-route: #10b981;
+    --lib-module: #a855f7;
+    --config: #f59e0b;
+    --sandbox: #ef4444;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif; }
+  header {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 10;
+    background: rgba(11, 13, 18, 0.94); backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 20px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  }
+  header h1 { font-size: 16px; margin: 0; font-weight: 600; letter-spacing: -0.01em; }
+  header h1 .sub { color: var(--muted); font-weight: 400; margin-left: 8px; font-size: 13px; }
+  .filters { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-left: auto; }
+  .chip {
+    padding: 4px 10px; border-radius: 999px; background: #1a1f2c; border: 1px solid var(--border);
+    font-size: 12px; cursor: pointer; user-select: none; color: var(--muted);
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .chip.active { color: var(--text); border-color: var(--accent); }
+  .chip .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .chip input { display: none; }
+  .cluster-select {
+    padding: 4px 10px; border-radius: 6px; background: #1a1f2c; border: 1px solid var(--border);
+    font-size: 12px; color: var(--text);
+  }
+  #stats { font-size: 12px; color: var(--muted); }
+  svg { display: block; width: 100vw; height: 100vh; cursor: grab; }
+  svg:active { cursor: grabbing; }
+  .link { stroke: #2a3142; stroke-opacity: 0.6; }
+  .link.calls { stroke: #60a5fa; }
+  .link.imports { stroke: #94a3b8; stroke-dasharray: 2 2; }
+  .link.routes-to { stroke: #10b981; stroke-width: 1.4; }
+  .node circle { stroke: #0b0d12; stroke-width: 1.5px; cursor: pointer; }
+  .node text {
+    fill: var(--text); font-size: 10px; pointer-events: none;
+    text-shadow: 0 0 3px #0b0d12, 0 0 5px #0b0d12;
+  }
+  .node.hidden, .link.hidden { display: none; }
+  #details {
+    position: fixed; top: 64px; right: 20px; width: 340px; max-width: 90vw; max-height: 70vh;
+    background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
+    padding: 14px 16px; overflow: auto; font-size: 13px; line-height: 1.5;
+    display: none; z-index: 20;
+  }
+  #details h3 { margin: 0 0 8px 0; font-size: 14px; word-break: break-all; }
+  #details .meta { color: var(--muted); font-size: 12px; }
+  #details .purpose { margin-top: 10px; color: var(--text); }
+  #details .badge {
+    display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px;
+    background: #1a1f2c; color: var(--text); border: 1px solid var(--border); margin-right: 4px;
+  }
+  #close-details { position: absolute; top: 8px; right: 8px; background: none; border: none; color: var(--muted); cursor: pointer; font-size: 18px; }
+  details.session-memory {
+    position: fixed; bottom: 12px; left: 12px; z-index: 30;
+    background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
+    padding: 10px 14px; max-width: 640px; max-height: 60vh; overflow: auto;
+    font-size: 13px; line-height: 1.5;
+  }
+  details.session-memory summary {
+    cursor: pointer; font-weight: 600; color: var(--accent); user-select: none;
+  }
+  details.session-memory h4 { margin: 14px 0 6px 0; font-size: 13px; color: var(--text); }
+  details.session-memory p, details.session-memory li { margin: 4px 0; }
+  details.session-memory code { background: #1a1f2c; padding: 1px 5px; border-radius: 3px; font-size: 12px; }
+  details.session-memory pre { background: #0f1219; padding: 8px 10px; border-radius: 5px; overflow-x: auto; font-size: 11.5px; border: 1px solid var(--border); }
+  details.session-memory ul { padding-left: 20px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>coding-agent-template<span class="sub">Knowledge Graph · Next.js 16 · 6 agent adapters</span></h1>
+  <span id="stats"></span>
+  <div class="filters">
+    <label class="chip active" data-type="component"><span class="dot" style="background: var(--component)"></span>component<input type="checkbox" checked /></label>
+    <label class="chip active" data-type="api-route"><span class="dot" style="background: var(--api-route)"></span>api-route<input type="checkbox" checked /></label>
+    <label class="chip active" data-type="lib-module"><span class="dot" style="background: var(--lib-module)"></span>lib-module<input type="checkbox" checked /></label>
+    <label class="chip active" data-type="config"><span class="dot" style="background: var(--config)"></span>config<input type="checkbox" checked /></label>
+    <select id="cluster-filter" class="cluster-select">
+      <option value="">All clusters</option>
+    </select>
+    <select id="kind-filter" class="cluster-select">
+      <option value="">All edge kinds</option>
+      <option value="calls">calls</option>
+      <option value="imports">imports</option>
+      <option value="routes-to">routes-to</option>
+    </select>
+  </div>
+</header>
+
+<div id="details">
+  <button id="close-details" title="Close">×</button>
+  <h3 id="details-title"></h3>
+  <div id="details-badges"></div>
+  <div id="details-purpose" class="purpose"></div>
+  <div id="details-connections" class="meta" style="margin-top:10px"></div>
+</div>
+
+<details class="session-memory">
+  <summary>Session Memory · for future Claude Code sessions</summary>
+
+  <h4>Repo role</h4>
+  <p><code>coding-agent-template</code> is Vercel Labs' reference substrate for spawning coding agents inside sandboxes and committing their output back to GitHub. It is the <strong>archetype</strong> for heynxt-core's agent substrate: adopt the contract patterns, dispatcher design, streaming persistence, and sandbox orchestration; re-implement Vercel-specific infrastructure (<code>@vercel/sandbox</code>, <code>ai-gateway.vercel.sh</code>, Vercel OAuth, Neon via Vercel integration) against the runtime heynxt-core actually targets.</p>
+
+  <h4>Read first</h4>
+  <ol>
+    <li><code>lib/sandbox/agents/index.ts</code> — the dispatcher and the uniform contract boundary.</li>
+    <li><code>lib/sandbox/agents/claude.ts</code> — reference adapter: CLI install, gateway auth, MCP wiring, stream-JSON parsing via <code>Writable</code>, <code>sessionId</code> extraction, resumption.</li>
+    <li><code>lib/sandbox/types.ts</code> — <code>SandboxConfig</code>, <code>SandboxResult</code>, <code>AgentExecutionResult</code>. The contract to preserve.</li>
+    <li><code>app/api/tasks/route.ts</code> — end-to-end orchestration: Next.js <code>after()</code> for long-running work; three parallel <code>after()</code> blocks (branch name / title / task execution); the timeout <code>Promise.race</code>; the "capture session before entering after() because session is not accessible inside" pattern.</li>
+    <li><code>lib/sandbox/creation.ts</code> — sandbox lifecycle (clone, install, dev server, git branch, browser skill install).</li>
+    <li><code>lib/db/schema.ts</code> — 7 tables + encryption story.</li>
+  </ol>
+
+  <h4>Six adapters · one contract</h4>
+  <p>Each file in <code>lib/sandbox/agents/{claude,codex,copilot,cursor,gemini,opencode}.ts</code> exports one function <code>(sandbox, instruction, logger, …) =&gt; Promise&lt;AgentExecutionResult&gt;</code>. They differ only in: CLI install, config-file format, auth, streaming parser, resume flag. Adding a 7th agent = write a new file + one switch case in <code>index.ts</code>. Copy this pattern verbatim.</p>
+
+  <h4>Sandbox + streaming pattern to adopt</h4>
+  <ul>
+    <li>Run CLI in an isolated container via an SDK exposing <code>runCommand({cmd, args, env, cwd, stdout: Writable, stderr: Writable, detached, sudo})</code>.</li>
+    <li>Feed a <code>Writable</code> whose <code>write(chunk)</code> splits on <code>\n</code>, parses each line, and incrementally updates a DB row via <code>drizzle.update(...).set({content: accumulated}).where(eq(taskMessages.id, agentMessageId))</code>. Fire-and-forget <code>.then().catch()</code> — UI polls the row.</li>
+    <li>For non-JSON agents, line-prefix-filter and wrap in <code>&lt;pre&gt;</code>.</li>
+    <li>Completion signal = explicit chunk (e.g. <code>type === 'result'</code>) or process exit. Poll loop is safer than awaiting detached process directly.</li>
+    <li>Always redact secrets via <code>redactSensitiveInfo()</code>; never log dynamic user values (see <code>AGENTS.md</code>).</li>
+  </ul>
+
+  <h4>Session resumption</h4>
+  <p>Store <code>sessionId</code> on the task row after each run. Follow-up messages pass <code>(isResumed: true, sessionId)</code>; adapter translates to per-agent resume flag. Keep sandbox alive if <code>keepAlive: true</code>; otherwise destroy after completion.</p>
+
+  <h4>What NOT to re-implement</h4>
+  <ul>
+    <li>Vercel Sandbox provisioning internals — reimplement against your container runtime but keep the <strong>create/configure/execute/teardown</strong> lifecycle shape.</li>
+    <li>AI Gateway URL — substitute your gateway or direct provider SDKs; keep the proxy-everything pattern.</li>
+    <li>Vercel+GitHub OAuth via arctic as configured — use your auth; keep the identity-merging pattern.</li>
+    <li>AES-256-CBC via Node <code>crypto</code> — use a KMS or framework secrets; keep per-user encrypted keys.</li>
+    <li>Neon-specific Postgres client — use any Drizzle-compatible driver; keep the schema shape.</li>
+    <li>JWE session implementation — use your framework's sessions; keep encrypted server-readable sessions carrying user id + provider tokens.</li>
+    <li>Agent CLI install scripts (curl URLs, npm package names) — treat as content, not architecture.</li>
+  </ul>
+
+  <h4>What to re-implement from scratch</h4>
+  <ul>
+    <li>Container runtime + lifecycle hooks.</li>
+    <li>Model gateway / key management surface.</li>
+    <li>Authentication and identity merging against heynxt-core providers.</li>
+    <li>Task queue / background execution mechanism (a proper queue is likely better than <code>after()</code>).</li>
+  </ul>
+
+  <h4>Files that matter most</h4>
+  <p>Keep the 4-file core stable across adaptations: <strong>dispatcher</strong> (<code>agents/index.ts</code>), <strong>reference adapter</strong> (<code>claude.ts</code>), <strong>contract types</strong> (<code>types.ts</code>), <strong>orchestrator</strong> (task route). Anything built atop these four is replaceable.</p>
+</details>
+
+<script>
+const graphData = {"repo": {"name": "coding-agent-template", "version": "2.0.0", "description": "Reference substrate for spawning coding agents in Vercel Sandbox and committing results to GitHub branches.", "stack": ["Next.js 16", "React 19", "TypeScript 5.9", "AI SDK 5", "Vercel Sandbox", "Drizzle", "Neon Postgres", "arctic OAuth", "shadcn/ui", "Tailwind 4", "Jotai"], "clonePath": "/tmp/coding-agent-template"}, "metadata": {"totalFiles": 223, "typescriptFiles": 223, "apiRoutes": 59, "components": 48, "agentAdapters": 6, "dbTables": 7, "drizzleMigrations": 21, "generatedAt": "2026-07-09"}, "nodes": [{"id": "app/page.tsx", "type": "component", "purpose": "Marketing landing page"}, {"id": "app/layout.tsx", "type": "component", "purpose": "Root layout (html, body, fonts, providers)"}, {"id": "app/tasks/page.tsx", "type": "component", "purpose": "Tasks list page wrapper"}, {"id": "app/tasks/[taskId]/page.tsx", "type": "component", "purpose": "Task detail page"}, {"id": "app/tasks/[taskId]/loading.tsx", "type": "component", "purpose": "Task detail loading skeleton"}, {"id": "app/[owner]/[repo]/page.tsx", "type": "component", "purpose": "Single repo overview"}, {"id": "app/[owner]/[repo]/layout.tsx", "type": "component", "purpose": "Repo-level layout"}, {"id": "app/new/[owner]/[repo]/page.tsx", "type": "component", "purpose": "New task creation page for specific repo"}, {"id": "app/repos/[owner]/[repo]/page.tsx", "type": "component", "purpose": "Redirects to commits"}, {"id": "app/repos/[owner]/[repo]/commits/page.tsx", "type": "component", "purpose": "Commits listing"}, {"id": "app/repos/[owner]/[repo]/issues/page.tsx", "type": "component", "purpose": "Issues listing"}, {"id": "app/repos/[owner]/[repo]/pull-requests/page.tsx", "type": "component", "purpose": "Pull requests listing"}, {"id": "app/repos/new/page.tsx", "type": "component", "purpose": "Create-new-repo flow"}, {"id": "app/api/tasks/route.ts", "type": "api-route", "purpose": "Task CRUD + orchestration entry (POST creates task, spawns sandbox via after())"}, {"id": "app/api/tasks/[taskId]/route.ts", "type": "api-route", "purpose": "Single task GET/UPDATE/DELETE"}, {"id": "app/api/tasks/[taskId]/continue/route.ts", "type": "api-route", "purpose": "Follow-up message handler; resumes sandbox+session"}, {"id": "app/api/tasks/[taskId]/start-sandbox/route.ts", "type": "api-route", "purpose": "Start sandbox on demand"}, {"id": "app/api/tasks/[taskId]/stop-sandbox/route.ts", "type": "api-route", "purpose": "Stop + unregister sandbox"}, {"id": "app/api/tasks/[taskId]/restart-dev/route.ts", "type": "api-route", "purpose": "Restart dev server inside sandbox"}, {"id": "app/api/tasks/[taskId]/sandbox-health/route.ts", "type": "api-route", "purpose": "Health probe for keepAlive sandbox"}, {"id": "app/api/tasks/[taskId]/pr/route.ts", "type": "api-route", "purpose": "Create PR from task branch"}, {"id": "app/api/tasks/[taskId]/close-pr/route.ts", "type": "api-route", "purpose": "Close PR"}, {"id": "app/api/tasks/[taskId]/merge-pr/route.ts", "type": "api-route", "purpose": "Merge PR"}, {"id": "app/api/tasks/[taskId]/reopen-pr/route.ts", "type": "api-route", "purpose": "Reopen PR"}, {"id": "app/api/tasks/[taskId]/sync-pr/route.ts", "type": "api-route", "purpose": "Sync PR metadata"}, {"id": "app/api/tasks/[taskId]/messages/route.ts", "type": "api-route", "purpose": "Task messages GET/POST"}, {"id": "app/api/tasks/[taskId]/files/route.ts", "type": "api-route", "purpose": "List files in sandbox"}, {"id": "app/api/tasks/[taskId]/file-content/route.ts", "type": "api-route", "purpose": "Read a file from sandbox"}, {"id": "app/api/tasks/[taskId]/save-file/route.ts", "type": "api-route", "purpose": "Save file to sandbox"}, {"id": "app/api/tasks/[taskId]/create-file/route.ts", "type": "api-route", "purpose": "Create file in sandbox"}, {"id": "app/api/tasks/[taskId]/delete-file/route.ts", "type": "api-route", "purpose": "Delete file in sandbox"}, {"id": "app/api/tasks/[taskId]/diff/route.ts", "type": "api-route", "purpose": "Git diff vs base branch"}, {"id": "app/api/tasks/[taskId]/terminal/route.ts", "type": "api-route", "purpose": "WS terminal proxy to sandbox shell"}, {"id": "app/api/tasks/[taskId]/lsp/route.ts", "type": "api-route", "purpose": "Language-server protocol proxy"}, {"id": "app/api/tasks/[taskId]/deployment/route.ts", "type": "api-route", "purpose": "Expose sandbox preview URL"}, {"id": "app/api/tasks/[taskId]/autocomplete/route.ts", "type": "api-route", "purpose": "Agent-driven autocomplete"}, {"id": "app/api/tasks/[taskId]/pr-comments/route.ts", "type": "api-route", "purpose": "List PR review comments"}, {"id": "app/api/tasks/[taskId]/check-runs/route.ts", "type": "api-route", "purpose": "List CI check runs"}, {"id": "app/api/tasks/[taskId]/clear-logs/route.ts", "type": "api-route", "purpose": "Clear task logs"}, {"id": "app/api/tasks/[taskId]/discard-file-changes/route.ts", "type": "api-route", "purpose": "Discard uncommitted changes"}, {"id": "app/api/tasks/[taskId]/file-operation/route.ts", "type": "api-route", "purpose": "Generic file operation"}, {"id": "app/api/tasks/[taskId]/project-files/route.ts", "type": "api-route", "purpose": "Project file tree"}, {"id": "app/api/tasks/[taskId]/reset-changes/route.ts", "type": "api-route", "purpose": "Reset branch to base"}, {"id": "app/api/tasks/[taskId]/sync-changes/route.ts", "type": "api-route", "purpose": "Sync local changes to remote branch"}, {"id": "app/api/auth/github/signin/route.ts", "type": "api-route", "purpose": "Initiate GitHub OAuth"}, {"id": "app/api/auth/github/callback/route.ts", "type": "api-route", "purpose": "GitHub OAuth callback"}, {"id": "app/api/auth/github/disconnect/route.ts", "type": "api-route", "purpose": "Disconnect GitHub account"}, {"id": "app/api/auth/github/status/route.ts", "type": "api-route", "purpose": "GitHub connection status"}, {"id": "app/api/auth/callback/vercel/route.ts", "type": "api-route", "purpose": "Vercel OAuth callback"}, {"id": "app/api/auth/signin/github/route.ts", "type": "api-route", "purpose": "Alias / signin entry"}, {"id": "app/api/auth/signin/vercel/route.ts", "type": "api-route", "purpose": "Initiate Vercel OAuth"}, {"id": "app/api/auth/signout/route.ts", "type": "api-route", "purpose": "Sign out + clear JWE cookie"}, {"id": "app/api/auth/info/route.ts", "type": "api-route", "purpose": "Current session info"}, {"id": "app/api/auth/rate-limit/route.ts", "type": "api-route", "purpose": "Report user rate-limit status"}, {"id": "app/api/connectors/route.ts", "type": "api-route", "purpose": "MCP server connector CRUD"}, {"id": "app/api/api-keys/route.ts", "type": "api-route", "purpose": "Per-user API key CRUD"}, {"id": "app/api/api-keys/check/route.ts", "type": "api-route", "purpose": "Validate stored API key"}, {"id": "app/api/github/orgs/route.ts", "type": "api-route", "purpose": "List user GitHub orgs"}, {"id": "app/api/github/repos/route.ts", "type": "api-route", "purpose": "List repos for org/user"}, {"id": "app/api/github/repos/create/route.ts", "type": "api-route", "purpose": "Create new GitHub repo"}, {"id": "app/api/github/user/route.ts", "type": "api-route", "purpose": "Current GitHub user profile"}, {"id": "app/api/github/user-repos/route.ts", "type": "api-route", "purpose": "Repos the user has push access to"}, {"id": "app/api/github/verify-repo/route.ts", "type": "api-route", "purpose": "Verify push access to a repo"}, {"id": "app/api/github-stars/route.ts", "type": "api-route", "purpose": "GitHub stars count"}, {"id": "app/api/repos/[owner]/[repo]/commits/route.ts", "type": "api-route", "purpose": "List commits"}, {"id": "app/api/repos/[owner]/[repo]/issues/route.ts", "type": "api-route", "purpose": "List issues"}, {"id": "app/api/repos/[owner]/[repo]/pull-requests/route.ts", "type": "api-route", "purpose": "List pull requests"}, {"id": "app/api/repos/[owner]/[repo]/pull-requests/[pr_number]/check-task/route.ts", "type": "api-route", "purpose": "Link PR to task"}, {"id": "app/api/repos/[owner]/[repo]/pull-requests/[pr_number]/close/route.ts", "type": "api-route", "purpose": "Close a PR"}, {"id": "app/api/sandboxes/route.ts", "type": "api-route", "purpose": "List active sandboxes"}, {"id": "app/api/vercel/teams/route.ts", "type": "api-route", "purpose": "List Vercel teams"}, {"id": "lib/sandbox/agents/index.ts", "type": "lib-module", "purpose": "Agent dispatcher: executeAgentInSandbox switches on AgentType, applies per-user env, returns AgentExecutionResult"}, {"id": "lib/sandbox/agents/claude.ts", "type": "lib-module", "purpose": "Reference adapter \u2014 installs Claude CLI, writes config.json, executes with --output-format stream-json, parses streaming JSON via Writable, persists to taskMessages, extracts sessionId"}, {"id": "lib/sandbox/agents/codex.ts", "type": "lib-module", "purpose": "OpenAI Codex adapter \u2014 npm install @openai/codex, write TOML config (~/.codex/config.toml) supporting Vercel AI Gateway or direct OpenAI key, codex exec / codex resume --last"}, {"id": "lib/sandbox/agents/copilot.ts", "type": "lib-module", "purpose": "GitHub Copilot adapter \u2014 npm install @github/copilot, MCP config JSON (~/.copilot/mcp-config.json), GitHub-token auth, streams text with --no-color"}, {"id": "lib/sandbox/agents/cursor.ts", "type": "lib-module", "purpose": "Cursor adapter \u2014 installs cursor-agent binary, streams text output, --resume <sessionId>"}, {"id": "lib/sandbox/agents/gemini.ts", "type": "lib-module", "purpose": "Gemini adapter \u2014 installs gemini CLI, no session resumption"}, {"id": "lib/sandbox/agents/opencode.ts", "type": "lib-module", "purpose": "OpenCode adapter \u2014 dual backend (AI Gateway GPT or direct Anthropic), --resume <sessionId>"}, {"id": "lib/sandbox/types.ts", "type": "lib-module", "purpose": "Contract types: SandboxConfig, SandboxResult, AgentExecutionResult"}, {"id": "lib/sandbox/creation.ts", "type": "lib-module", "purpose": "createSandbox() \u2014 validates env, creates Sandbox via Vercel SDK, clones repo, installs deps (npm/pnpm/yarn/pip), starts dev server, configures git, handles empty repos, checks out branch, optionally installs agent-browser + Chromium + per-agent skills"}, {"id": "lib/sandbox/commands.ts", "type": "lib-module", "purpose": "runCommandInSandbox + runInProject wrappers and PROJECT_DIR constant"}, {"id": "lib/sandbox/config.ts", "type": "lib-module", "purpose": "validateEnvironmentVariables + createAuthenticatedRepoUrl"}, {"id": "lib/sandbox/git.ts", "type": "lib-module", "purpose": "pushChangesToBranch + shutdownSandbox"}, {"id": "lib/sandbox/package-manager.ts", "type": "lib-module", "purpose": "detectPackageManager + installDependencies"}, {"id": "lib/sandbox/port-detection.ts", "type": "lib-module", "purpose": "detectPortFromRepo from heuristics"}, {"id": "lib/sandbox/sandbox-registry.ts", "type": "lib-module", "purpose": "In-memory taskId -> Sandbox map for keepAlive"}, {"id": "lib/db/schema.ts", "type": "lib-module", "purpose": "Drizzle tables: users, tasks, connectors, accounts, keys, taskMessages, settings + Zod schemas"}, {"id": "lib/db/client.ts", "type": "lib-module", "purpose": "Neon Postgres client (serverless)"}, {"id": "lib/db/settings.ts", "type": "lib-module", "purpose": "Per-user settings overrides (maxMessagesPerDay, maxSandboxDuration)"}, {"id": "lib/db/users.ts", "type": "lib-module", "purpose": "User DB helpers"}, {"id": "lib/crypto.ts", "type": "lib-module", "purpose": "AES-256-CBC encrypt/decrypt (stored tokens, MCP env, OAuth secrets)"}, {"id": "lib/jwe/encrypt.ts", "type": "lib-module", "purpose": "JWE session token encryption"}, {"id": "lib/jwe/decrypt.ts", "type": "lib-module", "purpose": "JWE session token decryption"}, {"id": "lib/session/server.ts", "type": "lib-module", "purpose": "Server-side session utilities"}, {"id": "lib/session/get-server-session.ts", "type": "lib-module", "purpose": "Extract session from request cookies"}, {"id": "lib/session/create.ts", "type": "lib-module", "purpose": "Create JWE session on sign-in"}, {"id": "lib/session/create-github.ts", "type": "lib-module", "purpose": "GitHub-specific session creation"}, {"id": "lib/session/get-oauth-token.ts", "type": "lib-module", "purpose": "Retrieve + refresh OAuth tokens from DB"}, {"id": "lib/session/types.ts", "type": "lib-module", "purpose": "Session type definitions"}, {"id": "lib/session/constants.ts", "type": "lib-module", "purpose": "Session cookie names / lifetimes"}, {"id": "lib/auth/providers.ts", "type": "lib-module", "purpose": "Auth provider registry (github, vercel)"}, {"id": "lib/github/client.ts", "type": "lib-module", "purpose": "Octokit client factory per user"}, {"id": "lib/github/user-token.ts", "type": "lib-module", "purpose": "getUserGitHubToken from accounts table"}, {"id": "lib/api-keys/user-keys.ts", "type": "lib-module", "purpose": "Load + decrypt user provider API keys"}, {"id": "lib/utils/task-logger.ts", "type": "lib-module", "purpose": "TaskLogger \u2014 DB + in-memory log sink"}, {"id": "lib/utils/branch-name-generator.ts", "type": "lib-module", "purpose": "AI SDK 5 branch name + fallback"}, {"id": "lib/utils/title-generator.ts", "type": "lib-module", "purpose": "AI SDK 5 task title + fallback"}, {"id": "lib/utils/commit-message-generator.ts", "type": "lib-module", "purpose": "AI SDK 5 commit message + fallback"}, {"id": "lib/utils/rate-limit.ts", "type": "lib-module", "purpose": "Daily per-user rate limiter"}, {"id": "lib/utils/logging.ts", "type": "lib-module", "purpose": "redactSensitiveInfo for API keys, tokens, secrets"}, {"id": "lib/utils/id.ts", "type": "lib-module", "purpose": "nanoid-based generateId"}, {"id": "components/task-details.tsx", "type": "component", "purpose": "Main task detail component (2705 LOC)"}, {"id": "components/task-chat.tsx", "type": "component", "purpose": "Chat UI for task messages + follow-ups (1306 LOC)"}, {"id": "components/task-form.tsx", "type": "component", "purpose": "Task creation form (784 LOC)"}, {"id": "components/task-sidebar.tsx", "type": "component", "purpose": "Task sidebar (781 LOC)"}, {"id": "components/repo-selector.tsx", "type": "component", "purpose": "Repo picker (628 LOC)"}, {"id": "components/app-layout.tsx", "type": "component", "purpose": "App-wide layout shell"}, {"id": "components/auth/sign-in.tsx", "type": "component", "purpose": "Sign-in dialog (GitHub/Vercel OAuth)"}, {"id": "components/auth/session-provider.tsx", "type": "component", "purpose": "Session context"}, {"id": "components/connectors/manage-connectors.tsx", "type": "component", "purpose": "MCP connector management UI"}, {"id": "drizzle.config.ts", "type": "config", "purpose": "Drizzle Kit config"}, {"id": "next.config.ts", "type": "config", "purpose": "Next.js config"}, {"id": "tsconfig.json", "type": "config", "purpose": "TypeScript config"}, {"id": "vercel.json", "type": "config", "purpose": "Vercel deployment config"}, {"id": "package.json", "type": "config", "purpose": "Dependencies + scripts"}, {"id": "AGENTS.md", "type": "config", "purpose": "AI agent coding guidelines (security rules, no dynamic logs, never run dev server)"}], "edges": [{"from": "app/api/tasks/route.ts", "to": "lib/sandbox/agents/index.ts", "kind": "calls"}, {"from": "app/api/tasks/route.ts", "to": "lib/sandbox/creation.ts", "kind": "calls"}, {"from": "app/api/tasks/route.ts", "to": "lib/sandbox/git.ts", "kind": "calls"}, {"from": "app/api/tasks/route.ts", "to": "lib/db/schema.ts", "kind": "imports"}, {"from": "app/api/tasks/route.ts", "to": "lib/crypto.ts", "kind": "calls"}, {"from": "app/api/tasks/route.ts", "to": "lib/utils/task-logger.ts", "kind": "calls"}, {"from": "app/api/tasks/route.ts", "to": "lib/utils/branch-name-generator.ts", "kind": "calls"}, {"from": "app/api/tasks/route.ts", "to": "lib/utils/title-generator.ts", "kind": "calls"}, {"from": "app/api/tasks/route.ts", "to": "lib/utils/commit-message-generator.ts", "kind": "calls"}, {"from": "app/api/tasks/route.ts", "to": "lib/api-keys/user-keys.ts", "kind": "calls"}, {"from": "app/api/tasks/route.ts", "to": "lib/github/user-token.ts", "kind": "calls"}, {"from": "app/api/tasks/route.ts", "to": "lib/session/get-server-session.ts", "kind": "calls"}, {"from": "app/api/tasks/[taskId]/continue/route.ts", "to": "lib/sandbox/agents/index.ts", "kind": "calls"}, {"from": "app/api/tasks/[taskId]/continue/route.ts", "to": "lib/sandbox/creation.ts", "kind": "calls"}, {"from": "app/api/tasks/[taskId]/continue/route.ts", "to": "lib/sandbox/git.ts", "kind": "calls"}, {"from": "lib/sandbox/agents/index.ts", "to": "lib/sandbox/agents/claude.ts", "kind": "calls"}, {"from": "lib/sandbox/agents/index.ts", "to": "lib/sandbox/agents/codex.ts", "kind": "calls"}, {"from": "lib/sandbox/agents/index.ts", "to": "lib/sandbox/agents/copilot.ts", "kind": "calls"}, {"from": "lib/sandbox/agents/index.ts", "to": "lib/sandbox/agents/cursor.ts", "kind": "calls"}, {"from": "lib/sandbox/agents/index.ts", "to": "lib/sandbox/agents/gemini.ts", "kind": "calls"}, {"from": "lib/sandbox/agents/index.ts", "to": "lib/sandbox/agents/opencode.ts", "kind": "calls"}, {"from": "lib/sandbox/agents/index.ts", "to": "lib/sandbox/types.ts", "kind": "imports"}, {"from": "lib/sandbox/agents/claude.ts", "to": "lib/sandbox/commands.ts", "kind": "imports"}, {"from": "lib/sandbox/agents/claude.ts", "to": "lib/sandbox/types.ts", "kind": "imports"}, {"from": "lib/sandbox/agents/claude.ts", "to": "lib/utils/logging.ts", "kind": "imports"}, {"from": "lib/sandbox/agents/claude.ts", "to": "lib/utils/task-logger.ts", "kind": "imports"}, {"from": "lib/sandbox/agents/claude.ts", "to": "lib/db/schema.ts", "kind": "imports"}, {"from": "lib/sandbox/agents/claude.ts", "to": "lib/db/client.ts", "kind": "imports"}, {"from": "lib/sandbox/agents/codex.ts", "to": "lib/sandbox/commands.ts", "kind": "imports"}, {"from": "lib/sandbox/agents/codex.ts", "to": "lib/sandbox/types.ts", "kind": "imports"}, {"from": "lib/sandbox/agents/copilot.ts", "to": "lib/sandbox/commands.ts", "kind": "imports"}, {"from": "lib/sandbox/agents/copilot.ts", "to": "lib/sandbox/types.ts", "kind": "imports"}, {"from": "lib/sandbox/agents/cursor.ts", "to": "lib/sandbox/commands.ts", "kind": "imports"}, {"from": "lib/sandbox/agents/cursor.ts", "to": "lib/sandbox/types.ts", "kind": "imports"}, {"from": "lib/sandbox/agents/gemini.ts", "to": "lib/sandbox/commands.ts", "kind": "imports"}, {"from": "lib/sandbox/agents/gemini.ts", "to": "lib/sandbox/types.ts", "kind": "imports"}, {"from": "lib/sandbox/agents/opencode.ts", "to": "lib/sandbox/commands.ts", "kind": "imports"}, {"from": "lib/sandbox/agents/opencode.ts", "to": "lib/sandbox/types.ts", "kind": "imports"}, {"from": "lib/sandbox/creation.ts", "to": "lib/sandbox/commands.ts", "kind": "imports"}, {"from": "lib/sandbox/creation.ts", "to": "lib/sandbox/types.ts", "kind": "imports"}, {"from": "lib/sandbox/creation.ts", "to": "lib/sandbox/config.ts", "kind": "imports"}, {"from": "lib/sandbox/creation.ts", "to": "lib/sandbox/package-manager.ts", "kind": "imports"}, {"from": "lib/sandbox/creation.ts", "to": "lib/sandbox/sandbox-registry.ts", "kind": "imports"}, {"from": "lib/sandbox/git.ts", "to": "lib/sandbox/commands.ts", "kind": "imports"}, {"from": "lib/sandbox/config.ts", "to": "lib/sandbox/types.ts", "kind": "imports"}, {"from": "lib/db/schema.ts", "to": "lib/db/client.ts", "kind": "uses"}, {"from": "lib/session/get-server-session.ts", "to": "lib/jwe/decrypt.ts", "kind": "calls"}, {"from": "lib/session/create.ts", "to": "lib/jwe/encrypt.ts", "kind": "calls"}, {"from": "lib/api-keys/user-keys.ts", "to": "lib/crypto.ts", "kind": "calls"}, {"from": "lib/api-keys/user-keys.ts", "to": "lib/db/schema.ts", "kind": "imports"}, {"from": "lib/github/client.ts", "to": "lib/github/user-token.ts", "kind": "calls"}, {"from": "lib/utils/task-logger.ts", "to": "lib/db/schema.ts", "kind": "imports"}, {"from": "lib/utils/task-logger.ts", "to": "lib/crypto.ts", "kind": "calls"}, {"from": "components/task-details.tsx", "to": "components/task-chat.tsx", "kind": "imports"}, {"from": "components/task-details.tsx", "to": "components/task-sidebar.tsx", "kind": "imports"}, {"from": "components/task-page-client.tsx", "to": "components/task-details.tsx", "kind": "imports"}, {"from": "app/tasks/[taskId]/page.tsx", "to": "components/task-page-client.tsx", "kind": "imports"}, {"from": "components/task-form.tsx", "to": "app/api/tasks/route.ts", "kind": "routes-to"}, {"from": "components/task-chat.tsx", "to": "app/api/tasks/[taskId]/continue/route.ts", "kind": "routes-to"}, {"from": "components/auth/sign-in.tsx", "to": "app/api/auth/github/signin/route.ts", "kind": "routes-to"}, {"from": "components/connectors/manage-connectors.tsx", "to": "app/api/connectors/route.ts", "kind": "routes-to"}], "clusters": [{"name": "Agent Substrate", "description": "The core: agent dispatcher + 6 CLI adapters + sandbox orchestration + streaming persistence. This is the heynxt-core adoption target.", "nodeIds": ["lib/sandbox/agents/index.ts", "lib/sandbox/agents/claude.ts", "lib/sandbox/agents/codex.ts", "lib/sandbox/agents/copilot.ts", "lib/sandbox/agents/cursor.ts", "lib/sandbox/agents/gemini.ts", "lib/sandbox/agents/opencode.ts", "lib/sandbox/types.ts", "lib/sandbox/creation.ts", "lib/sandbox/commands.ts", "lib/sandbox/config.ts", "lib/sandbox/git.ts", "lib/sandbox/package-manager.ts", "lib/sandbox/port-detection.ts", "lib/sandbox/sandbox-registry.ts"]}, {"name": "Task Orchestration", "description": "HTTP entry points + after() orchestration + continuation flow.", "nodeIds": ["app/api/tasks/route.ts", "app/api/tasks/[taskId]/route.ts", "app/api/tasks/[taskId]/continue/route.ts", "app/api/tasks/[taskId]/start-sandbox/route.ts", "app/api/tasks/[taskId]/stop-sandbox/route.ts"]}, {"name": "Persistence", "description": "Drizzle schema, migrations, Neon client, encryption for stored tokens.", "nodeIds": ["lib/db/schema.ts", "lib/db/client.ts", "lib/db/settings.ts", "lib/db/users.ts", "lib/crypto.ts", "lib/jwe/encrypt.ts", "lib/jwe/decrypt.ts"]}, {"name": "Auth + Session", "description": "arctic OAuth flows + JWE cookie sessions + per-user GitHub token resolution.", "nodeIds": ["lib/session/server.ts", "lib/session/get-server-session.ts", "lib/session/create.ts", "lib/session/create-github.ts", "lib/session/get-oauth-token.ts", "lib/session/types.ts", "lib/session/constants.ts", "lib/auth/providers.ts", "app/api/auth/github/signin/route.ts", "app/api/auth/github/callback/route.ts", "app/api/auth/callback/vercel/route.ts", "app/api/auth/signout/route.ts"]}, {"name": "GitHub Integration", "description": "Octokit client factory, per-user token, repo / PR / issue listing routes.", "nodeIds": ["lib/github/client.ts", "lib/github/user-token.ts", "lib/api-keys/user-keys.ts", "app/api/github/repos/route.ts", "app/api/github/user/route.ts", "app/api/repos/[owner]/[repo]/commits/route.ts", "app/api/repos/[owner]/[repo]/issues/route.ts", "app/api/repos/[owner]/[repo]/pull-requests/route.ts"]}, {"name": "Task UI", "description": "React surface for creating, monitoring, and continuing tasks.", "nodeIds": ["app/tasks/[taskId]/page.tsx", "components/task-page-client.tsx", "components/task-details.tsx", "components/task-chat.tsx", "components/task-form.tsx", "components/task-sidebar.tsx"]}, {"name": "Repo UI", "description": "Commits / issues / pull-requests tabs.", "nodeIds": ["app/repos/[owner]/[repo]/page.tsx", "app/repos/[owner]/[repo]/commits/page.tsx", "app/repos/[owner]/[repo]/issues/page.tsx", "app/repos/[owner]/[repo]/pull-requests/page.tsx", "components/repo-selector.tsx"]}, {"name": "Utility + Logging", "description": "Task logger, AI-powered text generators, redaction, ids, rate limit.", "nodeIds": ["lib/utils/task-logger.ts", "lib/utils/branch-name-generator.ts", "lib/utils/title-generator.ts", "lib/utils/commit-message-generator.ts", "lib/utils/rate-limit.ts", "lib/utils/logging.ts", "lib/utils/id.ts"]}, {"name": "Config", "description": "Project-level configuration.", "nodeIds": ["drizzle.config.ts", "next.config.ts", "tsconfig.json", "vercel.json", "package.json", "AGENTS.md"]}], "adapters": [{"name": "claude", "file": "lib/sandbox/agents/claude.ts", "exportFunction": "executeClaudeInSandbox", "cliCommand": "claude", "installCommand": "curl -fsSL https://claude.ai/install.sh | bash", "configPath": "$HOME/.config/claude/config.json", "authMethod": "AI Gateway (ANTHROPIC_API_KEY + ANTHROPIC_BASE_URL=ai-gateway.vercel.sh)", "resumeFlag": "--resume [sessionId]", "skipPermissionsFlag": "--dangerously-skip-permissions", "streamingFormat": "stream-json (line-delimited JSON, parsed by Writable stream)", "supportsMcp": true, "supportsSession": true, "contract": "AgentExecutionResult"}, {"name": "codex", "file": "lib/sandbox/agents/codex.ts", "exportFunction": "executeCodexInSandbox", "cliCommand": "codex", "installCommand": "npm install -g @openai/codex", "configPath": "$HOME/.codex/config.toml", "authMethod": "AI Gateway or direct OpenAI (AI_GATEWAY_API_KEY); TOML specifies wire_api=chat or responses", "resumeFlag": "(uses `codex resume --last`, no explicit id)", "skipPermissionsFlag": "--dangerously-bypass-approvals-and-sandbox", "streamingFormat": "text (lines prefixed with action/progress bullets)", "supportsMcp": true, "supportsSession": true, "contract": "AgentExecutionResult"}, {"name": "copilot", "file": "lib/sandbox/agents/copilot.ts", "exportFunction": "executeCopilotInSandbox", "cliCommand": "copilot", "installCommand": "npm install -g @github/copilot", "configPath": "$HOME/.copilot/mcp-config.json", "authMethod": "GitHub user token (GH_TOKEN / GITHUB_TOKEN)", "resumeFlag": "--resume <sessionId>", "skipPermissionsFlag": "--allow-all-tools", "streamingFormat": "text (no-color; action prefix chars; HTML-wrapped <pre>)", "supportsMcp": true, "supportsSession": true, "contract": "AgentExecutionResult"}, {"name": "cursor", "file": "lib/sandbox/agents/cursor.ts", "exportFunction": "executeCursorInSandbox", "cliCommand": "cursor-agent", "installCommand": "(official Cursor installer script)", "configPath": "(per Cursor conventions)", "authMethod": "CURSOR_API_KEY", "resumeFlag": "--resume <sessionId>", "skipPermissionsFlag": "(Cursor-specific bypass)", "streamingFormat": "text (line-based, with tool detection)", "supportsMcp": true, "supportsSession": true, "contract": "AgentExecutionResult"}, {"name": "gemini", "file": "lib/sandbox/agents/gemini.ts", "exportFunction": "executeGeminiInSandbox", "cliCommand": "gemini", "installCommand": "(Google official installer)", "configPath": "(per Gemini conventions)", "authMethod": "GEMINI_API_KEY", "resumeFlag": "(none \u2014 no isResumed parameter)", "skipPermissionsFlag": "(Gemini-specific bypass)", "streamingFormat": "text", "supportsMcp": true, "supportsSession": false, "contract": "AgentExecutionResult"}, {"name": "opencode", "file": "lib/sandbox/agents/opencode.ts", "exportFunction": "executeOpenCodeInSandbox", "cliCommand": "opencode", "installCommand": "(OpenCode installer)", "configPath": "(per OpenCode conventions)", "authMethod": "AI_GATEWAY_API_KEY or ANTHROPIC_API_KEY (dual-backend)", "resumeFlag": "--resume <sessionId>", "skipPermissionsFlag": "(OpenCode-specific bypass)", "streamingFormat": "text", "supportsMcp": true, "supportsSession": true, "contract": "AgentExecutionResult"}]};
+
+const colorByType = {
+  'component': '#3b82f6',
+  'api-route': '#10b981',
+  'lib-module': '#a855f7',
+  'config': '#f59e0b'
+};
+
+const typeSize = {
+  'component': 6,
+  'api-route': 5,
+  'lib-module': 7,
+  'config': 4
+};
+
+// Mark sandbox substrate nodes
+const substrateNodes = new Set((graphData.clusters.find(c => c.name === 'Agent Substrate') || {}).nodeIds || []);
+const criticalNodes = new Set([
+  'lib/sandbox/agents/index.ts',
+  'lib/sandbox/agents/claude.ts',
+  'lib/sandbox/types.ts',
+  'lib/sandbox/creation.ts',
+  'app/api/tasks/route.ts',
+  'lib/db/schema.ts'
+]);
+
+const nodes = graphData.nodes.map(n => ({
+  ...n,
+  isSubstrate: substrateNodes.has(n.id),
+  isCritical: criticalNodes.has(n.id)
+}));
+const links = graphData.edges.map(e => ({ source: e.from, target: e.to, kind: e.kind }));
+
+const clusterById = new Map(graphData.clusters.map(c => [c.name, c]));
+const nodeToCluster = new Map();
+graphData.clusters.forEach(c => c.nodeIds.forEach(id => nodeToCluster.set(id, c.name)));
+
+// Populate cluster filter
+const clusterSelect = document.getElementById('cluster-filter');
+graphData.clusters.forEach(c => {
+  const opt = document.createElement('option');
+  opt.value = c.name;
+  opt.textContent = c.name;
+  clusterSelect.appendChild(opt);
+});
+
+const stats = document.getElementById('stats');
+stats.textContent = `${nodes.length} nodes · ${links.length} edges · ${graphData.clusters.length} clusters · ${graphData.adapters.length} adapters`;
+
+const svg = d3.select('svg').attr('viewBox', [0, 0, window.innerWidth, window.innerHeight]);
+const g = svg.append('g');
+
+const simulation = d3.forceSimulation(nodes)
+  .force('link', d3.forceLink(links).id(d => d.id).distance(d => d.kind === 'imports' ? 55 : 75).strength(0.6))
+  .force('charge', d3.forceManyBody().strength(-180))
+  .force('center', d3.forceCenter(window.innerWidth / 2, window.innerHeight / 2))
+  .force('collision', d3.forceCollide().radius(14));
+
+const link = g.append('g')
+  .selectAll('line')
+  .data(links)
+  .enter().append('line')
+  .attr('class', d => `link ${d.kind}`)
+  .attr('stroke-width', 1);
+
+const node = g.append('g')
+  .selectAll('g')
+  .data(nodes)
+  .enter().append('g')
+  .attr('class', 'node')
+  .call(d3.drag()
+    .on('start', dragstarted)
+    .on('drag', dragged)
+    .on('end', dragended));
+
+node.append('circle')
+  .attr('r', d => typeSize[d.type] + (d.isCritical ? 3 : (d.isSubstrate ? 1.5 : 0)))
+  .attr('fill', d => {
+    if (d.isCritical) return '#ef4444';
+    if (d.isSubstrate) return '#f43f5e';
+    return colorByType[d.type] || '#475569';
+  })
+  .attr('stroke', d => d.isCritical ? '#fecaca' : (d.isSubstrate ? '#fda4af' : 'none'))
+  .on('click', (event, d) => showDetails(event, d));
+
+node.append('text')
+  .attr('dx', 10)
+  .attr('dy', 3)
+  .text(d => d.id.split('/').pop())
+  .style('font-size', d => d.isCritical ? '12px' : (d.isSubstrate ? '11px' : '10px'))
+  .style('font-weight', d => d.isCritical ? '700' : '400');
+
+simulation.on('tick', () => {
+  link
+    .attr('x1', d => d.source.x).attr('y1', d => d.source.y)
+    .attr('x2', d => d.target.x).attr('y2', d => d.target.y);
+  node.attr('transform', d => `translate(${d.x},${d.y})`);
+});
+
+function dragstarted(event, d) {
+  if (!event.active) simulation.alphaTarget(0.3).restart();
+  d.fx = d.x; d.fy = d.y;
+}
+function dragged(event, d) { d.fx = event.x; d.fy = event.y; }
+function dragended(event, d) {
+  if (!event.active) simulation.alphaTarget(0);
+  d.fx = null; d.fy = null;
+}
+
+// Zoom
+svg.call(d3.zoom().scaleExtent([0.2, 4]).on('zoom', (event) => g.attr('transform', event.transform)));
+
+// Filtering
+const typeActive = { component: true, 'api-route': true, 'lib-module': true, config: true };
+document.querySelectorAll('.chip[data-type]').forEach(chip => {
+  chip.addEventListener('click', () => {
+    const t = chip.dataset.type;
+    const cb = chip.querySelector('input');
+    cb.checked = !cb.checked;
+    typeActive[t] = cb.checked;
+    chip.classList.toggle('active', cb.checked);
+    applyFilters();
+  });
+});
+
+clusterSelect.addEventListener('change', applyFilters);
+document.getElementById('kind-filter').addEventListener('change', applyFilters);
+
+function applyFilters() {
+  const cluster = clusterSelect.value;
+  const kindFilter = document.getElementById('kind-filter').value;
+
+  node.classed('hidden', d => {
+    if (!typeActive[d.type]) return true;
+    if (cluster && nodeToCluster.get(d.id) !== cluster) return true;
+    return false;
+  });
+
+  link.classed('hidden', d => {
+    if (kindFilter && d.kind !== kindFilter) return true;
+    const sHidden = !typeActive[d.source.type] || (cluster && nodeToCluster.get(d.source.id) !== cluster);
+    const tHidden = !typeActive[d.target.type] || (cluster && nodeToCluster.get(d.target.id) !== cluster);
+    return sHidden || tHidden;
+  });
+}
+
+// Details panel
+const details = document.getElementById('details');
+document.getElementById('close-details').addEventListener('click', () => details.style.display = 'none');
+function showDetails(event, d) {
+  details.style.display = 'block';
+  document.getElementById('details-title').textContent = d.id;
+  const badges = document.getElementById('details-badges');
+  badges.innerHTML = '';
+  [['type', d.type], ['cluster', nodeToCluster.get(d.id) || '—']].forEach(([k, v]) => {
+    const span = document.createElement('span');
+    span.className = 'badge';
+    span.textContent = `${k}: ${v}`;
+    badges.appendChild(span);
+  });
+  if (d.isSubstrate) {
+    const s = document.createElement('span');
+    s.className = 'badge';
+    s.style.background = '#7f1d1d';
+    s.style.color = '#fff';
+    s.textContent = 'Agent Substrate';
+    badges.appendChild(s);
+  }
+  if (d.isCritical) {
+    const s = document.createElement('span');
+    s.className = 'badge';
+    s.style.background = '#ef4444';
+    s.style.color = '#fff';
+    s.textContent = 'HIGH BLAST RADIUS';
+    badges.appendChild(s);
+  }
+  document.getElementById('details-purpose').textContent = d.purpose || '';
+  const outgoing = graphData.edges.filter(e => e.from === d.id);
+  const incoming = graphData.edges.filter(e => e.to === d.id);
+  document.getElementById('details-connections').innerHTML =
+    `<div style="margin-top:4px"><strong>↗ ${outgoing.length} outgoing · ↙ ${incoming.length} incoming</strong></div>` +
+    (outgoing.length ? `<div style="margin-top:6px"><div style="color:var(--muted);font-size:11px">OUTGOING (${outgoing.length})</div>${outgoing.slice(0, 12).map(e => `<div>→ ${e.to} <span style="color:var(--muted)">${e.kind}</span></div>`).join('')}${outgoing.length > 12 ? `<div style="color:var(--muted)">… +${outgoing.length - 12} more</div>` : ''}</div>` : '') +
+    (incoming.length ? `<div style="margin-top:6px"><div style="color:var(--muted);font-size:11px">INCOMING (${incoming.length})</div>${incoming.slice(0, 12).map(e => `<div>← ${e.from} <span style="color:var(--muted)">${e.kind}</span></div>`).join('')}${incoming.length > 12 ? `<div style="color:var(--muted)">… +${incoming.length - 12} more</div>` : ''}</div>` : '');
+  event.stopPropagation();
+}
+svg.on('click', () => { details.style.display = 'none'; });
+
+// Keyboard: reset layout on 'r'
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'r') {
+    nodes.forEach(n => { n.fx = null; n.fy = null; });
+    simulation.alpha(0.8).restart();
+  }
+});
+</script>
+
+</body>
+</html>

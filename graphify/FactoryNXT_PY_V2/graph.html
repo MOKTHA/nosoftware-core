@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>FactoryNXT_PY_V2 — Structural Knowledge Graph</title>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+  :root {
+    --bg: #0f1117;
+    --panel: #181b24;
+    --border: #2a2f3a;
+    --text: #e8eaed;
+    --muted: #9aa0a6;
+    --accent: #6ea8fe;
+    --node-file: #60a5fa;
+    --node-model: #f59e0b;
+    --node-route: #10b981;
+    --node-bp: #a78bfa;
+    --node-workflow: #f472b6;
+    --node-domain: #64748b;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif; font-size: 14px; line-height: 1.4; }
+
+  .topbar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 20;
+    background: var(--panel); border-bottom: 1px solid var(--border);
+    padding: 10px 16px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  }
+  .topbar h1 { font-size: 15px; margin: 0; font-weight: 600; letter-spacing: -0.01em; }
+  .topbar .stats { color: var(--muted); font-size: 12px; }
+  .topbar .stats span { margin-right: 12px; }
+
+  .filters { display: flex; gap: 6px; flex-wrap: wrap; margin-left: auto; }
+  .filter-btn {
+    background: transparent; border: 1px solid var(--border); color: var(--muted);
+    padding: 4px 10px; border-radius: 4px; font-size: 12px; cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .filter-btn.active { background: var(--node-file); color: #0b1220; border-color: var(--node-file); font-weight: 600; }
+  .filter-btn:hover { border-color: var(--accent); color: var(--text); }
+
+  #graph { position: fixed; top: 54px; left: 0; right: 0; bottom: 0; }
+
+  .legend {
+    position: fixed; bottom: 16px; left: 16px; z-index: 15;
+    background: var(--panel); border: 1px solid var(--border); border-radius: 6px;
+    padding: 10px 14px; font-size: 12px; min-width: 180px;
+  }
+  .legend .row { display: flex; align-items: center; gap: 8px; margin: 3px 0; }
+  .legend .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .legend .key { color: var(--muted); }
+
+  .details-panel {
+    position: fixed; top: 54px; right: 0; z-index: 18;
+    background: var(--panel); border-left: 1px solid var(--border);
+    width: 340px; max-height: calc(100vh - 54px); overflow-y: auto;
+    padding: 16px; display: none;
+    transition: transform 0.2s ease;
+  }
+  .details-panel.open { display: block; }
+  .details-panel h2 { font-size: 13px; font-weight: 600; margin: 0 0 10px 0; color: var(--accent); text-transform: uppercase; letter-spacing: 0.05em; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+  .details-panel .close { float: right; background: transparent; color: var(--muted); border: none; cursor: pointer; font-size: 16px; padding: 0 4px; }
+  .details-panel .close:hover { color: var(--text); }
+  .details-panel .field { margin-bottom: 8px; font-size: 12px; }
+  .details-panel .field .label { color: var(--muted); display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px; }
+  .details-panel .field .value { color: var(--text); word-break: break-word; }
+  .details-panel .related { margin-top: 12px; padding-top: 8px; border-top: 1px solid var(--border); }
+  .details-panel .related .rel { font-size: 11px; padding: 3px 0; color: var(--muted); }
+  .details-panel .related .rel b { color: var(--text); font-weight: 500; }
+
+  details { background: var(--panel); border: 1px solid var(--border); border-radius: 6px; padding: 4px 14px; max-width: 90vw; }
+  details summary { cursor: pointer; font-size: 13px; padding: 4px 0; color: var(--accent); }
+  details[open] summary { border-bottom: 1px solid var(--border); margin-bottom: 10px; padding-bottom: 6px; }
+  .sm-content { max-height: 50vh; overflow-y: auto; font-size: 11px; line-height: 1.55; color: var(--muted); padding: 6px 0; white-space: pre-wrap; font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+  .sm-content h4 { color: var(--text); font-size: 12px; margin: 10px 0 4px 0; }
+
+  .node-label { font-size: 10px; fill: var(--text); pointer-events: none; text-shadow: 0 1px 2px rgba(0,0,0,0.8); }
+  .link { stroke: #334155; stroke-opacity: 0.4; }
+  .link:hover { stroke-opacity: 1; stroke: var(--accent); }
+  .node { cursor: pointer; stroke: #0b1220; stroke-width: 1.5; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>FactoryNXT_PY_V2 · Structural Knowledge Graph</h1>
+  <div class="stats">
+    <span id="stat-files">0 files</span>
+    <span id="stat-models">0 models</span>
+    <span id="stat-routes">0 routes</span>
+    <span id="stat-bps">0 blueprints</span>
+  </div>
+  <details style="margin-left: 8px;">
+    <summary>Session Memory</summary>
+    <div class="sm-content">FactoryNXT — Production MES for PCB/electronics assembly (SMT). <b>Reference repo for heynxt-core. DO NOT copy-paste.</b>
+Python / Flask 3.0 / SQLAlchemy / PostgreSQL. 60 models (55 in models.py, 5 in models_routing.py). 24 blueprints.
+
+<b>Most valuable pattern to extract</b>: app/routes/operations.py scan_serial() — enforces routing order, advances SerialNumber.current_step, auto-advances WO RELEASED→RUNNING→COMPLETED.
+
+<b>What to read first</b>:
+1. app/models.py first 200 lines (topology + WorkOrder + SerialNumber + OperationTransaction)
+2. app/__init__.py (blueprint registration pattern)
+3. app/routes/operations.py (full file — the execution engine)
+4. app/models_routing.py (V2 DAG + snapshot pattern)
+
+<b>What NOT to touch without reading the full chain</b>:
+- operations.py scan endpoint (routing-order enforcement is subtle)
+- Auto-release logic in operations.py / production.py
+- app/__init__.py blueprint names (conflicts crash app)
+- models.py FK columns (cascade; needs Alembic migration)
+
+<b>Model domains</b>: topology (Plant/Line/Machine/Station/Alarm), orders (WO/Serial/OpTx/Schedule/Kit), product (BOMItem/RoutingStep), SMT materials (FeederReel/SolderPaste/Stencil/Inventory), PCB (Panel/Board/UnitHistory/GenealogyEvent/Repair), quality (NCR/CAPA/Defect/Inspection/GoldenBoard/PPAP/TestResult/BurnIn), reliability (PM/Maintenance/Calibration/Downtime/OEE), governance (Role/User/Certification/AuditLog/ElectronicSig), integrations (Integration/ERPSync/Webhook/ApiKey), routing V2 (Master/StepV2/Connection/ProductAssignment/Snapshot).
+
+<b>Known gaps (inferred)</b>:
+- V1 RoutingStep (linear) still drives execution; V2 DAG (models_routing.py) has no bridge — known gap.
+- Auth is a stub: session['username'] = form input, no password.
+- ERP sync is fire-and-queue (no worker in repo).
+- Feature duplication between maintenance/machines and quality modules.
+
+<b>Language</b>: Python reference; extract ideas, do not port into heynxt-core verbatim.</div>
+  </details>
+  <div class="filters">
+    <button class="filter-btn active" data-filter="all">All</button>
+    <button class="filter-btn" data-filter="file">Files</button>
+    <button class="filter-btn" data-filter="model">Models</button>
+    <button class="filter-btn" data-filter="blueprint">Blueprints</button>
+    <button class="filter-btn" data-filter="route-file">Route Files</button>
+    <button class="filter-btn" data-filter="workflow">Workflows</button>
+  </div>
+</div>
+
+<div id="graph"></div>
+
+<div class="legend">
+  <div class="row"><span class="dot" style="background:var(--node-bp)"></span><span class="key">Blueprint</span></div>
+  <div class="row"><span class="dot" style="background:var(--node-route)"></span><span class="key">Route File</span></div>
+  <div class="row"><span class="dot" style="background:var(--node-model)"></span><span class="key">Model</span></div>
+  <div class="row"><span class="dot" style="background:var(--node-workflow)"></span><span class="key">Workflow</span></div>
+  <div class="row"><span class="dot" style="background:var(--node-file)"></span><span class="key">Other File</span></div>
+</div>
+
+<div id="details" class="details-panel">
+  <button class="close" onclick="closeDetails()">×</button>
+  <div id="details-content"></div>
+</div>
+
+<script>
+// ─────────────────────────────────────────
+// DATA — inlined from graph.json
+// ─────────────────────────────────────────
+const rawFiles = [
+  {path: "app/__init__.py", role: "app-factory", type: "python", blast: "high"},
+  {path: "app/models.py", role: "domain-models", type: "python", line_count: 635, model_count: 55, blast: "highest"},
+  {path: "app/models_routing.py", role: "v2-routing", type: "python", line_count: 175, model_count: 5, blast: "high"},
+  {path: "app/config.py", role: "config", type: "python"},
+  {path: "run.py", role: "entry-point", type: "python"},
+  {path: "app/routes/operations.py", role: "execution-engine", route_count: 7, blast: "highest"},
+  {path: "app/routes/production.py", role: "gantt-scheduler", route_count: 15, url_prefix: "/production", blast: "high"},
+  {path: "app/routes/routing_builder.py", role: "v2-routing-crud", route_count: 16},
+  {path: "app/routes/integrations.py", role: "integrations", route_count: 10, url_prefix: "/integrations"},
+  {path: "app/routes/machines.py", role: "machine-mgmt", route_count: 8},
+  {path: "app/routes/maintenance.py", role: "maintenance", route_count: 9, url_prefix: "/maintenance"},
+  {path: "app/routes/quality_ext.py", role: "quality-ext", route_count: 11, url_prefix: "/quality/ext"},
+  {path: "app/routes/ncr.py", role: "ncr", route_count: 3},
+  {path: "app/routes/pcb.py", role: "pcb-mgmt", route_count: 6, url_prefix: "/pcb"},
+  {path: "app/routes/genealogy.py", role: "genealogy", route_count: 5, url_prefix: "/genealogy"},
+  {path: "app/routes/traceability.py", role: "traceability", route_count: 5},
+  {path: "app/routes/smt_materials.py", role: "smt-materials", route_count: 11},
+  {path: "app/routes/kitting.py", role: "kitting", route_count: 7, url_prefix: "/kitting"},
+  {path: "app/routes/inventory.py", role: "inventory", route_count: 6},
+  {path: "app/routes/work_orders.py", role: "wo-legacy", route_count: 4},
+  {path: "app/routes/routing.py", role: "v1-routing", route_count: 2},
+  {path: "app/routes/bom.py", role: "bom", route_count: 2},
+  {path: "app/routes/stations.py", role: "stations", route_count: 5, url_prefix: "/stations"},
+  {path: "app/routes/scheduling.py", role: "scheduling", route_count: 4, url_prefix: "/scheduling"},
+  {path: "app/routes/oee.py", role: "oee", route_count: 8, url_prefix: "/oee"},
+  {path: "app/routes/admin.py", role: "admin", route_count: 7},
+  {path: "app/routes/users.py", role: "users", route_count: 8, url_prefix: "/users"},
+  {path: "app/routes/auth.py", role: "auth-stub", route_count: 1, note: "INFERRED: no password check"},
+  {path: "app/routes/dashboard.py", role: "dashboard", route_count: 1},
+  {path: "app/routes/api.py", role: "public-api", route_count: 1}
+];
+
+const rawModels = [
+  // Topology
+  {name: "Plant", domain: "topology", table: "plants"},
+  {name: "Line", domain: "topology", table: "lines"},
+  {name: "SmtLine", domain: "topology", table: "smt_lines"},
+  {name: "Machine", domain: "topology", table: "machines"},
+  {name: "Alarm", domain: "topology", table: "alarms"},
+  {name: "Station", domain: "topology", table: "stations"},
+  // Orders
+  {name: "WorkOrder", domain: "orders", table: "work_orders", lifecycle: "DRAFT → RELEASED → RUNNING → COMPLETED | CANCELLED"},
+  {name: "SerialNumber", domain: "orders", table: "serial_numbers", lifecycle: "PENDING → IN_PROGRESS → COMPLETED | REJECTED"},
+  {name: "OperationTransaction", domain: "orders", table: "operation_transactions"},
+  {name: "ProductionSchedule", domain: "orders", table: "production_schedule"},
+  {name: "ShiftCalendar", domain: "orders", table: "shift_calendars"},
+  {name: "Kit", domain: "orders", table: "kits"},
+  // Product
+  {name: "BOMItem", domain: "product", table: "bom_items"},
+  {name: "RoutingStep", domain: "product", table: "routing_steps", note: "V1 linear — drives execution engine"},
+  // SMT materials
+  {name: "FeederReel", domain: "smt_materials", table: "feeder_reels"},
+  {name: "SolderPasteLot", domain: "smt_materials", table: "solder_paste_lots"},
+  {name: "Stencil", domain: "smt_materials", table: "stencils"},
+  {name: "InventoryLocation", domain: "smt_materials", table: "inventory_locations"},
+  {name: "InventoryItem", domain: "smt_materials", table: "inventory_items"},
+  // PCB
+  {name: "PcbPanel", domain: "pcb_traceability", table: "pcb_panels"},
+  {name: "PcbBoard", domain: "pcb_traceability", table: "pcb_boards"},
+  {name: "UnitHistory", domain: "pcb_traceability", table: "unit_history"},
+  {name: "GenealogyEvent", domain: "pcb_traceability", table: "genealogy_events"},
+  {name: "RepairRecord", domain: "pcb_traceability", table: "repair_records"},
+  // Quality
+  {name: "NCR", domain: "quality", table: "ncrs"},
+  {name: "Capa", domain: "quality", table: "capas"},
+  {name: "DefectRecord", domain: "quality", table: "defect_records"},
+  {name: "InspectionPlan", domain: "quality", table: "inspection_plans"},
+  {name: "GoldenBoard", domain: "quality", table: "golden_boards"},
+  {name: "PpapRecord", domain: "quality", table: "ppap_records"},
+  {name: "TestResult", domain: "quality", table: "test_results"},
+  {name: "BurnInSession", domain: "quality", table: "burn_in_sessions"},
+  // Reliability
+  {name: "PmSchedule", domain: "reliability", table: "pm_schedules"},
+  {name: "MaintenanceLog", domain: "reliability", table: "maintenance_logs"},
+  {name: "CalibrationRecord", domain: "reliability", table: "calibration_records"},
+  {name: "DowntimeEvent", domain: "reliability", table: "downtime_events"},
+  {name: "OeeSnapshot", domain: "reliability", table: "oee_snapshots"},
+  // Governance
+  {name: "Role", domain: "governance", table: "roles"},
+  {name: "UserProfile", domain: "governance", table: "user_profiles"},
+  {name: "OperatorCertification", domain: "governance", table: "operator_certifications"},
+  {name: "AuditLog", domain: "governance", table: "audit_log"},
+  {name: "ElectronicSignature", domain: "governance", table: "electronic_signatures"},
+  // Integrations
+  {name: "Integration", domain: "integrations", table: "integrations"},
+  {name: "ErpSyncLog", domain: "integrations", table: "erp_sync_logs"},
+  {name: "Webhook", domain: "integrations", table: "webhooks"},
+  {name: "ApiKey", domain: "integrations", table: "api_keys"},
+  // Routing V2
+  {name: "RoutingMaster", domain: "routing_v2", table: "routing_master", lifecycle: "DRAFT → RELEASED → OBSOLETE"},
+  {name: "RoutingStepV2", domain: "routing_v2", table: "routing_steps_v2"},
+  {name: "RoutingConnection", domain: "routing_v2", table: "routing_connections"},
+  {name: "RoutingProductAssignment", domain: "routing_v2", table: "routing_product_assignments"},
+  {name: "WorkOrderRoutingSnapshot", domain: "routing_v2", table: "wo_routing_snapshots"}
+];
+
+const rawBlueprints = [
+  {name: "dashboard", module: "app/routes/dashboard.py", prefix: null},
+  {name: "auth", module: "app/routes/auth.py", prefix: "/auth"},
+  {name: "api", module: "app/routes/api.py", prefix: "/api"},
+  {name: "work_orders", module: "app/routes/work_orders.py", prefix: null},
+  {name: "ncr", module: "app/routes/ncr.py", prefix: null},
+  {name: "bom", module: "app/routes/bom.py", prefix: null},
+  {name: "routing", module: "app/routes/routing.py", prefix: null},
+  {name: "routing_builder", module: "app/routes/routing_builder.py", prefix: null},
+  {name: "quality_ext", module: "app/routes/quality_ext.py", prefix: "/quality/ext"},
+  {name: "machines", module: "app/routes/machines.py", prefix: null},
+  {name: "inventory", module: "app/routes/inventory.py", prefix: null},
+  {name: "production", module: "app/routes/production.py", prefix: "/production"},
+  {name: "traceability", module: "app/routes/traceability.py", prefix: null},
+  {name: "admin", module: "app/routes/admin.py", prefix: null},
+  {name: "smt_materials", module: "app/routes/smt_materials.py", prefix: null},
+  {name: "operations", module: "app/routes/operations.py", prefix: null},
+  {name: "scheduling", module: "app/routes/scheduling.py", prefix: "/scheduling"},
+  {name: "kitting", module: "app/routes/kitting.py", prefix: "/kitting"},
+  {name: "oee", module: "app/routes/oee.py", prefix: "/oee"},
+  {name: "pcb", module: "app/routes/pcb.py", prefix: "/pcb"},
+  {name: "maintenance", module: "app/routes/maintenance.py", prefix: "/maintenance"},
+  {name: "genealogy", module: "app/routes/genealogy.py", prefix: "/genealogy"},
+  {name: "stations", module: "app/routes/stations.py", prefix: "/stations"},
+  {name: "integrations", module: "app/routes/integrations.py", prefix: "/integrations"},
+  {name: "users", module: "app/routes/users.py", prefix: "/users"}
+];
+
+const rawWorkflows = [
+  {name: "WorkOrder lifecycle", states: ["DRAFT", "RELEASED", "RUNNING", "COMPLETED", "CANCELLED"]},
+  {name: "SerialNumber lifecycle", states: ["PENDING", "IN_PROGRESS", "COMPLETED", "REJECTED"]},
+  {name: "Routing revision", states: ["DRAFT", "RELEASED", "OBSOLETE"]},
+  {name: "Operation scan engine", states: ["scan", "validate", "transact", "advance", "auto-complete"]}
+];
+
+const rawRelations = [
+  // WO centrality
+  {from: "WorkOrder", to: "SerialNumber", type: "1:N"},
+  {from: "WorkOrder", to: "OperationTransaction", type: "1:N"},
+  {from: "WorkOrder", to: "ProductionSchedule", type: "1:N"},
+  {from: "WorkOrder", to: "Kit", type: "1:1"},
+  {from: "WorkOrder", to: "NCR", type: "1:N"},
+  {from: "WorkOrder", to: "PcbPanel", type: "1:N"},
+  {from: "WorkOrder", to: "PcbBoard", type: "1:N"},
+  {from: "WorkOrder", to: "GenealogyEvent", type: "1:N"},
+  {from: "WorkOrder", to: "RepairRecord", type: "1:N"},
+  {from: "WorkOrder", to: "DefectRecord", type: "1:N"},
+  {from: "WorkOrder", to: "PpapRecord", type: "1:N"},
+  {from: "WorkOrder", to: "FeederReel", type: "1:N"},
+  {from: "WorkOrder", to: "WorkOrderRoutingSnapshot", type: "1:N"},
+  // Topology
+  {from: "Line", to: "Machine", type: "1:N"},
+  {from: "Machine", to: "Alarm", type: "1:N"},
+  {from: "Plant", to: "SmtLine", type: "implied"},
+  {from: "Station", to: "RoutingStep", type: "1:N"},
+  {from: "Station", to: "RoutingStepV2", type: "1:N"},
+  {from: "Station", to: "OperationTransaction", type: "1:N"},
+  // Routing V2
+  {from: "RoutingMaster", to: "RoutingStepV2", type: "1:N"},
+  {from: "RoutingMaster", to: "RoutingConnection", type: "1:N"},
+  {from: "RoutingMaster", to: "RoutingProductAssignment", type: "1:N"},
+  {from: "RoutingMaster", to: "WorkOrderRoutingSnapshot", type: "1:N"},
+  // PCB
+  {from: "PcbPanel", to: "PcbBoard", type: "1:N"},
+  {from: "PcbBoard", to: "UnitHistory", type: "1:N"},
+  {from: "PcbBoard", to: "GenealogyEvent", type: "1:N"},
+  {from: "PcbBoard", to: "RepairRecord", type: "1:N"},
+  // Quality
+  {from: "NCR", to: "Capa", type: "1:N"},
+  {from: "NCR", to: "RepairRecord", type: "1:N"},
+  // Inventory
+  {from: "InventoryLocation", to: "InventoryItem", type: "1:N"},
+  // Governance
+  {from: "Plant", to: "UserProfile", type: "1:N"},
+  {from: "Role", to: "UserProfile", type: "1:N"},
+  {from: "Plant", to: "AuditLog", type: "1:N"},
+  // Reliability
+  {from: "SmtLine", to: "ProductionSchedule", type: "1:N"},
+  {from: "SmtLine", to: "OeeSnapshot", type: "1:N"},
+  // Blueprint → route-file
+  {from: "dashboard", to: "app/routes/dashboard.py", type: "bp:file"},
+  {from: "auth", to: "app/routes/auth.py", type: "bp:file"},
+  {from: "api", to: "app/routes/api.py", type: "bp:file"},
+  {from: "work_orders", to: "app/routes/work_orders.py", type: "bp:file"},
+  {from: "ncr", to: "app/routes/ncr.py", type: "bp:file"},
+  {from: "bom", to: "app/routes/bom.py", type: "bp:file"},
+  {from: "routing", to: "app/routes/routing.py", type: "bp:file"},
+  {from: "routing_builder", to: "app/routes/routing_builder.py", type: "bp:file"},
+  {from: "quality_ext", to: "app/routes/quality_ext.py", type: "bp:file"},
+  {from: "machines", to: "app/routes/machines.py", type: "bp:file"},
+  {from: "inventory", to: "app/routes/inventory.py", type: "bp:file"},
+  {from: "production", to: "app/routes/production.py", type: "bp:file"},
+  {from: "traceability", to: "app/routes/traceability.py", type: "bp:file"},
+  {from: "admin", to: "app/routes/admin.py", type: "bp:file"},
+  {from: "smt_materials", to: "app/routes/smt_materials.py", type: "bp:file"},
+  {from: "operations", to: "app/routes/operations.py", type: "bp:file"},
+  {from: "scheduling", to: "app/routes/scheduling.py", type: "bp:file"},
+  {from: "kitting", to: "app/routes/kitting.py", type: "bp:file"},
+  {from: "oee", to: "app/routes/oee.py", type: "bp:file"},
+  {from: "pcb", to: "app/routes/pcb.py", type: "bp:file"},
+  {from: "maintenance", to: "app/routes/maintenance.py", type: "bp:file"},
+  {from: "genealogy", to: "app/routes/genealogy.py", type: "bp:file"},
+  {from: "stations", to: "app/routes/stations.py", type: "bp:file"},
+  {from: "integrations", to: "app/routes/integrations.py", type: "bp:file"},
+  {from: "users", to: "app/routes/users.py", type: "bp:file"},
+  // Route file → models it touches
+  {from: "app/routes/operations.py", to: "WorkOrder", type: "uses"},
+  {from: "app/routes/operations.py", to: "SerialNumber", type: "uses"},
+  {from: "app/routes/operations.py", to: "OperationTransaction", type: "uses"},
+  {from: "app/routes/operations.py", to: "RoutingStep", type: "uses"},
+  {from: "app/routes/operations.py", to: "Station", type: "uses"},
+  {from: "app/routes/production.py", to: "WorkOrder", type: "uses"},
+  {from: "app/routes/production.py", to: "ProductionSchedule", type: "uses"},
+  {from: "app/routes/production.py", to: "OeeSnapshot", type: "uses"},
+  {from: "app/routes/production.py", to: "DowntimeEvent", type: "uses"},
+  {from: "app/routes/production.py", to: "SmtLine", type: "uses"},
+  {from: "app/routes/routing_builder.py", to: "RoutingMaster", type: "uses"},
+  {from: "app/routes/routing_builder.py", to: "RoutingStepV2", type: "uses"},
+  {from: "app/routes/routing_builder.py", to: "RoutingConnection", type: "uses"},
+  {from: "app/routes/routing_builder.py", to: "RoutingProductAssignment", type: "uses"},
+  {from: "app/routes/routing_builder.py", to: "WorkOrderRoutingSnapshot", type: "uses"},
+  {from: "app/routes/integrations.py", to: "Integration", type: "uses"},
+  {from: "app/routes/integrations.py", to: "ErpSyncLog", type: "uses"},
+  {from: "app/routes/integrations.py", to: "Webhook", type: "uses"},
+  {from: "app/routes/integrations.py", to: "ApiKey", type: "uses"},
+  {from: "app/routes/machines.py", to: "Machine", type: "uses"},
+  {from: "app/routes/machines.py", to: "Alarm", type: "uses"},
+  {from: "app/routes/machines.py", to: "Line", type: "uses"},
+  {from: "app/routes/maintenance.py", to: "PmSchedule", type: "uses"},
+  {from: "app/routes/maintenance.py", to: "MaintenanceLog", type: "uses"},
+  {from: "app/routes/maintenance.py", to: "CalibrationRecord", type: "uses"},
+  {from: "app/routes/pmb.py", to: "PcbPanel", type: "uses"},
+  {from: "app/routes/genealogy.py", to: "GenealogyEvent", type: "uses"},
+  {from: "app/routes/genealogy.py", to: "RepairRecord", type: "uses"},
+  {from: "app/routes/pcb.py", to: "PcbPanel", type: "uses"},
+  {from: "app/routes/pcb.py", to: "PcbBoard", type: "uses"},
+  {from: "app/routes/quality_ext.py", to: "DefectRecord", type: "uses"},
+  {from: "app/routes/quality_ext.py", to: "Capa", type: "uses"},
+  {from: "app/routes/quality_ext.py", to: "InspectionPlan", type: "uses"},
+  {from: "app/routes/quality_ext.py", to: "GoldenBoard", type: "uses"},
+  {from: "app/routes/quality_ext.py", to: "PpapRecord", type: "uses"},
+  {from: "app/routes/quality_ext.py", to: "TestResult", type: "uses"},
+  {from: "app/routes/quality_ext.py", to: "BurnInSession", type: "uses"},
+  {from: "app/routes/ncr.py", to: "NCR", type: "uses"},
+  {from: "app/routes/smt_materials.py", to: "SolderPasteLot", type: "uses"},
+  {from: "app/routes/smt_materials.py", to: "Stencil", type: "uses"},
+  {from: "app/routes/smt_materials.py", to: "FeederReel", type: "uses"},
+  {from: "app/routes/kitting.py", to: "Kit", type: "uses"},
+  {from: "app/routes/inventory.py", to: "InventoryLocation", type: "uses"},
+  {from: "app/routes/inventory.py", to: "InventoryItem", type: "uses"},
+  {from: "app/routes/stations.py", to: "Station", type: "uses"},
+  {from: "app/routes/scheduling.py", to: "ShiftCalendar", type: "uses"},
+  {from: "app/routes/oee.py", to: "OeeSnapshot", type: "uses"},
+  {from: "app/routes/oee.py", to: "DowntimeEvent", type: "uses"},
+  {from: "app/routes/users.py", to: "UserProfile", type: "uses"},
+  {from: "app/routes/users.py", to: "Role", type: "uses"},
+  {from: "app/routes/users.py", to: "OperatorCertification", type: "uses"},
+  {from: "app/routes/admin.py", to: "UserProfile", type: "uses"},
+  {from: "app/routes/admin.py", to: "Role", type: "uses"},
+  {from: "app/routes/admin.py", to: "AuditLog", type: "uses"},
+  {from: "app/routes/bom.py", to: "BOMItem", type: "uses"},
+  {from: "app/routes/routing.py", to: "RoutingStep", type: "uses"},
+  {from: "app/routes/traceability.py", to: "UnitHistory", type: "uses"},
+  {from: "app/routes/traceability.py", to: "PcbBoard", type: "uses"},
+  // High-level structure
+  {from: "run.py", to: "app/__init__.py", type: "imports"},
+  {from: "app/__init__.py", to: "app/models.py", type: "imports"},
+  {from: "app/__init__.py", to: "app/models_routing.py", type: "imports"}
+];
+
+// ─────────────────────────────────────────
+// BUILD graph
+// ─────────────────────────────────────────
+const nodes = [];
+const links = [];
+const nodeById = new Map();
+
+const domainColor = {
+  topology: "#ef4444",
+  orders: "#f59e0b",
+  product: "#eab308",
+  smt_materials: "#84cc16",
+  pcb_traceability: "#22c55e",
+  quality: "#14b8a6",
+  reliability: "#06b6d4",
+  governance: "#6366f1",
+  integrations: "#8b5cf6",
+  routing_v2: "#ec4899"
+};
+
+// Models
+rawModels.forEach(m => {
+  const id = "m:" + m.name;
+  const size = m.lifecycle ? 14 : (m.name === "WorkOrder" ? 18 : 8);
+  nodes.push({
+    id, type: "model", name: m.name, domain: m.domain, table: m.table,
+    lifecycle: m.lifecycle, note: m.note, size,
+    color: m.name === "WorkOrder" ? "#fbbf24" : domainColor[m.domain] || "#f59e0b"
+  });
+  nodeById.set(id, m);
+});
+
+// Blueprints
+rawBlueprints.forEach(b => {
+  const id = "bp:" + b.name;
+  nodes.push({
+    id, type: "blueprint", name: b.name, module: b.module, prefix: b.prefix,
+    size: 11, color: "#a78bfa"
+  });
+});
+
+// Route files
+rawFiles.forEach(f => {
+  const id = "f:" + f.path;
+  const node = {
+    id, type: f.path.startsWith("app/routes/") ? "route-file" : "file",
+    name: f.path, path: f.path, role: f.role, route_count: f.route_count,
+    url_prefix: f.url_prefix, route_note: f.note,
+    size: f.blast === "highest" ? 16 : f.blast === "high" ? 12 : 7,
+    blast: f.blast
+  };
+  if (f.path.startsWith("app/routes/")) {
+    node.color = f.blast === "highest" ? "#ef4444" : f.blast === "high" ? "#f97316" : "#10b981";
+    node.type = "route-file";
+    node.size = f.blast === "highest" ? 16 : f.blast === "high" ? 13 : 8;
+  } else {
+    node.color = "#60a5fa";
+    node.size = f.blast === "highest" || f.blast === "high" ? 12 : 7;
+  }
+  nodes.push(node);
+});
+
+// Workflows
+rawWorkflows.forEach(w => {
+  const id = "wf:" + w.name;
+  nodes.push({
+    id, type: "workflow", name: w.name, states: w.states,
+    size: 10, color: "#f472b6"
+  });
+});
+// Workflow → related models
+nodes.filter(n => n.type === "workflow").forEach(wf => {
+  if (wf.name === "WorkOrder lifecycle") {
+    links.push({source: wf.id, target: "m:WorkOrder", type: "drives"});
+  }
+  if (wf.name === "SerialNumber lifecycle") {
+    links.push({source: wf.id, target: "m:SerialNumber", type: "drives"});
+  }
+  if (wf.name === "Routing revision") {
+    links.push({source: wf.id, target: "m:RoutingMaster", type: "drives"});
+    links.push({source: wf.id, target: "m:RoutingStepV2", type: "drives"});
+  }
+  if (wf.name === "Operation scan engine") {
+    links.push({source: wf.id, target: "app/routes/operations.py", type: "lives-in"});
+    links.push({source: wf.id, target: "m:OperationTransaction", type: "creates"});
+  }
+});
+rawRelations.forEach(r => {
+  links.push({source: r.from, target: r.to, type: r.type});
+});
+
+// Stats
+document.getElementById("stat-files").textContent = rawFiles.filter(f => !f.path.startsWith("app/routes")).length + " files";
+document.getElementById("stat-models").textContent = rawModels.length + " models";
+document.getElementById("stat-routes").textContent = rawFiles.filter(f => f.path.startsWith("app/routes/")).length + " route files";
+document.getElementById("stat-bps").textContent = rawBlueprints.length + " blueprints";
+
+// ─────────────────────────────────────────
+// D3 FORCE LAYOUT
+// ─────────────────────────────────────────
+const width = window.innerWidth;
+const height = window.innerHeight - 54;
+
+const svg = d3.select("#graph").append("svg")
+  .attr("width", width)
+  .attr("height", height);
+
+// Zoom container
+const g = svg.append("g");
+svg.call(d3.zoom().scaleExtent([0.2, 5]).on("zoom", e => g.attr("transform", e.transform)));
+
+const simulation = d3.forceSimulation(nodes)
+  .force("link", d3.forceLink(links).id(d => d.id).distance(d => {
+    if (d.type === "bp:file") return 30;
+    if (d.type === "uses") return 80;
+    if (d.type && d.type.startsWith("1:")) return 70;
+    return 60;
+  }).strength(d => {
+    if (d.type === "bp:file") return 0.8;
+    if (d.type === "uses") return 0.3;
+    return 0.5;
+  }))
+  .force("charge", d3.forceManyBody().strength(d => {
+    if (d.id === "m:WorkOrder") return -800;
+    if (d.size >= 14) return -500;
+    return d.type === "model" ? -250 : -150;
+  }))
+  .force("center", d3.forceCenter(width / 2, height / 2 + 20))
+  .force("collide", d3.forceCollide().radius(d => d.size + 4));
+
+// Links
+const link = g.append("g")
+  .selectAll("line")
+  .data(links)
+  .join("line")
+  .attr("class", "link")
+  .attr("stroke-width", d => d.type === "bp:file" ? 1.5 : 1);
+
+// Nodes
+const node = g.append("g")
+  .selectAll("g")
+  .data(nodes)
+  .join("g")
+  .attr("class", "node-g")
+  .call(d3.drag()
+    .on("start", (e, d) => { if (!e.active) simulation.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
+    .on("drag", (e, d) => { d.fx = e.x; d.fy = e.y; })
+    .on("end", (e, d) => { if (!e.active) simulation.alphaTarget(0); d.fx = null; d.fy = null; })
+  );
+
+node.append("circle")
+  .attr("class", "node")
+  .attr("r", d => d.size)
+  .attr("fill", d => d.color)
+  .attr("stroke", d => {
+    if (d.blast === "highest") return "#ef4444";
+    if (d.blast === "high") return "#f97316";
+    return "#0b1220";
+  })
+  .attr("stroke-width", d => d.blast ? 2.5 : 1.5);
+
+node.append("title").text(d => d.name);
+
+// Labels (only show for bigger / important nodes)
+node.append("text")
+  .attr("class", "node-label")
+  .attr("dx", d => d.size + 3)
+  .attr("dy", 3)
+  .text(d => {
+    if (d.type === "model" && d.size >= 11) return d.name;
+    if (d.type === "blueprint") return d.name;
+    if (d.type === "route-file" && (d.blast === "highest" || d.blast === "high")) {
+      return d.name.replace("app/routes/", "");
+    }
+    if (d.type === "workflow") return d.name;
+    if (d.type === "file") return d.name;
+    return "";
+  });
+
+// Click → details
+node.on("click", (e, d) => { showDetails(d); e.stopPropagation(); });
+svg.on("click", closeDetails);
+
+simulation.on("tick", () => {
+  link
+    .attr("x1", d => d.source.x).attr("y1", d => d.source.y)
+    .attr("x2", d => d.target.x).attr("y2", d => d.target.y);
+  node.attr("transform", d => `translate(${d.x},${d.y})`);
+});
+
+// ─────────────────────────────────────────
+// FILTER buttons
+// ─────────────────────────────────────────
+let activeFilter = "all";
+document.querySelectorAll(".filter-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    activeFilter = btn.dataset.filter;
+    applyFilter();
+  });
+});
+
+function applyFilter() {
+  const isRouteFile = n => n.type === "route-file";
+  node.style("display", d => {
+    if (activeFilter === "all") return null;
+    if (activeFilter === "file") return (d.type === "file" || d.type === "route-file") ? null : "none";
+    if (activeFilter === "model") return d.type === "model" ? null : "none";
+    if (activeFilter === "blueprint") return d.type === "blueprint" ? null : "none";
+    if (activeFilter === "route-file") return isRouteFile(d) ? null : "none";
+    if (activeFilter === "workflow") return d.type === "workflow" ? null : "none";
+  });
+  link.style("display", d => {
+    const srcVis = node.filter(n => n.id === d.source.id || n.id === d.source).style("display");
+    const tgtVis = node.filter(n => n.id === d.target.id || n.id === d.target).style("display");
+    return (srcVis !== "none" && tgtVis !== "none") ? null : "none";
+  });
+}
+
+// ─────────────────────────────────────────
+// DETAILS panel
+// ─────────────────────────────────────────
+function showDetails(d) {
+  const panel = document.getElementById("details");
+  const content = document.getElementById("details-content");
+  let html = `<h2>${d.type.toUpperCase()}</h2>`;
+  html += `<div class="field"><div class="label">Name</div><div class="value">${d.name}</div></div>`;
+  if (d.path) html += `<div class="field"><div class="label">Path</div><div class="value">${d.path}</div></div>`;
+  if (d.role) html += `<div class="field"><div class="label">Role</div><div class="value">${d.role}</div></div>`;
+  if (d.domain) html += `<div class="field"><div class="label">Domain</div><div class="value">${d.domain}</div></div>`;
+  if (d.table) html += `<div class="field"><div class="label">Table</div><div class="value">${d.table}</div></div>`;
+  if (d.lifecycle) html += `<div class="field"><div class="label">Lifecycle</div><div class="value">${d.lifecycle}</div></div>`;
+  if (d.note) html += `<div class="field"><div class="label">Note</div><div class="value">${d.note}</div></div>`;
+  if (d.route_count) html += `<div class="field"><div class="label">Route count</div><div class="value">${d.route_count}</div></div>`;
+  if (d.url_prefix) html += `<div class="field"><div class="label">URL prefix</div><div class="value">${d.url_prefix}</div></div>`;
+  if (d.module) html += `<div class="field"><div class="label">Module</div><div class="value">${d.module}</div></div>`;
+  if (d.prefix) html += `<div class="field"><div class="label">Prefix</div><div class="value">${d.prefix}</div></div>`;
+  if (d.blast) html += `<div class="field"><div class="label">Blast radius</div><div class="value">${d.blast}</div></div>`;
+  if (d.states) html += `<div class="field"><div class="label">States</div><div class="value">${d.states.join(" → ")}</div></div>`;
+
+  // Related
+  const outgoing = links.filter(l => (l.source.id || l.source) === d.id).map(l => ({to: l.target.id || l.target, type: l.type}));
+  const incoming = links.filter(l => (l.target.id || l.target) === d.id).map(l => ({from: l.source.id || l.source, type: l.type}));
+  if (outgoing.length || incoming.length) {
+    html += `<div class="related"><h3 style="font-size:11px;color:var(--accent);margin:0 0 6px 0;text-transform:uppercase;letter-spacing:0.05em">Relationships</h3>`;
+    outgoing.forEach(r => { html += `<div class="rel">→ <b>${escapeHtml(String(r.to))}</b> <span style="color:var(--muted)">(${r.type})</span></div>`; });
+    incoming.forEach(r => { html += `<div class="rel">← <b>${escapeHtml(String(r.from))}</b> <span style="color:var(--muted)">(${r.type})</span></div>`; });
+    html += `</div>`;
+  }
+
+  content.innerHTML = html;
+  panel.classList.add("open");
+}
+
+function closeDetails() {
+  document.getElementById("details").classList.remove("open");
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+// Initial filter
+applyFilter();
+</script>
+</body>
+</html>

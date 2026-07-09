@@ -162,6 +162,7 @@ Rules:
 - Implement within the appropriate package boundary
 - Keep changes small, merge-safe, and verifiable
 - Ask before making major architectural rewrites
+- **Refresh the relevant graph in `graphify/<repo>/` after structural refactors, package moves, or major workflow additions** — re-run Graphify (or spawn a Graphify agent) so future sessions read an accurate map instead of stale architecture. Applies to heynxt-core and each reference repo. See `graphify/README.md` for refresh guidance.
 
 **Do Not:**
 - Rebuild the foundation from scratch
@@ -240,9 +241,11 @@ Align with the entity names in the FactoryNXT reference repos to ease extraction
 
 Before touching the repository, read (in this order):
 
-1. `README.md` — project overview
-2. `buildplan.md` — current phase and plan
-3. `package.json` — workspace config and scripts
+0. `graphify/README.md` — layout of knowledge graphs for this repo and references
+1. `graphify/heynxt-core/GRAPH_REPORT.md` — structural map of this repo (paste its Session Memory block into your prompt before opening files)
+2. `README.md` — project overview
+3. `buildplan.md` — current phase and plan
+4. `package.json` — workspace config and scripts
 4. `pnpm-workspace.yaml` — package locations
 5. `turbo.json` — task definitions
 6. `tsconfig.base.json` — TypeScript config

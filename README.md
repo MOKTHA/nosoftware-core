@@ -71,6 +71,9 @@ pnpm lint
 
 ## 📚 Documentation
 
+- [Knowledge Graphs](graphify/README.md) - Structural maps of this repo and reference repos (start here)
+  - [heynxt-core map](graphify/heynxt-core/GRAPH_REPORT.md) — structural graph of this repo
+  - Also includes graphs for: FactoryNXT_PY_v2_Extrusion, FactoryNXT_PY_V2, coding-agent-template
 - [Architecture Overview](docs/architecture/overview.md) - Detailed architecture documentation
 - [Build Plan](buildplan.md) - Phase-by-phase implementation plan
 - [Architecture Decision Records](docs/adr/) - Key architectural decisions and rationale
