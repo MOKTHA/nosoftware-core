@@ -226,7 +226,7 @@ Paste into your prompt before continuing:
 You are resuming heynxt-core after Task 23 committed.
 
 Commits on main (most recent first):
-  edc8a55   feat(web): Task 23 — user invitation flow (POST + accept + invitations table)
+  fb4785a   feat(web): Task 23 — user invitation flow (POST + accept + invitations table)
   3217f3   docs: Task 22 — update HANDOVER.md with commit SHA
   e2a2030   feat(web): Task 22 — RBAC runtime enforcement (write-route gates + 403 path)
   b5661ac   feat(web): Task 21 — PATCH route (project status transition) + transition graph
