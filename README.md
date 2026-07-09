@@ -1,6 +1,6 @@
 # HeyNXT Core - Industrial AI App Builder Platform
 
-> **Status**: Phase 0 - Foundation Complete | **Next**: Phase 1 Schema Implementation
+> **Status**: Phase 1 - Product Control Plane (in progress) | **Next**: Dev database + Drizzle persistence layer
 
 HeyNXT Core is the product control plane and orchestration layer for an industrial AI app builder platform. It combines coding-agent execution patterns with industrial manufacturing blueprints to enable AI-driven application generation for industrial use cases.
 
@@ -44,7 +44,7 @@ HeyNXT Core uses a **layered monorepo** architecture with explicit boundaries be
 | Package | Purpose | Status |
 |---------|---------|--------|
 | `@heynxt/web` | Next.js control plane UI | Scaffolded |
-| `@heynxt/core-types` | Shared Zod schemas and types | Scaffolded |
+| `@heynxt/core-types` | Shared Zod schemas and types | 9 control-plane schemas (User, Organization, Workspace, RBAC, Project, Task, GenerationRun, Artifact, AuditLogEntry) |
 | `@heynxt/prompt-spec` | Prompt-to-spec transformation | Scaffolded |
 | `@heynxt/agent-adapter` | Coding agent execution adapter | Scaffolded |
 | `@heynxt/blueprint-registry` | Industrial blueprint catalog | Scaffolded |
@@ -55,6 +55,9 @@ HeyNXT Core uses a **layered monorepo** architecture with explicit boundaries be
 ```bash
 # Install dependencies
 pnpm install
+
+# Start local Postgres (Postgres 15 mirroring Neon serverless)
+pnpm dev:db
 
 # Build all packages
 pnpm build
@@ -69,11 +72,15 @@ pnpm typecheck
 pnpm lint
 ```
 
+See [docs/dev-setup.md](docs/dev-setup.md) for the full local setup guide
+(credentials, env file, troubleshooting).
+
 ## 📚 Documentation
 
 - [Knowledge Graphs](graphify/README.md) - Structural maps of this repo and reference repos (start here)
   - [heynxt-core map](graphify/heynxt-core/GRAPH_REPORT.md) — structural graph of this repo
   - Also includes graphs for: FactoryNXT_PY_v2_Extrusion, FactoryNXT_PY_V2, coding-agent-template
+- [Local Development Setup](docs/dev-setup.md) - How to run the database and app locally
 - [Architecture Overview](docs/architecture/overview.md) - Detailed architecture documentation
 - [Build Plan](buildplan.md) - Phase-by-phase implementation plan
 - [Architecture Decision Records](docs/adr/) - Key architectural decisions and rationale
@@ -83,6 +90,7 @@ pnpm lint
 - [ADR-0001: Monorepo and Boundaries](docs/adr/0001-monorepo-and-boundaries.md)
 - [ADR-0002: Agent Substrate](docs/adr/0002-agent-substrate.md)
 - [ADR-0003: Industrial Blueprint Sources](docs/adr/0003-industrial-blueprint-sources.md)
+- [ADR-0004: ORM and Database Choice](docs/adr/0004-orm-and-database.md) — Drizzle + Neon serverless Postgres
 
 ## 🏭 Reference Architecture Sources
 
@@ -93,18 +101,16 @@ pnpm lint
 - [FactoryNXT_PY_v2_Extrusion](https://github.com/pskbmohan/FactoryNXT_PY_v2_Extrusion) - Extrusion manufacturing domain models and blueprints
 - [FactoryNxT_PY_V2](https://github.com/pskbmohan/FactoryNxT_PY_V2) - General industrial automation blueprints
 
-## 🎯 Current Phase: Foundation (Phase 0)
+## 🎯 Current Phase: Phase 1 — Product Control Plane Foundation
 
-The repository foundation is complete. Next steps:
+Tasks 1 and 2 are complete — nine control-plane Zod schemas are defined
+and tested in `@heynxt/core-types`. The next slice is Task 3 (local
+dev Postgres via `docker-compose.yml` — ✅ done) followed by Task 4
+(Drizzle persistence layer).
 
-1. **Phase 1**: Core Schema Foundation - Define Zod schemas in `@heynxt/core-types`
-2. **Phase 2**: Domain Models - Implement industrial domain entities
-3. **Phase 3**: Blueprint Registry - Catalog and load industrial blueprints
-4. **Phase 4**: Prompt-to-Spec - Implement transformation logic
-5. **Phase 5**: Agent Adapter - Integrate coding agent runtime
-6. **Phase 6**: Control Plane UI - Build user interface
-
-See [buildplan.md](buildplan.md) for detailed phase descriptions.
+See [buildplan.md](buildplan.md) for the full phase plan, and
+[docs/dev-setup.md](docs/dev-setup.md) for the local development
+workflow.
 
 ## 🤝 Contributing
 
@@ -123,6 +129,7 @@ See [CLAUDE.md](CLAUDE.md) for detailed guidance.
 
 - Node.js >= 20.0.0
 - pnpm >= 9.0.0
+- Docker (with Compose V2 plugin) — for local Postgres via `pnpm dev:db`
 
 ## 📄 License
 
@@ -130,4 +137,4 @@ UNLICENSED - Proprietary
 
 ---
 
-**Repository Status**: Phase 0 Complete ✓ | Ready for Phase 1 Implementation
+**Repository Status**: Phase 1 In Progress — Tasks 1, 2, 3 Complete | Next: Drizzle persistence layer (Task 4)

@@ -1,0 +1,58 @@
+# =============================================================================
+# HeyNXT Core — Local Development Database
+# =============================================================================
+# Mirrors Neon serverless Postgres locally (ADR-0004). Runs Postgres 15
+# matching Neon's supported major version so local dev and production behave
+# identically for dialect, extension, and collation semantics.
+#
+# Usage:
+#   pnpm dev:db         # start in background
+#   pnpm dev:db:stop    # stop
+#   pnpm dev:db:logs    # follow container logs
+#   pnpm dev:db:bash    # shell into the container (psql, etc.)
+#
+# First-time connection:
+#   DATABASE_URL=postgresql://heynxt:heynxt@localhost:5432/heynxt
+#
+# The schema is empty on first boot — Drizzle migrations (added in Task 4)
+# will populate tables when the persistence package lands.
+# =============================================================================
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: heynxt-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: heynxt
+      POSTGRES_PASSWORD: heynxt
+      POSTGRES_DB: heynxt
+      # Force UTF8 + UTC so local matches Neon serverless defaults.
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --lc-collate=C --lc-ctype=C"
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      # Bind to 127.0.0.1 explicitly — never expose to LAN from a dev box.
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - heynxt-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      # `pg_isready` waits until Postgres accepts connections; compose marks
+      # the service healthy only once the DB is actually reachable.
+      test: ["CMD-SHELL", "pg_isready -U heynxt -d heynxt -q"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    # Keep the dev container lightweight — cap CPU/memory if the host has
+    # constraints. These limits are generous; local dev rarely exceeds them.
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+
+volumes:
+  heynxt-postgres-data:
+    # Data persists across `docker compose down` unless passing `--volumes`.
+    # Useful when iterating on migrations — your seed data isn't wiped each run.
+    name: heynxt-postgres-data

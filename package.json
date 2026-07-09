@@ -6,6 +6,10 @@
   "scripts": {
     "build": "turbo build",
     "dev": "turbo dev",
+    "dev:db": "docker compose up -d",
+    "dev:db:stop": "docker compose down",
+    "dev:db:logs": "docker compose logs -f postgres",
+    "dev:db:bash": "docker compose exec postgres bash",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
     "test": "turbo test",
