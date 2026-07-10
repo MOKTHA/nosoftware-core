@@ -32,11 +32,11 @@
  *   Invitations (Phase 1.8):
  *     Invitation, InvitationStatus, InvitationSummary, InviteUserInput
  *
- * TODO: Define remaining core schemas (Phase 4+):
- *   - AgentSpec schema (agent configuration contract)
- *   - PromptSpec schema (prompt-to-spec input/output types)
- *   - Blueprint schema (industrial recipe definition)
- *   - DomainModel schema (industrial entity types)
+ * Agent execution (Phase 2):
+ *   AgentSpec, AgentType, AgentStatus, AgentSpecId, AgentSpecSummary
+ *   ExecutionConfig
+ *   AgentExecutionResult, ExecutionResultStatus
+ *   TaskPayload, TaskPriority, TaskPayloadSummary
  */
 
 // Control plane — identity and tenancy
@@ -58,3 +58,7 @@ export * from './schemas/artifact.js';
 
 // Control plane — audit
 export * from './schemas/audit-log.js';
+
+// Agent execution (Phase 2)
+export * from './schemas/agent-spec.js';
+export * from './schemas/task-payload.js';
