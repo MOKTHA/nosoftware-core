@@ -141,32 +141,26 @@ Phase 5 is **complete**. The blueprint composition engine provides:
 
 ## Next Session Recommendations
 
-### ✅ COMPLETED: Phase 5 — Blueprint Selection and Composition (this session)
+### ⚠️ IN PROGRESS: Fix TypeScript errors in test file
 
-**What was done this session:**
-1. Implemented `packages/blueprint-registry/src/composition.ts` (~800 lines):
-   - SpecInput schema with domain preference, required/optional capabilities, integrations, governance requirements
-   - Keyword extraction from natural language descriptions (40+ keyword mappings)
-   - BLUEPRINT_MATCH_RULES for deterministic blueprint selection
-   - composeBlueprintPlan() algorithm with auto-detection and pack attachments
-   - validateCompositionPlan(), createCompositionPlanFromResult(), normalizeSelections()
-   - checkBlueprintCompatibility(), hasCircularDependency(), applyManualOverride()
+**Current state:** 
+Phase 5 implementation is complete but there are TypeScript errors in the test file that need to be fixed before committing.
 
-2. Fixed TypeScript errors in composition.ts:
-   - Changed BLUEPRINT_MATCH_RULES type to Partial<Record> since not all keywords have rules
-   - Added proper null checks for array access (rule.packs.kpi[0], rule.packs.approval[0])
-   - Fixed candidate lookup narrowing issues
+**Issues identified:**
+1. `createMockBlueprint` missing required `sourceRepo` field for BlueprintMetadata
+2. Test specs need all required fields (requiredCapabilities, optionalPreferences, integrations, requiresApprovals, requiresAuditTrail)
+3. Need helper function `createSpec()` to create valid SpecInput objects
 
-3. Created comprehensive test suite: `packages/blueprint-registry/src/__tests__/composition.test.ts` (~450 lines):
-   - 26 unit tests covering all Phase 5 exit criteria
-   - Scenarios: extrusion domain, PCB domain, quality inspection, user overrides, governance requirements
-   - Tests for explainability, versioning, determinism, performance (<2s for 100 blueprints)
+**Fixes applied so far:**
+- Added `domain: 'extrusion' as const` and `sourceRepo: 'FactoryNXT_PY_v2_Extrusion'` to mock blueprint base
+- Created `createSpec()` helper function for valid SpecInput creation
+- Updated test fixtures to use proper type annotations
 
-4. Updated exports in `packages/blueprint-registry/src/index.ts` to include all composition module functions and types
-
-**Verification:**
-- `pnpm typecheck` → All packages ✅
-- `pnpm build` → Next.js compiled successfully ✅
-- Phase 5 exit criteria: ALL SATISFIED ✅
+**Remaining work before commit:**
+1. Replace all inline spec objects `{ name, description }` with calls to `createSpec({ ... })` 
+2. Ensure all domain/family casts are explicit (`as const`, `as 'extrusion' | 'pcb-electronics'`)
+3. Add null guards for TEST_BLUEPRINTS array access in compatibility tests
+4. Run `pnpm typecheck` again to verify all errors resolved
+5. Commit changes
 
 ---

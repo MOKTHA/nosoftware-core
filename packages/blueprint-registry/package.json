@@ -15,7 +15,7 @@
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "lint": "echo 'TODO: add linter'",
-    "test": "node --test src/__tests__/*.test.ts",
+    "test": "tsx src/__tests__/*.test.ts",
     "clean": "rm -rf dist"
   },
   "dependencies": {
@@ -25,6 +25,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "tsx": "^4.19.0",
     "typescript": "^5.5.0"
   }
 }
