@@ -15,6 +15,7 @@
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "lint": "echo 'TODO: add linter'",
+    "test": "node --test src/__tests__/*.test.ts",
     "clean": "rm -rf dist"
   },
   "dependencies": {

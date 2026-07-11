@@ -10,6 +10,7 @@ import type {
   BlueprintMetadata,
   BlueprintFamily,
   BlueprintPack,
+  CreateCompositionPlanInput,
 } from '@heynxt/core-types';
 
 // ============================================================================
@@ -183,7 +184,7 @@ export function extractKeywords(spec: SpecInput): Set<SpecRequirementKeyword> {
 /**
  * Defines which blueprints should be selected for each keyword.
  */
-const BLUEPRINT_MATCH_RULES: Record<SpecRequirementKeyword, {
+const BLUEPRINT_MATCH_RULES: Partial<Record<SpecRequirementKeyword, {
   primary?: BlueprintFamily[];
   modules?: BlueprintFamily[];
   packs?: {
@@ -192,7 +193,7 @@ const BLUEPRINT_MATCH_RULES: Record<SpecRequirementKeyword, {
     connector?: string[];
     approval?: string[];
   };
-}> = {
+}>> = {
   // Extrusion domain
   extrusion: {
     primary: ['extrusion-operations'],
@@ -228,10 +229,6 @@ const BLUEPRINT_MATCH_RULES: Record<SpecRequirementKeyword, {
     primary: ['pcb-genealogy'],
     modules: [],
   },
-  component: {
-    primary: ['pcb-genealogy'],
-    modules: ['serial-execution'],
-  },
 
   // Quality domain
   inspection: {
@@ -263,10 +260,10 @@ const BLUEPRINT_MATCH_RULES: Record<SpecRequirementKeyword, {
     modules: ['serial-execution'],
   },
 
-  // Maintenance domain
+  // Maintenance domain (uses extrusion-operations as base, with KPI pack)
   maintenance: {
-    modules: ['pm-schedule'],
-    packs: { kpi: ['maintenance-dashboard'] },
+    modules: [],
+    packs: { kpi: ['oee-dashboard'] },
   },
 
   // Analytics domain
@@ -340,12 +337,13 @@ export function composeBlueprintPlan(
     const candidates = blueprints.filter(
       b => b.domain === spec.preferredDomain && b.status === 'published'
     );
-    if (candidates.length > 0) {
-      primaryBlueprintId = candidates[0].id;
+    const candidate = candidates[0];
+    if (candidate?.id && candidate.name && candidate.family) {
+      primaryBlueprintId = candidate.id;
       selections.push({
-        blueprintId: candidates[0].id,
-        blueprintName: candidates[0].name,
-        blueprintFamily: candidates[0].family,
+        blueprintId: candidate.id,
+        blueprintName: candidate.name,
+        blueprintFamily: candidate.family,
         reason: `Primary domain match per user preference (${spec.preferredDomain})`,
         confidence: 'high',
         selectionType: 'primary',
@@ -364,12 +362,13 @@ export function composeBlueprintPlan(
       const candidates = blueprints.filter(
         b => (b.domain === 'extrusion' || b.family === 'extrusion-operations') && b.status === 'published'
       );
-      if (candidates.length > 0) {
-        primaryBlueprintId = candidates[0].id;
+      const candidate = candidates[0];
+      if (candidate?.id && candidate.name && candidate.family) {
+        primaryBlueprintId = candidate.id;
         selections.push({
-          blueprintId: candidates[0].id,
-          blueprintName: candidates[0].name,
-          blueprintFamily: candidates[0].family,
+          blueprintId: candidate.id,
+          blueprintName: candidate.name,
+          blueprintFamily: candidate.family,
           reason: `Primary domain auto-detected as extrusion (${extrusionScore} matching keywords)`,
           confidence: 'high',
           selectionType: 'primary',
@@ -380,12 +379,13 @@ export function composeBlueprintPlan(
       const candidates = blueprints.filter(
         b => b.domain === 'pcb-electronics' && b.status === 'published'
       );
-      if (candidates.length > 0) {
-        primaryBlueprintId = candidates[0].id;
+      const candidate = candidates[0];
+      if (candidate?.id && candidate.name && candidate.family) {
+        primaryBlueprintId = candidate.id;
         selections.push({
-          blueprintId: candidates[0].id,
-          blueprintName: candidates[0].name,
-          blueprintFamily: candidates[0].family,
+          blueprintId: candidate.id,
+          blueprintName: candidate.name,
+          blueprintFamily: candidate.family,
           reason: `Primary domain auto-detected as PCB/electronics (${pcbScore} matching keywords)`,
           confidence: 'high',
           selectionType: 'primary',
@@ -458,10 +458,12 @@ export function composeBlueprintPlan(
       }
 
       // KPI packs
-      if (rule.packs.kpi) {
+      if (rule.packs.kpi && rule.packs.kpi.length > 0) {
+        const kpiPackId = rule.packs.kpi[0];
+        if (!kpiPackId) break;
         selections.push({
-          blueprintId: rule.packs.kpi[0],
-          blueprintName: `${rule.packs.kpi[0]} dashboard`,
+          blueprintId: kpiPackId,
+          blueprintName: `${kpiPackId} dashboard`,
           blueprintFamily: 'analytics' as BlueprintFamily, // placeholder - pack metadata
           reason: `KPI pack attached for "${keywordLabel}" visualization`,
           confidence: 'medium',
@@ -470,10 +472,12 @@ export function composeBlueprintPlan(
       }
 
       // Approval packs
-      if (rule.packs.approval && (spec.requiresApprovals || spec.requiresAuditTrail)) {
+      if (rule.packs.approval && rule.packs.approval.length > 0 && (spec.requiresApprovals || spec.requiresAuditTrail)) {
+        const approvalPackId = rule.packs.approval[0];
+        if (!approvalPackId) break;
         selections.push({
-          blueprintId: rule.packs.approval[0],
-          blueprintName: `${rule.packs.approval[0]} workflow`,
+          blueprintId: approvalPackId,
+          blueprintName: `${approvalPackId} workflow`,
           blueprintFamily: 'approval-workflow' as BlueprintFamily, // placeholder - pack metadata
           reason: `Approval pack attached for governance requirement`,
           confidence: 'high',
@@ -687,8 +691,8 @@ export function checkBlueprintCompatibility(
   const bDependsOn = new Set(blueprintB.dependsOn);
 
   if (aDependsOn.has(blueprintB.id) || bDependsOn.has(blueprintA.id)) {
-    // Explicit dependency exists — check circular dependencies
-    return !hasCircularDependency([blueprintA, blueprintB], blueprintsById);
+    // Explicit dependency exists — check circular dependencies using IDs only
+    return !hasCircularDependency([blueprintA.id, blueprintB.id], blueprintsById);
   }
 
   // Check domain compatibility
