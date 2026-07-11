@@ -37,6 +37,10 @@
  *   ExecutionConfig
  *   AgentExecutionResult, ExecutionResultStatus
  *   TaskPayload, TaskPriority, TaskPayloadSummary
+ *
+ * Blueprint registry (Phase 3):
+ *   BlueprintMetadata, BlueprintFamily, BlueprintDomain, BlueprintTag
+ *   DomainEntity, CompositionPlan, BlueprintPack
  */
 
 // Control plane — identity and tenancy
@@ -62,3 +66,6 @@ export * from './schemas/audit-log.js';
 // Agent execution (Phase 2)
 export * from './schemas/agent-spec.js';
 export * from './schemas/task-payload.js';
+
+// Blueprint registry (Phase 3)
+export * from './schemas/blueprint.js';
