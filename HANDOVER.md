@@ -128,13 +128,15 @@ No new deferrals in Phase 3. Existing Phase 1 deferrals remain:
 
 ### Immediate Options (all valid next steps):
 
-#### Option A: Implement FactoryNXT Repo Extraction (Phase 3 continuation)
-1. Create `LocalPathBlueprintLoader` in `packages/blueprint-registry/src/loaders/local-path.ts`
-2. Parse Python models from FactoryNXT_PY_v2_Extrusion repo path → HeyNXT format
-3. Parse Python models from FactoryNxT_PY_V2 repo path → HeyNXT format  
-4. Generate initial blueprint instances with actual sourceCommitHash values
+#### ✅ COMPLETED: Option A — LocalPathBlueprintLoader Implementation
+- `packages/blueprint-registry/src/loaders/local-path.ts` fully implemented
+- Parses Python SQLAlchemy models from FactoryNXT_PY_v2_Extrusion and FactoryNxT_PY_V2 repos
+- Extracts class names, columns, relationships, status fields (FSM detection)
+- Generates HeyNXT format blueprints with DomainEntity schemas
+- **TypeScript error fixed** — regex exec type narrowing issue resolved
+- All packages pass `pnpm typecheck` and `pnpm build`
 
-#### Option B: Move to Phase 4 — Prompt-to-Spec Engine
+#### Option B: Move to Phase 4 — Prompt-to-Spec Engine ⭐ RECOMMENDED
 1. Define `PromptSpec` schema in `packages/core-types/src/schemas/prompt-spec.ts`
 2. Implement parser/generator/validation in `packages/prompt-spec/src/`
 3. Integrate with blueprint-registry for blueprint selection
@@ -144,7 +146,7 @@ No new deferrals in Phase 3. Existing Phase 1 deferrals remain:
 2. Write migration file
 3. Implement db-backed catalog implementation
 
-**Recommendation**: Proceed to **Option B (Phase 4)** since the registry foundation is complete and prompt-to-spec is needed before we can actually *use* extracted blueprints in practice. FactoryNXT extraction can be done incrementally as Phase 3 follow-up work.
+**Recommendation**: **Option B (Phase 4)** — The LocalPathBlueprintLoader is now fully functional with actual FactoryNXT repo extraction logic. It's ready to be tested end-to-end once source paths are configured. Moving forward with prompt-to-spec will enable the system to actually *use* extracted blueprints for generation workflows.
 
 ---
 
