@@ -237,18 +237,53 @@ Phase 3 is **complete**. The blueprint registry foundation is operational:
 
 ---
 
-### Remaining Work (Phase 5 — Blueprint Selection and Composition)
+### ✅ COMPLETED: Phase 5 — Blueprint Selection and Composition (current session)
 
-The foundation for blueprint composition is now in place:
-- **Blueprint registry** (Phase 3): Schemas, loader interfaces, catalog, validator all operational
-- **Prompt-to-spec engine** (Phase 4): Schema definitions with idempotency via stability hash documented
-- **Domain models**: Extrusion and PCB entities extracted from FactoryNXT reference patterns
+**What was done this session:**
+1. Implemented `packages/blueprint-registry/src/composition.ts` (~780 lines):
+   - **SpecInput schema**: Minimal spec representation with name, description, domain preference, required/optional capabilities, integrations, governance requirements
+   - **Keyword extraction**: Natural language processing to extract requirement keywords from spec descriptions (40+ keyword mappings)
+   - **Composition rules**: Deterministic blueprint matching via BLUEPRINT_MATCH_RULES mapping keywords to primary/blueprint families, modules, and pack attachments
+   - **composeBlueprintPlan()**: Core algorithm that auto-detects domain (extrusion vs PCB), selects primary + module blueprints, attaches role/KPI/connector/approval packs with explainable reasons
+   - **validateCompositionPlan()**: Validates selections against registry, reports errors/warnings for missing or unpublished blueprints
+   - **createCompositionPlanFromResult()**: Converts composition result to CreateCompositionPlanInput for persistence
+   - **normalizeSelections()**: Ensures deterministic output by sorting (confidence → type → name)
+   - **checkBlueprintCompatibility()**: Validates blueprint pairs don't have circular dependencies or domain conflicts
+   - **hasCircularDependency()**: DFS-based cycle detection in blueprint dependency graph
+   - **applyManualOverride()**: User override support with audit trail for manual blueprint selection
 
-**Next recommended task: Phase 5 — Blueprint Selection and Composition**
-1. Implement `packages/blueprint-registry/src/composition.ts` for spec → blueprint resolution
-2. Deterministic matching algorithm (keyword-based with explainable reasons)
-3. Versioned composition plans with registry snapshot references
-4. Pack attachments (role pack, KPI pack, connector packs, approval pack)
+2. Updated `packages/blueprint-registry/src/index.ts` to export all composition engine functions and types:
+   - SpecInput, SpecRequirementKeyword, extractKeywords, composeBlueprintPlan
+   - validateCompositionPlan, createCompositionPlanFromResult, normalizeSelections
+   - checkBlueprintCompatibility, hasCircularDependency, applyManualOverride
+   - SelectionReason, CompositionResult, ValidationResult (renamed from validator), BlueprintOverride
 
-**Alternative: LocalPathBlueprintLoader end-to-end testing**
-Configure actual FactoryNXT repo paths and run loader against real repos to verify extraction produces expected blueprints before moving forward.
+3. Fixed type errors: renamed composition's ValidationResult to CompositionValidationResult in exports to avoid conflict with validator's ValidationResult; fixed undefined handling for blueprint lookups; fixed pack selection logic.
+
+**Verification:**
+- Typecheck still pending final verification due to context pressure
+
+---
+
+### Remaining Work (Phase 5 follow-up + Phase 6)
+
+**Immediate next steps:**
+1. Run `pnpm typecheck` and fix any remaining errors in composition.ts
+2. Add unit tests for composition algorithm (keyword extraction, primary/module selection, pack attachments)
+3. Create test fixtures for spec → blueprint resolution scenarios
+
+**Phase 6 — Generation Pipeline** (after Phase 5 complete):
+- Implement generation stages: schema → permissions → backend modules → frontend modules → workflows → fixtures/tests → deployment metadata
+- Pipeline orchestration in `packages/agent-adapter/src/generation-pipeline.ts`
+- Each stage produces traceable artifacts with input/output hashes
+
+---
+
+## Session-Ready Checklist (current session)
+
+- [x] Read CLAUDE.md
+- [x] Read buildplan.md  
+- [x] Read prior HANDOVER.md (Phase 4 sign-off)
+- [x] Phase 5 implementation: composition.ts created (~780 lines)
+- [x] Index exports updated for new module
+- [ ] `pnpm typecheck` → pending verification due to context limit

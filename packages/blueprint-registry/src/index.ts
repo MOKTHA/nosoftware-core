@@ -40,13 +40,30 @@ export {
 
 // Export validator interface and implementations
 export {
-  type ValidationResult,
-  type ValidationReport,
+  type ValidationReport as ValidatorValidationReport,
   type BlueprintValidator,
   BlueprintValidatorImpl,
   ValidationRules,
   createValidator,
 } from './validator.js';
+
+// Export composition engine (Phase 5) - ValidationResult renamed to CompositionValidationResult to avoid conflict
+export {
+  type SpecInput,
+  type SpecRequirementKeyword,
+  extractKeywords,
+  composeBlueprintPlan,
+  validateCompositionPlan,
+  createCompositionPlanFromResult,
+  normalizeSelections,
+  checkBlueprintCompatibility,
+  hasCircularDependency,
+  applyManualOverride,
+  type SelectionReason,
+  type CompositionResult,
+  ValidationResult as CompositionValidationResult,
+  type BlueprintOverride,
+} from './composition.js';
 
 // Export test fixtures (for development/testing)
 export * as ExtrusionBlueprints from './fixtures/extrusion-blueprint.js';
