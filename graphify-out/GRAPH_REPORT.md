@@ -1,340 +1,574 @@
-# HeyNXT Core — Structural Knowledge Graph Report
+# Graph Report - heynxt-core  (2026-07-11)
 
-> Generated: 2026-07-09 (after Task 4 — Drizzle persistence layer)
-> Total tracked files: 86 | Total workspace modules: 7
-> Previous graph updated from: pre-Task-1 scaffold (33 files, all stubs)
+## Corpus Check
+- 139 files · ~117,230 words
+- Verdict: corpus is large enough that graph structure adds value.
 
----
+## Summary
+- 1580 nodes · 2055 edges · 172 communities (92 shown, 80 thin omitted)
+- Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS
+- Token cost: 0 input · 0 output
 
-## Repository Overview
+## Graph Freshness
+- Built from commit: `eef0255b`
+- Run `git rev-parse HEAD` and compare to check if the graph is stale.
+- Run `graphify update .` after code changes (no API cost).
 
-HeyNXT Core is the **product control plane and orchestration layer** for an
-industrial AI app builder. It integrates coding-agent execution patterns (from
-Vercel's coding-agent-template) with industrial manufacturing blueprints (from
-two FactoryNXT reference repos) to enable AI-driven application generation for
-manufacturing use cases.
+## Community Hubs (Navigation)
+- index.ts
+- errorResponse
+- index.ts
+- index.ts
+- dependencies
+- HeyNXT Core - Foundation Summary
+- scripts
+- scripts
+- layout.tsx
+- FactoryNXT_PY_V2 — Structural Knowledge Graph
+- FactoryNXT_PY_v2_Extrusion — Structural Knowledge Graph
+- index.ts
+- ADR-0003: Industrial Blueprint Sources
+- compilerOptions
+- package.json
+- compilerOptions
+- 4. Gap Analysis — What's Missing Between Current State and Target
+- Handover — Phase 3 COMPLETE sign-off
+- package.json
+- package.json
+- ADR-0010: Blueprint Registry Architecture
+- package.json
+- package.json
+- HeyNXT Core — Claude Instructions
+- Graph Report — coding-agent-template
+- workspace.ts
+- LocalPathBlueprintLoader
+- control-plane.test.ts
+- blueprint.ts
+- ADR-0001: Monorepo and Boundaries
+- ADR-0004: ORM and Database Choice for Control Plane
+- Architecture Overview
+- page.tsx
+- InMemoryBlueprintCatalog
+- HeyNXT Core - Industrial AI App Builder Platform
+- tsconfig.json
+- API Contract
+- ADR-0008 — Auth Library and OAuth Provider
+- agent-spec.ts
+- page.tsx
+- Local Development Setup
+- BlueprintValidatorImpl
+- ADR-0009: Migrations — Forward-Only with Reset as Phase 1 Reversibility
+- CompositeBlueprintLoader
+- task-payload.ts
+- tsconfig.json
+- Decision
+- page.tsx
+- ADR-0002: Agent Substrate and Execution Model
+- BlueprintCatalog
+- task.ts
+- auth.ts
+- rbac.ts
+- ADR-0006 — `createdBy` Session Sweep Plan
+- ADR-0007 — Phase 1 UI Consolidation Pattern
+- Graphify — Unified Repo Map
+- tsconfig.json
+- extracted-blueprints-example.ts
+- tsconfig.json
+- tsconfig.json
+- tsconfig.json
+- tsconfig.json
+- ADR-0005 — Client Form Pattern (fetch + router.refresh)
+- InMemoryBlueprintLoader
+- generation-run.ts
+- Phase 3 — Industrial Blueprint Extraction
+- Phase 0 — Multi-Repo Audit ✓ COMPLETE
+- local-path.ts
+- audit-log.ts
+- Implementation Phases
+- Phase 1 — Product Control Plane Foundation
+- Phase 2 — Agent Execution Integration
+- Phase 4 — Prompt-to-Spec Engine
+- Phase 5 — Blueprint Selection and Composition
+- Phase 6 — Generation Pipeline
+- Phase 7 — Validation and Review Loop
+- Phase 8 — Industrial Runtime Services
+- Phase 9 — Governance and Hardening
+- Rationale
+- @heynxt/persistence
+- Source-of-Truth Repositories
+- Architecture Intent
+- First-Time Setup
+- extrusion-blueprint.ts
+- pcb-blueprint.ts
+- next.config.mjs
+- next-env.d.ts
+- index.ts
+- .claude/settings.json
+- .env.example
+- .gitignore
+- CLAUDE.md
+- FOUNDATION.md
+- HANDOVER.md
+- README.md
+- apps/web
+- apps/web/README.md
+- apps/web/package.json
+- apps/web/src/index.ts
+- apps/web/tsconfig.json
+- { GET, POST }
+- buildplan.md
+- docker-compose.yml
+- docs/adr/0001-monorepo-and-boundaries.md
+- docs/adr/0002-agent-substrate.md
+- docs/adr/0003-industrial-blueprint-sources.md
+- docs/adr/0004-orm-and-database.md
+- docs/architecture/overview.md
+- docs/dev-setup.md
+- docs/gap-analysis.md
+- package.json
+- packages/agent-adapter/package.json
+- packages/agent-adapter/src/index.ts
+- packages/agent-adapter/tsconfig.json
+- packages/blueprint-registry/package.json
+- packages/blueprint-registry/src/index.ts
+- packages/blueprint-registry/tsconfig.json
+- packages/core-types/package.json
+- packages/core-types/src/index.ts
+- packages/core-types/src/schemas/artifact.ts
+- packages/core-types/src/schemas/audit-log.ts
+- packages/core-types/src/schemas/control-plane.test.ts
+- packages/core-types/src/schemas/generation-run.ts
+- packages/core-types/src/schemas/organization.ts
+- packages/core-types/src/schemas/project.ts
+- packages/core-types/src/schemas/rbac.ts
+- packages/core-types/src/schemas/task.ts
+- packages/core-types/src/schemas/user.ts
+- packages/core-types/src/schemas/workspace.ts
+- packages/core-types/tsconfig.json
+- packages/core-types/vitest.config.ts
+- packages/domain-models/package.json
+- packages/domain-models/src/index.ts
+- packages/domain-models/tsconfig.json
+- packages/persistence/README.md
+- packages/persistence/drizzle.config.ts
+- packages/persistence/drizzle/0000_great_sunspot.sql
+- packages/persistence/drizzle/meta
+- packages/persistence/package.json
+- packages/persistence/src/index.ts
+- packages/persistence/src/schema/artifacts.ts
+- packages/persistence/src/schema/audit-log.ts
+- packages/persistence/src/schema/generation-runs.ts
+- packages/persistence/src/schema/index.ts
+- packages/persistence/src/schema/organizations.ts
+- packages/persistence/src/schema/projects.ts
+- packages/persistence/src/schema/role-assignments.ts
+- packages/persistence/src/schema/tasks.ts
+- packages/persistence/src/schema/users.ts
+- packages/persistence/src/schema/workspaces.ts
+- packages/persistence/tsconfig.json
+- packages/persistence/vitest.config.ts
+- packages/prompt-spec/package.json
+- packages/prompt-spec/src/index.ts
+- packages/prompt-spec/tsconfig.json
+- pnpm-lock.yaml
+- pnpm-workspace.yaml
+- tsconfig.base.json
+- tsconfig.json
+- turbo.json
+- validator.ts
+- artifact.ts
+- Architectural Layers
+- workspace.ts
+- Troubleshooting
 
-**Current state (2026-07-09)**: Phase 0 foundation complete; Phase 1 substantial
-with Tasks 1–4 landed. The monorepo now has **real implementation** in two
-packages:
-- **`@heynxt/core-types`** (Phase 1.1–1.2) — 9 Zod schemas, 61 vitest cases, 9
-  control-plane entity contracts
-- **`@heynxt/persistence`** (Phase 1.4–1.5) — 9 Drizzle tables, 12 Postgres
-  enums, first migration, drizzle-kit config
+## God Nodes (most connected - your core abstractions)
+1. `errorResponse()` - 24 edges
+2. `badRequest()` - 23 edges
+3. `LocalPathBlueprintLoader` - 21 edges
+4. `parseJsonBody()` - 18 edges
+5. `compilerOptions` - 18 edges
+6. `HeyNXT Core — Claude Instructions` - 18 edges
+7. `insertAuditEntry()` - 17 edges
+8. `InMemoryBlueprintCatalog` - 17 edges
+9. `requireAuth()` - 16 edges
+10. `scripts` - 16 edges
 
-The other 4 domain packages (`prompt-spec`, `agent-adapter`, `blueprint-registry`,
-`domain-models`) are still stubs (deferred to Phases 2–4).
+## Surprising Connections (you probably didn't know these)
+- `POST()` --references--> `Invitation`  [EXTRACTED]
+  apps/web/src/app/api/invitations/route.ts → packages/core-types/src/schemas/invitation.ts
+- `POST()` --references--> `InviteUserInput`  [EXTRACTED]
+  apps/web/src/app/api/invitations/route.ts → packages/core-types/src/schemas/invitation.ts
+- `POST()` --references--> `CreateTaskPayloadInput`  [EXTRACTED]
+  apps/web/src/app/api/tasks/[id]/execute/route.ts → packages/core-types/src/schemas/task-payload.ts
+- `POST()` --references--> `CreateWorkspaceInput`  [EXTRACTED]
+  apps/web/src/app/api/workspaces/route.ts → packages/core-types/src/schemas/workspace.ts
+- `ProjectsPage()` --references--> `WorkspaceId`  [EXTRACTED]
+  apps/web/src/app/projects/page.tsx → packages/core-types/src/schemas/workspace.ts
 
-The toolchain is fully operational: `pnpm install`, `pnpm typecheck` (12/12),
-`pnpm build` (7/7), `pnpm test`. Local dev Postgres 15 runs via
-`docker-compose.yml` mirroring Neon serverless; Drizzle migrations generate and
-apply against it.
+## Import Cycles
+- None detected.
 
----
+## Communities (172 total, 80 thin omitted)
 
-## What the Repo does (now)
+### Community 0 - "index.ts"
+Cohesion: 0.05
+Nodes (68): AlloyGrade, BilletStatus, DieStatus, ExtrusionBillet, ExtrusionBilletId, ExtrusionDie, ExtrusionDieId, ExtrusionOeeSnapshot (+60 more)
 
-### Operational (Phase 1)
-- **Control-plane schemas** — 9 entity Zod schemas with 61 vitest tests covering
-  shape validation, FSM transitions, and helpers. Entities: User, Organization,
-  Workspace, Role/Permission, Project, Task, GenerationRun, Artifact, AuditLogEntry.
-- **Drizzle persistence** — 9 tables in `@heynxt/persistence`, each 1:1 with a
-  Zod schema via camelCase columns. 12 Postgres enums, 19 indexes, composite
-  unique constraints, FK constraints. First migration `0000_great_sunspot.sql`
-  (341 lines, idempotent).
-- **Local dev database** — Postgres 15 alpine container via docker-compose, creds
-  `heynxt/heynxt/heynxt`, bound to `127.0.0.1:5432`, healthcheck, persistent
-  volume. Mirrors Neon serverless's Postgres 15 major version.
-- **drizzle-kit pipeline** — `pnpm build && drizzle-kit generate` emits migrations
-  from compiled `dist/schema/index.js` (drizzle-kit CJS loader).
-- **Scripts** — Root-level `dev:db`, `db:migrate`, `db:migrate:generate`,
-  `db:migrate:reset`, `db:studio` scripts delegate to `@heynxt/persistence`.
-- **Session hygiene** — `HANDOVER.md` + `docs/gap-analysis.md` track state across
-  Claude Code sessions.
+### Community 1 - "errorResponse"
+Cohesion: 0.10
+Nodes (50): GET(), POST(), GET(), POST(), GET(), buildAcceptUrl(), findPendingInvitation(), findUserByEmail() (+42 more)
 
-### Still Stubbed / Planned
-- `@heynxt/web` — minimal `src/index.ts` placeholder; real Next.js routes in
-  Phase 6
-- `@heynxt/prompt-spec` — empty stub (Phase 4)
-- `@heynxt/agent-adapter` — empty stub (Phase 2)
-- `@heynxt/blueprint-registry` — empty stub (Phase 3)
-- `@heynxt/domain-models` — empty stub (Phase 3)
+### Community 2 - "index.ts"
+Cohesion: 0.07
+Nodes (17): AgentRuntime, BaseAgentRuntime, EventEmitter, ExecutionContext, ExecutionHandle, ExecutionValidation, InMemoryEventEmitter, OutputEvent (+9 more)
 
----
+### Community 3 - "index.ts"
+Cohesion: 0.09
+Nodes (39): createDb(), db, DbClient, getDb(), HeyNxtDb, accounts, agentExecutionResults, agentSpecs (+31 more)
 
-## Top-Level Architecture
+### Community 4 - "dependencies"
+Cohesion: 0.04
+Nodes (45): dependencies, @auth/drizzle-adapter, drizzle-orm, @heynxt/agent-adapter, @heynxt/blueprint-registry, @heynxt/core-types, @heynxt/domain-models, @heynxt/persistence (+37 more)
 
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                    apps/web  (Next.js UI — placeholder)                 │
-│                    Control Plane — user-facing                          │
-│                    Will consume @heynxt/persistence in Phase 1.6        │
-└───────────────┬────────────────────────────────┬────────────────────────┘
-                │                                │
-┌───────────────▼─────────┐  ┌───────────────────▼───────────────┐
-│ packages/prompt-spec    │  │ packages/agent-adapter            │
-│ (natural language →     │  │ (agent spawn/execute/monitor)     │
-│  structured spec)       │  │                                   │
-│   [STUB — Phase 4]      │  │   [STUB — Phase 2]               │
-└───────────────┬─────────┘  └───────────────────┬───────────────┘
-                │                                │
-┌───────────────▼──────────────────┐  ┌──────────▼───────────────┐
-│ packages/blueprint-registry     │  │ packages/domain-models   │
-│ (industrial blueprint catalog)  │  │ (FactoryNXT entities)    │
-│   [STUB — Phase 3]             │  │   [STUB — Phase 3]       │
-└───────────────┬─────────────────┘  └──────────┬───────────────┘
-                │                                │
-                └────────────────┬───────────────┘
-                                 │
-              ┌──────────────────▼──────────────────┐
-              │    packages/core-types              │ ← LEAF PACKAGE
-              │    (Zod schemas + shared TS types)  │
-              │    9 schemas, 61 vitest cases       │
-              │    <<< acyclic-leaf >>>             │
-              └──────────────────┬──────────────────┘
-                                 │
-              ┌──────────────────▼──────────────────┐
-              │    packages/persistence             │
-              │    (Drizzle ORM + migrations)       │
-              │    9 tables, 12 enums, 1st mig.     │
-              │    <<< ORM boundary >>>             │
-              └─────────────────────────────────────┘
-```
+### Community 5 - "HeyNXT Core - Foundation Summary"
+Cohesion: 0.05
+Nodes (38): 1. Monorepo with pnpm + Turbo, 2. Contract-First Architecture, 3. Agent Substrate Pattern, 4. Industrial Blueprint Sources, 5. TypeScript Configuration, Architecture Decision Records, Architecture Documentation, 🏗️ Architecture Summary (+30 more)
 
-Data flow (current): `Zod schemas in core-types → Drizzle tables in persistence → (Phase 1.6) db client → (Phase 6) apps/web API routes`
+### Community 6 - "scripts"
+Cohesion: 0.05
+Nodes (36): author, description, devDependencies, turbo, typescript, engines, node, pnpm (+28 more)
 
-Data flow (planned full): `prompt → prompt-spec → spec → agent-adapter → generated app ← blueprint-registry + domain-models ← core-types ← persistence`
+### Community 7 - "scripts"
+Cohesion: 0.06
+Nodes (34): drizzle-kit, dependencies, drizzle-orm, @heynxt/core-types, postgres, devDependencies, drizzle-kit, typescript (+26 more)
 
----
+### Community 8 - "layout.tsx"
+Cohesion: 0.07
+Nodes (29): metadata, RootLayout(), initialsFor(), SessionUser, UserMenu(), UserMenuProps, ^build, .env (+21 more)
 
-## Module Inventory
+### Community 9 - "FactoryNXT_PY_V2 — Structural Knowledge Graph"
+Cohesion: 0.06
+Nodes (32): API Boundaries, `app/routes/integrations.py` — ERP Adapter Patterns, `app/routes/operations.py` — Execution Engine, `app/routes/production.py` — Gantt Scheduler, Edit with Caution, Entry Points, FactoryNXT_PY_V2 — Structural Knowledge Graph, Governance (+24 more)
 
-| Module | Purpose | Status | Depends On | Phase |
-|---|---|---|---|---|
-| `apps/web` | Next.js control plane UI | placeholder (minimal src/index.ts) | core-types, prompt-spec, agent-adapter, blueprint-registry, domain-models | Phase 6 |
-| `packages/core-types` | Shared Zod schemas and types (LEAF) | **implemented** — 9 schemas, 61 tests | (none — acyclic leaf) | Phase 1 |
-| `packages/persistence` | Drizzle ORM tables + migrations | **implemented** — 9 tables, 12 enums, 1 migration | core-types (for JSONB type params) | Phase 1.4 |
-| `packages/prompt-spec` | Prompt-to-spec transformation | stub | core-types | Phase 4 |
-| `packages/agent-adapter` | Coding-agent execution adapter | stub | core-types, prompt-spec | Phase 2 |
-| `packages/blueprint-registry` | Industrial blueprint catalog | stub | core-types, domain-models | Phase 3 |
-| `packages/domain-models` | Industrial domain entities (plant/line/station/etc.) | stub | core-types | Phase 3 |
+### Community 10 - "FactoryNXT_PY_v2_Extrusion — Structural Knowledge Graph"
+Cohesion: 0.07
+Nodes (28): API Boundaries, Edit with Caution, Entry Points, Extrusion Add-on — APS (`models_aps.py`), Extrusion Core — Admin / User / Misc, Extrusion Core — Equipment, Extrusion Core — Integration, Extrusion Core — KPI / Alert (+20 more)
 
-**Dependency graph (acyclic):**
-```
-@heynxt/web  ──┐
-               ├─→ @heynxt/core-types
-               ├─→ @heynxt/prompt-spec ─→ @heynxt/core-types
-               ├─→ @heynxt/agent-adapter ─→ { @heynxt/core-types, @heynxt/prompt-spec }
-               ├─→ @heynxt/blueprint-registry ─→ { @heynxt/core-types, @heynxt/domain-models }
-               └─→ @heynxt/domain-models ─→ @heynxt/core-types
-@heynxt/persistence ─→ @heynxt/core-types      ← new edge in Task 4
-@heynxt/core-types ─→ (no workspace deps — acyclic leaf)
-```
+### Community 11 - "index.ts"
+Cohesion: 0.16
+Nodes (15): BlueprintDomain, BlueprintFamily, BlueprintFilter, BlueprintPagination, BlueprintSort, BlueprintTag, CatalogQueryResult, ExtrusionBlueprints (+7 more)
 
----
+### Community 12 - "ADR-0003: Industrial Blueprint Sources"
+Cohesion: 0.07
+Nodes (27): ADR-0003: Industrial Blueprint Sources, Blueprint Extraction Strategy, Blueprint Schema Design, Consequences, Context, Decision, Domain Model Derivation, FactoryNXT_PY_v2_Extrusion (Aluminum Extrusion) (+19 more)
 
-## Entry Points
+### Community 13 - "compilerOptions"
+Cohesion: 0.07
+Nodes (26): compilerOptions, declaration, declarationMap, esModuleInterop, forceConsistentCasingInFileNames, isolatedModules, lib, module (+18 more)
 
-| Package | Entry point | State |
-|---|---|---|
-| `apps/web/src/index.ts` | placeholder (exports `APP_NAME` const) | Phase 6 will replace with Next.js pages |
-| `packages/core-types/src/index.ts` | re-exports 9 Zod schema files + helpers | real public surface |
-| `packages/persistence/src/index.ts` | re-exports `schema/index.ts` → 9 tables + 12 enums | real public surface (future: `db` client) |
-| `packages/prompt-spec/src/index.ts` | stub `export {}` | Phase 4 |
-| `packages/agent-adapter/src/index.ts` | stub `export {}` | Phase 2 |
-| `packages/blueprint-registry/src/index.ts` | stub `export {}` | Phase 3 |
-| `packages/domain-models/src/index.ts` | stub `export {}` | Phase 3 |
+### Community 14 - "package.json"
+Cohesion: 0.08
+Nodes (25): dependencies, @heynxt/core-types, @heynxt/domain-models, zod, devDependencies, @types/node, typescript, exports (+17 more)
 
----
+### Community 15 - "compilerOptions"
+Cohesion: 0.08
+Nodes (24): compilerOptions, allowJs, incremental, jsx, lib, module, moduleResolution, noEmit (+16 more)
 
-## Hub Files / High Blast Radius List
+### Community 16 - "4. Gap Analysis — What's Missing Between Current State and Target"
+Cohesion: 0.08
+Nodes (24): 1. Current State (from `graphify/heynxt-core/`), 2. Reference Repo Synthesis (from graphify reports), 3. Reuse Matrix (summary; full version in `buildplan.md` Phase 0), 4. Gap Analysis — What's Missing Between Current State and Target, 5. Summary: Three Blockers, One Slice, 6. Proposed Task 1, 7. Decision Required, Commands Run (+16 more)
 
-| File | Blast Radius | Why |
-|---|---|---|
-| `packages/core-types/src/schemas/*.ts` | **CRITICAL** | 9 schema files, each is a contract. Changes cascade to persistence + any downstream consumer. Editing one requires matching changes in persistence tables.|
-| `packages/core-types/src/index.ts` | **HIGH** | Public surface for all cross-package types.|
-| `packages/persistence/src/schema/*.ts` | **HIGH** | 9 tables + 12 enums. Each maps 1:1 to a Zod schema. Adding a table requires adding a Zod schema first.|
-| `packages/persistence/drizzle.config.ts` | **HIGH** | Schema entry is `dist/schema/index.js`. Changing breaks migration generation.|
-| `packages/persistence/drizzle/0000_great_sunspot.sql` | **HIGH** | First migration. Already committed. Never edit — additive migrations only going forward.|
-| `docker-compose.yml` | **MEDIUM** | Local Postgres 15. Credentials must match `.env.example` DATABASE_URL.|
-| `package.json` (root) | **HIGH** | Workspace scripts (dev:db, db:migrate), Turbo dep, engine constraints.|
-| `turbo.json` | **HIGH** | Task pipeline (build/lint/typecheck/test) — changes cascade to every package.|
-| `tsconfig.base.json` | **HIGH** | Strict compiler options inherited by all 7 packages.|
-| `pnpm-workspace.yaml` | **HIGH** | Workspace member globs (apps/*, packages/*). Adding a package requires editing this.|
-| `CLAUDE.md` | **CRITICAL** | Dictates all future Claude Code session behavior.|
-| `buildplan.md` | **HIGH** | 9-phase plan; edits cascade to task sequencing.|
-| `HANDOVER.md` | **HIGH** | Session handover doc; edits cascade to next session's starting point.|
+### Community 17 - "Handover — Phase 3 COMPLETE sign-off"
+Cohesion: 0.08
+Nodes (24): Commit History (most recent first), ✅ COMPLETED: Option A — LocalPathBlueprintLoader Implementation, ✅ COMPLETED: Phase 4 — Prompt-to-Spec Engine Implementation (this session), Core Schemas (`packages/core-types/src/schemas/blueprint.ts`), Documentation (`docs/adr/`), Domain Models (`packages/domain-models/src/entities/`), Files Changed (Phase 3), Handover — Phase 3 COMPLETE sign-off (+16 more)
 
----
+### Community 18 - "package.json"
+Cohesion: 0.09
+Nodes (23): dependencies, @heynxt/core-types, @heynxt/prompt-spec, zod, devDependencies, typescript, exports, import (+15 more)
 
-## Safe to Edit
+### Community 19 - "package.json"
+Cohesion: 0.09
+Nodes (23): dependencies, zod, devDependencies, typescript, vitest, exports, import, typescript (+15 more)
 
-- Add new files under `packages/core-types/src/schemas/*.ts` (coordinate with persistence + re-export from index.ts + add vitest)
-- Add new files under `packages/persistence/src/schema/*.ts` (coordinate with core-types + regenerate migration)
-- New ADRs in `docs/adr/` — append-only pattern
-- `docs/dev-setup.md`, `HANDOVER.md`, `README.md` — informational docs
-- `apps/web/src/` — placeholder content; real Next.js routes will land in Phase 6
-- `.env.example` — additive env var declarations
-- `docs/gap-analysis.md` — informational, no downstream consumers
+### Community 20 - "ADR-0010: Blueprint Registry Architecture"
+Cohesion: 0.09
+Nodes (22): 1. Schema Design — Blueprint Metadata (in `core-types`), 2. Domain Entity Schema — Industrial Entities, 3. Registry Infrastructure — Three Interfaces, 4. Composition Plan Schema, ADR-0010: Blueprint Registry Architecture, Alternative 1: JSON-based Blueprint Storage (vs. DB schema), Alternative 2: LLM-assisted Blueprint Matching (vs. keyword-based), Alternative 3: Single Monolithic Blueprint Schema (vs. Family/Domain classification) (+14 more)
 
----
+### Community 21 - "package.json"
+Cohesion: 0.10
+Nodes (21): dependencies, @heynxt/core-types, zod, devDependencies, typescript, exports, import, @heynxt/core-types (+13 more)
 
-## Edit with Caution
+### Community 22 - "package.json"
+Cohesion: 0.10
+Nodes (21): dependencies, @heynxt/core-types, zod, devDependencies, typescript, exports, import, @heynxt/core-types (+13 more)
 
-- `packages/core-types/src/schemas/<entity>.ts` (existing schemas are LOADED with 61 tests) — edits require matching Drizzle changes + possible new migration
-- `packages/persistence/src/schema/<entity>.ts` — same coupling
-- `packages/persistence/drizzle/0000_great_sunspot.sql` — **never edit**. Future migrations are additive.
-- `packages/persistence/drizzle.config.ts` — schema/out path changes break migration generation
-- `turbo.json` — task pipeline changes cascade to every package's build/lint/typecheck
-- `tsconfig.base.json` — any flag change cascades to all 7 packages simultaneously
-- `package.json` (root) — workspace globs, engine constraints, dev dependency versions
-- `pnpm-workspace.yaml` — workspace glob changes affect what pnpm treats as a package
-- `docker-compose.yml` — Postgres creds must stay in sync with DATABASE_URL in .env.example and docs
+### Community 23 - "HeyNXT Core — Claude Instructions"
+Cohesion: 0.10
+Nodes (21): 1) Coding agent execution reference, 2) Industrial blueprint reference — aluminum extrusion, 3) Industrial blueprint reference — PCB/electronics MES, Architecture Principles, Core Rules, Current Phase, Development Commands, External Reference Repositories (+13 more)
 
----
+### Community 24 - "Graph Report — coding-agent-template"
+Cohesion: 0.10
+Nodes (20): 1. Adapter pattern for agents (`lib/sandbox/agents/index.ts`), 2. Sandboxed execution (`lib/sandbox/creation.ts` + `lib/sandbox/commands.ts`), 3. Streaming JSON output (claude.ts — reference implementation), 4. Session resumption, 5. Background orchestration via Next.js `after()`, 6. Per-user encrypted API keys + AI Gateway proxying, API Boundaries, Critical Files / High Blast Radius (+12 more)
 
-## Load-Bearing Files (do NOT refactor without strong justification)
+### Community 25 - "workspace.ts"
+Cohesion: 0.12
+Nodes (17): WorkspacesPage(), Invitation, InvitationId, InvitationStatus, InvitationSummary, InviteUserInput, Organization, OrganizationId (+9 more)
 
-1. `packages/core-types/src/index.ts` — single source of truth for cross-package types
-2. `packages/persistence/src/schema/*.ts` (9 files) — 1:1 with Zod, Drizzle migrations derive from these
-3. `packages/persistence/drizzle/0000_great_sunspot.sql` — first migration, committed
-4. `packages/persistence/drizzle.config.ts` — drizzle-kit config, entry point is dist
-5. `docker-compose.yml` — local Postgres; creds flow to env
-6. `tsconfig.base.json` — TS base config
-7. `pnpm-workspace.yaml` — workspace membership
-8. `turbo.json` — task pipeline
-9. `CLAUDE.md` — session guide
+### Community 27 - "control-plane.test.ts"
+Cohesion: 0.26
+Nodes (9): ALLOWED_PROJECT_STATUS_TRANSITIONS, CreateProjectInput, isProjectStatusTransitionAllowed(), Project, ProjectLookupKey, ProjectSlug, ProjectStatus, ProjectSummary (+1 more)
 
----
+### Community 28 - "blueprint.ts"
+Cohesion: 0.11
+Nodes (13): BlueprintDomain, BlueprintFamily, BlueprintMetadata, BlueprintPack, BlueprintSummary, BlueprintTag, CompositionPlan, CreateBlueprintInput (+5 more)
 
-## Workflows
+### Community 29 - "ADR-0001: Monorepo and Boundaries"
+Cohesion: 0.12
+Nodes (17): ADR-0001: Monorepo and Boundaries, Consequences, Context, Decision, Dependency Rules, Migration Plan, Monorepo Structure, Negative (+9 more)
 
-| Workflow | Status | Steps |
-|---|---|---|
-| Local dev | **implemented** | pnpm install → pnpm dev:db → pnpm db:migrate → pnpm dev |
-| Schema authoring | **implemented** | Add Zod schema in core-types → add vitest → add Drizzle table in persistence → `pnpm db:migrate:generate` → verify |
-| Migration additive flow | **implemented** | pnpm build in persistence → drizzle-kit diff → emit SQL → pnpm db:migrate |
-| API-route wiring | in progress (Phase 1.6) | Add persistence/src/client.ts → re-export db → create apps/web API routes → Zod-validate at boundary |
-| Prompt → spec | planned (Phase 4) | stub prompt-spec → implemented |
-| Agent execution | planned (Phase 2) | stub agent-adapter → implemented; needs db client first |
-| Blueprint selection | planned (Phase 3) | stub blueprint-registry + domain-models → implemented |
-| Generation pipeline | planned (Phase 6) | combines all three layers; needs Phase 2 + Phase 3 |
+### Community 30 - "ADR-0004: ORM and Database Choice for Control Plane"
+Cohesion: 0.12
+Nodes (17): ADR-0004: ORM and Database Choice for Control Plane, Consequences, Considered Alternatives, Context, Decision, Decisions locked in (Task 4), Follow-ups (all landed), Implementation status (as of 2026-07-09) (+9 more)
 
----
+### Community 31 - "Architecture Overview"
+Cohesion: 0.20
+Nodes (10): Architecture Overview, Blueprint Loading Flow, Data Flow, Extension Points, Package Dependency Graph, References, Security Considerations, Standard Generation Flow (+2 more)
 
-## API Boundaries
+### Community 32 - "page.tsx"
+Cohesion: 0.14
+Nodes (14): CreateTaskForm(), errStyle, inputStyle, ProjectOption, ADR-0006, WorkspaceOption, defaultStatusColor, getStatusColor() (+6 more)
 
-- **Public exports only**: every package uses conditional `exports`
-  field (types + import). Consumers import `@heynxt/xxx`, never
-  `@heynxt/xxx/src/...` or `dist/....`
-- **No internal path imports across packages** — enforced by convention
-  (no lint rule yet). CLAUDE.md forbids it.
-- **All types cross boundaries via `core-types`** — Zod schemas are the
-  single source of truth (inferred types via `z.infer`)
-- **Persistence tables map 1:1 with Zod schemas** — camelCase columns
-  match Zod field names exactly (no `mapFromView`)
-- **Migration boundary**: Drizzle-kit owns the migrations/ folder.
-  Migrations are additive SQL; never hand-edit generated SQL files.
-- **No HTTP routes yet** — `apps/web/src/app/api/...` doesn't exist. Phase 1.6
-  will add it using the persistence db client.
+### Community 34 - "HeyNXT Core - Industrial AI App Builder Platform"
+Cohesion: 0.13
+Nodes (15): ADRs, 🏗️ Architecture Overview, Coding Agent Substrate, 🤝 Contributing, 🎯 Current Phase: Phase 1 — Product Control Plane Foundation, 📚 Documentation, For Claude Sessions, HeyNXT Core - Industrial AI App Builder Platform (+7 more)
 
----
+### Community 35 - "tsconfig.json"
+Cohesion: 0.13
+Nodes (14): apps, packages, compilerOptions, noEmit, exclude, extends, include, dist (+6 more)
 
-## Uncertain / Inferred Areas
+### Community 36 - "API Contract"
+Cohesion: 0.14
+Nodes (13): API Contract, Artifacts, Generation Runs, Health, @heynxt/web, Local Setup, Package Dependencies (runtime), Projects (+5 more)
 
-| Subject | Detail |
-|---|---|
-| Migration apply not verified against live Postgres 15 | drizzle-kit generated `0000_great_sunspot.sql` from the schema, but the Docker daemon was inaccessible in the sandbox. The user should verify `pnpm dev:db` + `pnpm db:migrate` apply cleanly against the local Postgres 15 container. |
-| No `db` client yet | `@heynxt/persistence` exports the 9 tables but no configured db client. Phase 1.6 will add `packages/persistence/src/client.ts`. `apps/web` routes will then depend on persistence for the first time. |
-| `apps/web` doesn't yet import persistence | `apps/web/package.json` lists 5 `@heynxt/*` packages but not `@heynxt/persistence`. Phase 1.6 will wire `@heynxt/persistence` in as a 6th dep. |
-| `apps/web` has only a placeholder `src/index.ts` | Real Next.js routes (`layout.tsx`, `page.tsx`, `app/api/`) are deferred to Phase 6. |
-| Reference-repo graphs are stale | Coding-agent-template, FactoryNXT_PY_V2, FactoryNXT_PY_V2_Extrusion graphs under `graphify/` are pre-Phase-0 snapshots. Refresh when Phase 3 (blueprint extraction) starts. |
-| No lint enforcement for cross-package imports | CLAUDE.md forbids internal-path imports but no `manypkg` / ESLint rule enforces it. Risk grows as the dep graph widens. |
-| Test coverage for persistence is zero | vitest.config.ts exists but no `*.test.ts` files. Recommended: round-trip INSERT/SELECT + Zod.parse tests against live (or in-memory SQLite) DB. |
-| `role_assignments` NULL-caveat on composite UNIQUE | Postgres treats NULLs as distinct in UNIQUE constraints, so org-scoped (workspaceId=NULL) role assignments can collide. Mitigated at the API layer via `INSERT ... ON CONFLICT`. |
+### Community 37 - "ADR-0008 — Auth Library and OAuth Provider"
+Cohesion: 0.14
+Nodes (13): ADR-0008 — Auth Library and OAuth Provider, Affected Code Surface (preview for next task), Affected Schema Surface, Consequences, Context, Costs / Tradeoffs, Decision, Exit Criteria for This Decision (+5 more)
 
----
+### Community 38 - "agent-spec.ts"
+Cohesion: 0.14
+Nodes (11): AgentExecutionResult, AgentExecutionResultId, AgentSpec, AgentSpecId, AgentSpecSummary, AgentStatus, AgentType, CreateAgentSpecInput (+3 more)
 
-## Session Memory
+### Community 39 - "page.tsx"
+Cohesion: 0.18
+Nodes (11): CreateProjectForm(), errStyle, inputStyle, ADR-0006, WorkspaceOption, PageProps, ProjectsList(), ProjectsPage() (+3 more)
 
-> **Paste this block verbatim at the top of any future Claude Code session
-> prompt before opening a file in this repo:**
+### Community 40 - "Local Development Setup"
+Cohesion: 0.17
+Nodes (12): 1. Install dependencies, 2. Create your local env file, 3. Start the local Postgres container, Daily Workflow, Database Details, First-Time Setup, Local Development Setup, Prerequisites (+4 more)
 
-```
-You are working in /Users/pskbmohan/Documents/GitHub/heynxt-core — an
-industrial AI app builder monorepo. Phase 0 foundation is complete; Phase 1
-is substantial with Tasks 1-4 done. Two packages have real implementation.
+### Community 41 - "BlueprintValidatorImpl"
+Cohesion: 0.27
+Nodes (3): BlueprintMetadata, BlueprintValidator, BlueprintValidatorImpl
 
-CURRENT STATE (2026-07-09, post-Task-4):
-- 86 tracked files. 1 app (apps/web/) — placeholder src/index.ts.
-  6 packages: core-types, persistence, prompt-spec, agent-adapter,
-  blueprint-registry, domain-models.
-- @heynxt/core-types (LEAF package): 9 Zod schemas, 61 vitest cases
-  (User, Organization, Workspace, RBAC, Project, Task, GenerationRun,
-  Artifact, AuditLogEntry). Tests: control-plane.test.ts. Helpers:
-  getRolePermissions, isTaskTerminal, isGenerationRunTerminal,
-  hasInlineContent, createStatusChangeEntry.
-- @heynxt/persistence: 9 pgTable definitions 1:1 with Zod schemas,
-  12 pgEnum, 19 indexes, composite uniques, FK constraints. First
-  migration: drizzle/0000_great_sunspot.sql (341 lines, idempotent).
-  drizzle.config.ts points at dist/schema/index.js (drizzle-kit CJS).
-  db client not yet wired (Phase 1.6).
-- Stub packages: prompt-spec (Phase 4), agent-adapter (Phase 2),
-  blueprint-registry (Phase 3), domain-models (Phase 3).
-- Toolchain: pnpm 9 workspaces + Turbo 2.10.4 + TypeScript 5.5 +
-  Vitest 2 + Drizzle-orm ^0.33 + postgres ^3.4 + drizzle-kit ^0.24
-  (all installed; lockfile present).
-- Local dev Postgres: postgres:15-alpine via docker-compose.yml,
-  creds heynxt/heynxt/heynxt on 127.0.0.1:5432, UTF8+C collation,
-  healthcheck, named volume. Mirrors Neon serverless.
-- Migration apply not verified in sandbox (docker daemon unavailable);
-  user should run `pnpm dev:db && pnpm db:migrate` locally.
-- Verification: pnpm typecheck → 12/12 PASS; pnpm build → 7/7 PASS
-  (after adding persistence as 6th package).
+### Community 42 - "ADR-0009: Migrations — Forward-Only with Reset as Phase 1 Reversibility"
+Cohesion: 0.17
+Nodes (11): ADR-0009: Migrations — Forward-Only with Reset as Phase 1 Reversibility, Consequences, Context, Decision, Option A — Hand-write down migrations for every forward migration, Option B — Treat `pnpm db:migrate:reset` as the reversibility mechanism, Option C — Defer reversibility entirely to Phase 9, Options Considered (+3 more)
 
-PACKAGE BOUNDARIES (acyclic, core-types is leaf):
-  web → {core-types, prompt-spec, agent-adapter, blueprint-registry, domain-models}
-  persistence → {core-types}
-  agent-adapter → {core-types, prompt-spec}
-  blueprint-registry → {core-types, domain-models}
-  prompt-spec → {core-types}
-  domain-models → {core-types}
-  core-types → (none)
+### Community 44 - "task-payload.ts"
+Cohesion: 0.17
+Nodes (10): CreateTaskPayloadInput, CreateTaskPayloadInputSchema, TaskPayload, TaskPayloadId, TaskPayloadIdSchema, TaskPayloadSchema, TaskPayloadSummary, TaskPayloadSummarySchema (+2 more)
 
-READ FIRST:
-  1. CLAUDE.md (session guide)
-  2. buildplan.md (phase plan)
-  3. HANDOVER.md (session handover)
-  4. graphify-out/GRAPH_REPORT.md (structural map — this file)
-  5. packages/core-types/src/index.ts (to see schema exports)
-  6. packages/persistence/src/index.ts (to see table exports)
-  7. docs/adr/0004-orm-and-database.md (DB decisions + Task 4 status)
+### Community 45 - "tsconfig.json"
+Cohesion: 0.17
+Nodes (11): compilerOptions, outDir, rootDir, exclude, extends, include, dist, node_modules (+3 more)
 
-DO NOT TOUCH without strong justification:
-  - turbo.json (cascades to all packages)
-  - tsconfig.base.json (cascades to all 7 packages)
-  - pnpm-workspace.yaml (workspace membership)
-  - package.json root workspace scripts (dev:db / db:migrate flow)
-  - Existing schema files in core-types/src/schemas/*.ts or
-    persistence/src/schema/*.ts WITHOUT matching changes in the other
-    (1:1 coupled)
-  - drizzle/0000_great_sunspot.sql (additive migrations only)
+### Community 47 - "Decision"
+Cohesion: 0.18
+Nodes (11): 1. Adapter Pattern with Uniform Contract, 2. Sandboxed Execution, 3. Streaming Output, 4. Credential Management, 5. Resumable Sessions, Adaptation for HeyNXT, Agent Spec Schema, Agent Substrate Architecture (+3 more)
 
-NEXT PHASE: Phase 1.6 — wire db client into apps/web API routes.
-  - Add packages/persistence/src/client.ts (Drizzle client factory)
-    (postgres.js driver for local + neon for future prod)
-  - Re-export db from @heynxt/persistence
-  - Add @heynxt/persistence to apps/web deps
-  - Create minimal apps/web API routes using db client
-  - Zod-validate at route boundary
+### Community 48 - "page.tsx"
+Cohesion: 0.22
+Nodes (8): CreateWorkspaceForm(), errStyle, inputStyle, PageProps, tdStyle, thStyle, WorkspacesList(), Workspace
 
-CONTRACT-FIRST RULE: every new type/schema goes in @heynxt/core-types
-first. Cross-package imports must use bare @heynxt/xxx, never
-@heynxt/xxx/src/... or dist/.... Verify with pnpm typecheck before
-claiming done. Persistence table changes must mirror Zod changes (1:1).
+### Community 49 - "ADR-0002: Agent Substrate and Execution Model"
+Cohesion: 0.20
+Nodes (10): ADR-0002: Agent Substrate and Execution Model, Consequences, Context, Future Considerations, Implementation Notes, Negative, Neutral, Phase 5 Tasks (+2 more)
 
-GRAPHIFY STATUS: heynxt-core graph refreshed post-Task-4 (this file).
-Reference-repo graphs (coding-agent-template, FactoryNXT_PY_V2,
-FactoryNXT_PY_V2_Extrusion) are pre-Phase-0 and STALE. Refresh before
-Phase 3 blueprint extraction.
-```
+### Community 51 - "task.ts"
+Cohesion: 0.22
+Nodes (8): CreateTaskInput, isTaskTerminal(), TaskSummary, TaskType, User, UserId, UserStatus, UserSummary
+
+### Community 52 - "auth.ts"
+Cohesion: 0.25
+Nodes (5): authConfig, ADR-0008, nextAuth, ADR-0008, config
+
+### Community 53 - "rbac.ts"
+Cohesion: 0.07
+Nodes (26): 1. Schema Design — PromptSpec in `core-types`, 2. Input Schemas for Mutations, 3. Module Structure in `packages/prompt-spec/src/`, 4. Export Strategy, 5. Idempotency via Stability Hash, ADR-0011: Prompt-to-Spec Engine Architecture (Phase 4), Alternative 1: LLM-Only Parsing, Alternative 2: Form-First Input (+18 more)
+
+### Community 54 - "ADR-0006 — `createdBy` Session Sweep Plan"
+Cohesion: 0.22
+Nodes (8): ADR-0006 — `createdBy` Session Sweep Plan, Consequences, Context, Costs / Tradeoffs, Decision, Exit Criteria for the Sweep, Rationale, Sweep Plan
+
+### Community 55 - "ADR-0007 — Phase 1 UI Consolidation Pattern"
+Cohesion: 0.22
+Nodes (8): ADR-0007 — Phase 1 UI Consolidation Pattern, Consequences, Context, Conventions, Costs / Tradeoffs, Decision, Rationale, Revisit Triggers
+
+### Community 56 - "Graphify — Unified Repo Map"
+Cohesion: 0.22
+Nodes (9): Cross-Repo Navigation, File Contents, Graphify — Unified Repo Map, How Graphs Are Generated, How to Use This Map, Layout, Priority Order for Any Repo, Refreshing a Graph (+1 more)
+
+### Community 57 - "tsconfig.json"
+Cohesion: 0.22
+Nodes (8): compilerOptions, outDir, rootDir, extends, include, src/**/*, ../../tsconfig.base.json, $schema
+
+### Community 58 - "extracted-blueprints-example.ts"
+Cohesion: 0.22
+Nodes (6): EXAMPLE_DIE_ENTITY, EXAMPLE_EXTRUSION_BLUEPRINT, EXAMPLE_GENEALOGY_EVENT_ENTITY, EXAMPLE_OPERATION_TRANSACTION_ENTITY, EXAMPLE_PCB_BLUEPRINT, EXAMPLE_WORK_ORDER_ENTITY
+
+### Community 59 - "tsconfig.json"
+Cohesion: 0.22
+Nodes (8): compilerOptions, outDir, rootDir, extends, include, src/**/*, ../../tsconfig.base.json, $schema
+
+### Community 60 - "tsconfig.json"
+Cohesion: 0.22
+Nodes (8): compilerOptions, outDir, rootDir, extends, include, src/**/*, ../../tsconfig.base.json, $schema
+
+### Community 61 - "tsconfig.json"
+Cohesion: 0.22
+Nodes (8): compilerOptions, outDir, rootDir, extends, include, src/**/*, ../../tsconfig.base.json, $schema
+
+### Community 62 - "tsconfig.json"
+Cohesion: 0.22
+Nodes (8): compilerOptions, outDir, rootDir, extends, include, src/**/*, ../../tsconfig.base.json, $schema
+
+### Community 63 - "ADR-0005 — Client Form Pattern (fetch + router.refresh)"
+Cohesion: 0.25
+Nodes (7): ADR-0005 — Client Form Pattern (fetch + router.refresh), Consequences, Context, Costs / Tradeoffs, Decision, Rationale, Revisit When
+
+### Community 65 - "generation-run.ts"
+Cohesion: 0.25
+Nodes (7): CreateGenerationRunInput, GenerationRun, GenerationRunId, GenerationRunSnapshot, GenerationRunStatus, GenerationRunSummary, isGenerationRunTerminal()
+
+### Community 66 - "Phase 3 — Industrial Blueprint Extraction"
+Cohesion: 0.33
+Nodes (6): Blueprint Extraction Targets, Dependencies, Exit Criteria, Initial Blueprint Families, Phase 3 — Industrial Blueprint Extraction, Risks
+
+### Community 67 - "Phase 0 — Multi-Repo Audit ✓ COMPLETE"
+Cohesion: 0.33
+Nodes (6): Completed Deliverables, Cross-Repo Reuse Matrix, Exit Criteria, Files Changed, Gaps Documented, Phase 0 — Multi-Repo Audit ✓ COMPLETE
+
+### Community 68 - "local-path.ts"
+Cohesion: 0.29
+Nodes (5): createEmptyCatalog(), DEFAULT_FACTORY_NXT_SOURCES, FactoryNxtSourceConfig, ParsedPythonClass, ParsedPythonFile
+
+### Community 69 - "audit-log.ts"
+Cohesion: 0.33
+Nodes (5): AuditAction, AuditEntityType, AuditLogEntry, AuditLogId, createStatusChangeEntry()
+
+### Community 70 - "Implementation Phases"
+Cohesion: 0.40
+Nodes (5): Definition of Done, HeyNXT Core — Build Plan, Implementation Phases, Objective, Summary
+
+### Community 71 - "Phase 1 — Product Control Plane Foundation"
+Cohesion: 0.40
+Nodes (5): Dependencies, Exit Criteria, Phase 1 — Product Control Plane Foundation, Risks, Scope
+
+### Community 72 - "Phase 2 — Agent Execution Integration"
+Cohesion: 0.40
+Nodes (5): Dependencies, Exit Criteria, Phase 2 — Agent Execution Integration, Risks, Scope
+
+### Community 73 - "Phase 4 — Prompt-to-Spec Engine"
+Cohesion: 0.40
+Nodes (5): Dependencies, Exit Criteria, Phase 4 — Prompt-to-Spec Engine, Risks, Scope
+
+### Community 74 - "Phase 5 — Blueprint Selection and Composition"
+Cohesion: 0.40
+Nodes (5): Dependencies, Exit Criteria, Phase 5 — Blueprint Selection and Composition, Risks, Scope
+
+### Community 75 - "Phase 6 — Generation Pipeline"
+Cohesion: 0.40
+Nodes (5): Dependencies, Exit Criteria, Phase 6 — Generation Pipeline, Risks, Scope
+
+### Community 76 - "Phase 7 — Validation and Review Loop"
+Cohesion: 0.40
+Nodes (5): Dependencies, Exit Criteria, Phase 7 — Validation and Review Loop, Risks, Scope
+
+### Community 77 - "Phase 8 — Industrial Runtime Services"
+Cohesion: 0.40
+Nodes (5): Dependencies, Exit Criteria, Phase 8 — Industrial Runtime Services, Risks, Scope
+
+### Community 78 - "Phase 9 — Governance and Hardening"
+Cohesion: 0.40
+Nodes (5): Dependencies, Exit Criteria, Phase 9 — Governance and Hardening, Risks, Scope
+
+### Community 79 - "Rationale"
+Cohesion: 0.40
+Nodes (5): Rationale, Why Agent Substrate Pattern?, Why Not Agent Framework (LangChain, AutoGen)?, Why Not Direct API Integration?, Why Vercel coding-agent-template Specifically?
+
+### Community 80 - "@heynxt/persistence"
+Cohesion: 0.40
+Nodes (4): Design decisions, @heynxt/persistence, References, What it exposes
+
+### Community 81 - "Source-of-Truth Repositories"
+Cohesion: 0.50
+Nodes (4): 1) Coding agent execution reference, 2) Industrial blueprint references, 3) Product platform repository, Source-of-Truth Repositories
+
+### Community 82 - "Architecture Intent"
+Cohesion: 0.50
+Nodes (4): A. Control Plane, Architecture Intent, B. Agent Execution Adapter, C. Industrial Blueprint Engine
+
+### Community 83 - "First-Time Setup"
+Cohesion: 0.11
+Nodes (18): ApiEndpointDefinition, AppType, AuditRequirement, BlueprintHint, CreatePromptInput, DeploymentProfile, IntegrationDefinition, ParsedIntent (+10 more)
+
+### Community 84 - "extrusion-blueprint.ts"
+Cohesion: 0.83
+Nodes (3): createExtrusionBlueprints(), createExtrusionDieLifecycleBlueprint(), createExtrusionOperationsBlueprint()
+
+### Community 85 - "pcb-blueprint.ts"
+Cohesion: 0.83
+Nodes (3): createPcbBlueprints(), createPcbGenealogyBlueprint(), createPcbSerialExecutionBlueprint()
+
+### Community 167 - "validator.ts"
+Cohesion: 0.25
+Nodes (6): CompositionPlan, createValidator(), DomainEntity, ValidationReport, ValidationResult, ValidationRules
+
+### Community 168 - "artifact.ts"
+Cohesion: 0.25
+Nodes (7): Artifact, ArtifactId, ArtifactKind, ArtifactStorageKind, ArtifactSummary, CreateArtifactInput, hasInlineContent()
+
+### Community 169 - "Architectural Layers"
+Cohesion: 0.29
+Nodes (7): Architectural Layers, Layer 1: Shared Schema Layer (`@heynxt/core-types`), Layer 2: Domain Models Layer (`@heynxt/domain-models`), Layer 3: Blueprint Registry Layer (`@heynxt/blueprint-registry`), Layer 4: Prompt-to-Spec Layer (`@heynxt/prompt-spec`), Layer 5: Agent Adapter Layer (`@heynxt/agent-adapter`), Layer 6: Control Plane UI (`apps/web`)
+
+### Community 170 - "workspace.ts"
+Cohesion: 0.33
+Nodes (5): CreateWorkspaceInput, WorkspaceLookupKey, WorkspaceSlug, WorkspaceStatus, WorkspaceSummary
+
+### Community 171 - "Troubleshooting"
+Cohesion: 0.40
+Nodes (5): Container starts unhealthy, `DATABASE_URL` connection refused, `docker compose: command not found`, Port 5432 already in use, Troubleshooting
+
+## Knowledge Gaps
+- **787 isolated node(s):** `nextConfig`, `name`, `version`, `private`, `dev` (+782 more)
+  These have ≤1 connection - possible missing edges or undocumented components.
+- **80 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+
+## Suggested Questions
+_Questions this graph is uniquely positioned to answer:_
+
+- **Why does `HeyNXT Core — Build Plan` connect `Implementation Phases` to `Source-of-Truth Repositories`, `Architecture Intent`, `README.md`?**
+  _High betweenness centrality (0.012) - this node is a cross-community bridge._
+- **Why does `Implementation Phases` connect `Implementation Phases` to `Phase 3 — Industrial Blueprint Extraction`, `Phase 0 — Multi-Repo Audit ✓ COMPLETE`, `Phase 1 — Product Control Plane Foundation`, `Phase 2 — Agent Execution Integration`, `Phase 4 — Prompt-to-Spec Engine`, `Phase 5 — Blueprint Selection and Composition`, `Phase 6 — Generation Pipeline`, `Phase 7 — Validation and Review Loop`, `Phase 8 — Industrial Runtime Services`, `Phase 9 — Governance and Hardening`?**
+  _High betweenness centrality (0.010) - this node is a cross-community bridge._
+- **Why does `POST()` connect `errorResponse` to `index.ts`, `task-payload.ts`?**
+  _High betweenness centrality (0.006) - this node is a cross-community bridge._
+- **What connects `NOTE: This file should not be edited`, `nextConfig`, `name` to the rest of the system?**
+  _792 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Should `index.ts` be split into smaller, more focused modules?**
+  _Cohesion score 0.05359937402190924 - nodes in this community are weakly interconnected._
+- **Should `errorResponse` be split into smaller, more focused modules?**
+  _Cohesion score 0.09745390693590869 - nodes in this community are weakly interconnected._
+- **Should `index.ts` be split into smaller, more focused modules?**
+  _Cohesion score 0.07380520266182698 - nodes in this community are weakly interconnected._

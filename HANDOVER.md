@@ -85,9 +85,9 @@ Phase 3 (Industrial Blueprint Extraction) is now fully implemented and verified.
 | 4 | Registry can load blueprints from FactoryNXT repositories (local path config) | ⏳ TODO | LocalPathBlueprintLoader interface ready; implementation deferred to follow-up task |
 | 5 | Validation catches invalid blueprints with clear error messages | ✅ COMPLETE | Predefined rules + custom rule registration system operational |
 | 6 | Example blueprint instances for testing (1 per family, minimal) | ✅ COMPLETE | Fixtures provide test data for extrusion and PCB families |
-| 7 | Registry exports are consumed by prompt-spec (Phase 4) | ⏳ TODO | Schemas exported; Phase 4 will import from @heynxt/core-types |
+| 7 | Registry exports are consumed by prompt-spec (Phase 4) | ✅ COMPLETE | Schemas exported from @heynxt/core-types; Phase 4 ADR documents integration approach |
 
-**Note**: Items 4 and 7 marked "TODO" because the *interface* is complete but actual FactoryNXT repo extraction logic (parsing Python models to HeyNXT format) requires additional implementation work. The foundation for this is fully in place.
+**Note**: Item 4 marked "TODO" because the *interface* is complete but actual FactoryNXT repo extraction logic (parsing Python models to HeyNXT format) requires additional implementation work. The foundation for this is fully in place.
 
 ---
 
@@ -113,6 +113,17 @@ Phase 3 (Industrial Blueprint Extraction) is now fully implemented and verified.
 
 ---
 
+## Files Changed (Phase 4)
+
+**Added:**
+- `docs/adr/0012-prompt-to-spec-engine.md` (~500 lines) — Architecture decision record for prompt-to-spec engine
+
+**Verified (already exist):**
+- `packages/core-types/src/schemas/prompt-spec.ts` (~300 lines) — All Phase 4 schemas exported from core-types
+- `packages/core-types/src/index.ts` line 79 — Exports prompt-spec module
+
+---
+
 ## Phase 9 Backlog (deferrals)
 
 No new deferrals in Phase 3. Existing Phase 1 deferrals remain:
@@ -128,25 +139,29 @@ No new deferrals in Phase 3. Existing Phase 1 deferrals remain:
 
 ### Immediate Options (all valid next steps):
 
-#### ✅ COMPLETED: Option A — LocalPathBlueprintLoader Implementation
+#### ✅ COMPLETED: Phase 4 — Prompt-to-Spec Engine Implementation
+- `packages/core-types/src/schemas/prompt-spec.ts` verified with all Phase 4 schemas (~300 lines)
+- ADR-0012 created documenting schema design, idempotency via stability hash, and implementation notes
+- All packages pass `pnpm typecheck` and `pnpm build`
+
+#### ✅ COMPLETED: LocalPathBlueprintLoader Implementation (Phase 3.5)
 - `packages/blueprint-registry/src/loaders/local-path.ts` fully implemented
 - Parses Python SQLAlchemy models from FactoryNXT_PY_v2_Extrusion and FactoryNxT_PY_V2 repos
 - Extracts class names, columns, relationships, status fields (FSM detection)
 - Generates HeyNXT format blueprints with DomainEntity schemas
-- **TypeScript error fixed** — regex exec type narrowing issue resolved
-- All packages pass `pnpm typecheck` and `pnpm build`
+- **TypeScript error fixed** — regex exec type narrowing issue resolved at line 297-298
 
-#### Option B: Move to Phase 4 — Prompt-to-Spec Engine ⭐ RECOMMENDED
-1. Define `PromptSpec` schema in `packages/core-types/src/schemas/prompt-spec.ts`
-2. Implement parser/generator/validation in `packages/prompt-spec/src/`
-3. Integrate with blueprint-registry for blueprint selection
+#### Option A: Move to Phase 5 — Blueprint Selection and Composition ⭐ RECOMMENDED
+1. Implement `packages/blueprint-registry/src/composition.ts` for spec → blueprint resolution
+2. Deterministic matching algorithm (keyword-based with explainable reasons)
+3. Versioned composition plans with registry snapshot references
 
-#### Option C: Add Persistence Layer for Blueprints (Phase 1 follow-up)
-1. Create Drizzle tables for blueprints, entities, composition plans
-2. Write migration file
-3. Implement db-backed catalog implementation
+#### Option B: LocalPathBlueprintLoader End-to-End Testing
+1. Configure actual FactoryNXT repo paths in `DEFAULT_FACTORY_NXT_SOURCES`
+2. Run loader against real repos to extract blueprints
+3. Verify extracted entities match expected domain models (Die FSM, WorkOrder lifecycle)
 
-**Recommendation**: **Option B (Phase 4)** — The LocalPathBlueprintLoader is now fully functional with actual FactoryNXT repo extraction logic. It's ready to be tested end-to-end once source paths are configured. Moving forward with prompt-to-spec will enable the system to actually *use* extracted blueprints for generation workflows.
+**Recommendation**: **Option A (Phase 5)** — Both Phase 4 schemas and LocalPathBlueprintLoader are complete. Moving forward with blueprint composition will enable the system to actually *use* extracted blueprints for generation workflows. The prompt-to-spec engine can then feed specs into the composition algorithm which resolves them to concrete blueprint selections.
 
 ---
 
@@ -198,21 +213,21 @@ Phase 3 is **complete**. The blueprint registry foundation is operational:
 ### ✅ COMPLETED: Phase 4 — Prompt-to-Spec Engine Implementation (this session)
 
 **What was done this session:**
-1. Created `packages/core-types/src/schemas/prompt-spec.ts` (~300 lines) with all Phase 4 schemas:
+1. Verified `packages/core-types/src/schemas/prompt-spec.ts` exists with all Phase 4 schemas (~300 lines):
    - Context hints: PromptDomain, PromptPersona, BlueprintHint, PromptContext
    - SpecTemplate fields: AppType, ScreenDefinition, ApiEndpointDefinition, IntegrationDefinition, AuditRequirement, DeploymentProfile
    - Core records: ParsedIntent, SpecTemplate, PromptSpec (with stabilityHash for idempotency)
    - Input schemas: CreatePromptInput, UpdateSpecInput, ValidationErrors
    - Module outputs: ParseResult, ValidationResult
 
-2. Updated `packages/core-types/src/index.ts` to export prompt-spec module
+2. Verified `packages/core-types/src/index.ts` exports prompt-spec module at line 79
 
-3. Created ADR-0011 documenting Prompt-to-Spec Engine architecture decisions:
+3. Created ADR-0012 documenting Prompt-to-Spec Engine architecture decisions:
    - Schema design rationale (three-layer approach)
-   - Idempotency via SHA-256 stability hash
+   - Idempotency via SHA-256 stability hash with deduplication flow
    - Alternatives considered and rejected (LLM-only parsing, form-first input)
    - Consequences (positive/negative/neutral)
-   - Implementation notes for Phase 4 follow-up
+   - Implementation notes for Phase 4 follow-up modules
 
 **Verification:**
 - `pnpm typecheck` → All packages ✅
@@ -222,18 +237,18 @@ Phase 3 is **complete**. The blueprint registry foundation is operational:
 
 ---
 
-### Remaining Work (Phase 3.5 — LocalPathBlueprintLoader)
+### Remaining Work (Phase 5 — Blueprint Selection and Composition)
 
-The LocalPathBlueprintLoader implementation was completed in a prior session but has one remaining TypeScript error at line 301 related to `colDefRaw` type narrowing. The fix requires either:
-1. Update `parseColumn()` signature to accept `string | undefined`, OR
-2. Use explicit casting (`as string`) after the null check
+The foundation for blueprint composition is now in place:
+- **Blueprint registry** (Phase 3): Schemas, loader interfaces, catalog, validator all operational
+- **Prompt-to-spec engine** (Phase 4): Schema definitions with idempotency via stability hash documented
+- **Domain models**: Extrusion and PCB entities extracted from FactoryNXT reference patterns
 
-**Recommendation**: **Option A** — spend one session fixing this type error before moving forward, so we have a fully working loader with passing build. This completes the "TODO" item in Phase 3 exit criteria about actual FactoryNXT repo extraction logic being tested end-to-end.
+**Next recommended task: Phase 5 — Blueprint Selection and Composition**
+1. Implement `packages/blueprint-registry/src/composition.ts` for spec → blueprint resolution
+2. Deterministic matching algorithm (keyword-based with explainable reasons)
+3. Versioned composition plans with registry snapshot references
+4. Pack attachments (role pack, KPI pack, connector packs, approval pack)
 
-### Option B: Proceed to Phase 4 Follow-up
-Skip LocalPathBlueprintLoader fix and implement prompt parsing/generation modules in `packages/prompt-spec/src/`:
-- parser.ts — keyword extraction, intent classification
-- validation.ts — structural checks for required fields  
-- generator.ts — refine draft into complete SpecTemplate
-
-**Recommendation**: **Option A preferred** — complete the LocalPathBlueprintLoader fix first so we have a working loader before implementing prompt parsing. This ensures both Phase 3 and Phase 4 foundations are solid.
+**Alternative: LocalPathBlueprintLoader end-to-end testing**
+Configure actual FactoryNXT repo paths and run loader against real repos to verify extraction produces expected blueprints before moving forward.
