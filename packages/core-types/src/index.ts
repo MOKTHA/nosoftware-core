@@ -41,6 +41,11 @@
  * Blueprint registry (Phase 3):
  *   BlueprintMetadata, BlueprintFamily, BlueprintDomain, BlueprintTag
  *   DomainEntity, CompositionPlan, BlueprintPack
+ *
+ * Prompt-to-spec engine (Phase 4):
+ *   PromptSpec, SpecTemplate, ParsedIntent, PromptContext
+ *   AppType, ScreenDefinition, ApiEndpointDefinition
+ *   ParseResult, ValidationResult
  */
 
 // Control plane — identity and tenancy
@@ -69,3 +74,6 @@ export * from './schemas/task-payload.js';
 
 // Blueprint registry (Phase 3)
 export * from './schemas/blueprint.js';
+
+// Prompt-to-spec engine (Phase 4)
+export * from './schemas/prompt-spec.js';
