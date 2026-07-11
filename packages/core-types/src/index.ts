@@ -77,3 +77,6 @@ export * from './schemas/blueprint.js';
 
 // Prompt-to-spec engine (Phase 4)
 export * from './schemas/prompt-spec.js';
+
+// Generation pipeline orchestration (Phase 6)
+export * from './schemas/generation-pipeline.js';

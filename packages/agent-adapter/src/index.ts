@@ -36,3 +36,22 @@ export type {
   VercelSdkConfig,
   VercelStreamEvent,
 } from './vercel-sdk.js';
+
+// Generation pipeline (Phase 6) - orchestration and types
+export * from './generation-pipeline.js';
+
+// Generation stages (Phase 6) - concrete implementations
+export {
+  NormalizeSpecStage,
+  ResolveBlueprintPlanStage,
+  GenerateSchemaStage,
+  GeneratePermissionsStage,
+  GenerateBackendStage,
+  GenerateFrontendStage,
+  GenerateWorkflowsStage,
+  GenerateFixturesTestsStage,
+  GenerateDeploymentStage,
+} from './stages/index.js';
+
+// Re-export core types for stage implementations
+export type { GenerationArtifact } from '@heynxt/core-types';
