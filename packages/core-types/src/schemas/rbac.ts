@@ -56,7 +56,12 @@ export const Permission = z.enum([
   // Generation runs
   'generation:run',
   'generation:read',
+  'generation:write',
   'generation:approve',
+
+  // Validation & approval (Phase 7)
+  'approval:read',
+  'approval:write',
 
   // Artifacts
   'artifact:create',
@@ -123,7 +128,8 @@ export const ROLE_DEFINITIONS: Record<RoleName, RoleDefinition> = {
       'workspace:read', 'workspace:update', 'workspace:archive', 'workspace:admin',
       'project:create', 'project:read', 'project:update', 'project:delete',
       'task:create', 'task:read', 'task:update', 'task:delete', 'task:execute',
-      'generation:run', 'generation:read', 'generation:approve',
+      'generation:run', 'generation:read', 'generation:write', 'generation:approve',
+      'approval:read', 'approval:write',
       'artifact:create', 'artifact:read', 'artifact:download', 'artifact:delete',
       'blueprint:read', 'blueprint:publish', 'blueprint:deprecate', 'blueprint:admin',
       'domain-model:read', 'domain-model:admin',
@@ -137,7 +143,8 @@ export const ROLE_DEFINITIONS: Record<RoleName, RoleDefinition> = {
       'workspace:read', 'workspace:update', 'workspace:archive', 'workspace:admin',
       'project:create', 'project:read', 'project:update', 'project:delete',
       'task:create', 'task:read', 'task:update', 'task:delete', 'task:execute',
-      'generation:run', 'generation:read', 'generation:approve',
+      'generation:run', 'generation:read', 'generation:write', 'generation:approve',
+      'approval:read', 'approval:write',
       'artifact:create', 'artifact:read', 'artifact:download', 'artifact:delete',
       'blueprint:read', 'blueprint:publish', 'blueprint:deprecate',
       'domain-model:read',
@@ -151,7 +158,8 @@ export const ROLE_DEFINITIONS: Record<RoleName, RoleDefinition> = {
       'workspace:read',
       'project:create', 'project:read', 'project:update',
       'task:create', 'task:read', 'task:update', 'task:execute',
-      'generation:run', 'generation:read',
+      'generation:run', 'generation:read', 'generation:write',
+      'approval:read',
       'artifact:create', 'artifact:read', 'artifact:download',
       'blueprint:read',
       'domain-model:read',

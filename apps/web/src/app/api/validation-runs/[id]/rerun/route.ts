@@ -52,7 +52,7 @@ export async function POST(
     const input = CreateRerunRequestInput.parse(await parseJsonBody(req));
 
     // Verify user has generation permission for the workspace
-    const validationRun = await db
+    const [validationRun] = await db
       .select({
         workspaceId: validationRuns.workspaceId,
         generationRunId: validationRuns.generationRunId,
@@ -61,17 +61,16 @@ export async function POST(
       .where(eq(validationRuns.id, validationRunId))
       .limit(1);
 
-    if (validationRun.length === 0) {
+    if (!validationRun) {
       return errorResponse(badRequest(`Validation run ${validationRunId} not found`));
     }
 
-    const validationRunData = validationRun[0];
-    if (!validationRunData?.workspaceId || !validationRunData.generationRunId) {
+    const workspaceId = validationRun.workspaceId;
+    if (!workspaceId || !validationRun.generationRunId) {
       throw new Error('Validation run missing required fields');
     }
 
-    const workspaceId = validationRunData.workspaceId;
-    await requirePermission('generation:write', userId, workspaceId);
+    await requirePermission({ userId, workspaceId, permission: 'generation:write' });
 
     // Check if user already has a pending rerun request for this validation run
     const existingRequests = await db
@@ -79,7 +78,7 @@ export async function POST(
       .from(rerunRequests)
       .where(
         and(
-          eq(rerunRequests.originalGenerationRunId, validationRunData.generationRunId),
+          eq(rerunRequests.originalGenerationRunId, validationRun.generationRunId),
           eq(rerunRequests.requestedBy, userId),
           inArray(rerunRequests.status, ['pending', 'processing'])
         )
@@ -96,7 +95,7 @@ export async function POST(
       .insert(rerunRequests)
       .values({
         id: randomUUID(),
-        originalGenerationRunId: validationRunData.generationRunId,
+        originalGenerationRunId: validationRun.generationRunId,
         feedback: input.feedback,
         requestedBy: userId,
         status: 'pending',
@@ -124,7 +123,7 @@ export async function POST(
     );
   } catch (err) {
     if (err instanceof z.ZodError) {
-      return errorResponse(badRequest(err.errors[0].message));
+      return errorResponse(badRequest(err.errors[0]?.message ?? 'Invalid request'));
     }
     return errorResponse(err);
   }
@@ -146,23 +145,22 @@ export async function GET(
     const { id: validationRunId } = await params;
 
     // Verify user has generation permission for the workspace
-    const validationRun = await db
+    const [validationRun] = await db
       .select({ workspaceId: validationRuns.workspaceId, generationRunId: validationRuns.generationRunId })
       .from(validationRuns)
       .where(eq(validationRuns.id, validationRunId))
       .limit(1);
 
-    if (validationRun.length === 0) {
+    if (!validationRun) {
       return errorResponse(badRequest(`Validation run ${validationRunId} not found`));
     }
 
-    const validationRunData = validationRun[0];
-    if (!validationRunData?.workspaceId || !validationRunData.generationRunId) {
+    const workspaceId = validationRun.workspaceId;
+    if (!workspaceId || !validationRun.generationRunId) {
       throw new Error('Validation run missing required fields');
     }
 
-    const workspaceId = validationRunData.workspaceId;
-    await requirePermission('generation:read', userId, workspaceId);
+    await requirePermission({ userId, workspaceId, permission: 'generation:read' });
 
     // Fetch rerun requests for this validation run's generation
     const requests = await db
@@ -175,7 +173,7 @@ export async function GET(
         newGenerationRunId: rerunRequests.newGenerationRunId,
       })
       .from(rerunRequests)
-      .where(eq(rerunRequests.originalGenerationRunId, validationRunData.generationRunId))
+      .where(eq(rerunRequests.originalGenerationRunId, validationRun.generationRunId))
       .orderBy(rerunRequests.requestedAt);
 
     return NextResponse.json(
@@ -189,7 +187,7 @@ export async function GET(
     );
   } catch (err) {
     if (err instanceof z.ZodError) {
-      return errorResponse(badRequest(err.errors[0].message));
+      return errorResponse(badRequest(err.errors[0]?.message ?? 'Invalid request'));
     }
     return errorResponse(err);
   }

@@ -31,6 +31,11 @@ export const validationRuns = pgTable('validation_runs', {
     .notNull()
     .references(() => 'generation_runs' as any),
 
+  /** FK to the workspace this validation belongs to (for RBAC). */
+  workspaceId: text('workspaceId')
+    .notNull()
+    .references(() => workspaces.id),
+
   /** Current status of validation run. */
   status: text('status', { enum: ['pending', 'completed', 'failed'] })
     .notNull()
@@ -45,6 +50,7 @@ export const validationRuns = pgTable('validation_runs', {
   updatedAt: timestamp('updatedAt', { mode: 'date' }).notNull(),
 }, (table) => ({
   generationRunIdx: index('validation_runs_generationRunId_idx').on(table.generationRunId),
+  workspaceIdx: index('validation_runs_workspaceId_idx').on(table.workspaceId),
   createdByIdx: index('validation_runs_createdBy_idx').on(table.createdBy),
 }));
 

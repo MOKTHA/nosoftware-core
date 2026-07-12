@@ -142,7 +142,7 @@ export async function GET(req: NextRequest) {
     );
   } catch (err) {
     if (err instanceof z.ZodError) {
-      return errorResponse(badRequest(err.errors[0].message));
+      return errorResponse(badRequest(err.errors[0]?.message ?? 'Invalid request'));
     }
     return errorResponse(err);
   }
@@ -177,6 +177,9 @@ export async function POST(req: NextRequest) {
     }
 
     const workspaceId = genRunData.workspaceId;
+    if (!workspaceId) {
+      throw new Error('Generation run missing workspace ID');
+    }
 
     const now = new Date();
     const validationRunId = randomUUID();
@@ -191,6 +194,7 @@ export async function POST(req: NextRequest) {
       .values({
         id: validationRunId,
         generationRunId: input.generationRunId,
+        workspaceId,
         status: 'completed',
         createdBy,
         createdAt: now,
@@ -254,7 +258,7 @@ export async function POST(req: NextRequest) {
     );
   } catch (err) {
     if (err instanceof z.ZodError) {
-      return errorResponse(badRequest(err.errors[0].message));
+      return errorResponse(badRequest(err.errors[0]?.message ?? 'Invalid request'));
     }
     return errorResponse(err);
   }

@@ -63,23 +63,22 @@ export async function POST(
     const input = CreateApprovalDecisionInput.parse(await parseJsonBody(req));
 
     // Verify user has approver permission for the workspace
-    const validationRun = await db
+    const [validationRun] = await db
       .select({ workspaceId: validationRuns.workspaceId, generationRunId: validationRuns.generationRunId })
       .from(validationRuns)
       .where(eq(validationRuns.id, validationRunId))
       .limit(1);
 
-    if (validationRun.length === 0) {
+    if (!validationRun) {
       return errorResponse(badRequest(`Validation run ${validationRunId} not found`));
     }
 
-    const validationRunData = validationRun[0];
-    if (!validationRunData?.workspaceId || !validationRunData.generationRunId) {
+    const workspaceId = validationRun.workspaceId;
+    if (!workspaceId || !validationRun.generationRunId) {
       throw new Error('Validation run missing required fields');
     }
 
-    const workspaceId = validationRunData.workspaceId;
-    await requirePermission('approval:write', userId, workspaceId);
+    await requirePermission({ userId, workspaceId, permission: 'approval:write' });
 
     // Check if user already made a decision on this validation run
     const existingDecisions = await db
@@ -103,7 +102,7 @@ export async function POST(
       .insert(approvalDecisions)
       .values({
         id: randomUUID(),
-        generationRunId: validationRun[0].generationRunId,
+        generationRunId: validationRun.generationRunId,
         validationRunId,
         decision: input.decision,
         approvedBy: userId,
@@ -137,7 +136,7 @@ export async function POST(
     );
   } catch (err) {
     if (err instanceof z.ZodError) {
-      return errorResponse(badRequest(err.errors[0].message));
+      return errorResponse(badRequest(err.errors[0]?.message ?? 'Invalid request'));
     }
     return errorResponse(err);
   }
@@ -162,23 +161,22 @@ export async function GET(
     });
 
     // Verify user has approver permission for the workspace
-    const validationRun = await db
+    const [validationRun] = await db
       .select({ workspaceId: validationRuns.workspaceId, generationRunId: validationRuns.generationRunId })
       .from(validationRuns)
       .where(eq(validationRuns.id, validationRunId))
       .limit(1);
 
-    if (validationRun.length === 0) {
+    if (!validationRun) {
       return errorResponse(badRequest(`Validation run ${validationRunId} not found`));
     }
 
-    const validationRunData = validationRun[0];
-    if (!validationRunData?.workspaceId || !validationRunData.generationRunId) {
+    const workspaceId = validationRun.workspaceId;
+    if (!workspaceId || !validationRun.generationRunId) {
       throw new Error('Validation run missing required fields');
     }
 
-    const workspaceId = validationRunData.workspaceId;
-    await requirePermission('approval:read', userId, workspaceId);
+    await requirePermission({ userId, workspaceId, permission: 'approval:read' });
 
     // Fetch approval decisions for this validation run
     const decisions = await db
@@ -208,7 +206,7 @@ export async function GET(
     );
   } catch (err) {
     if (err instanceof z.ZodError) {
-      return errorResponse(badRequest(err.errors[0].message));
+      return errorResponse(badRequest(err.errors[0]?.message ?? 'Invalid request'));
     }
     return errorResponse(err);
   }
