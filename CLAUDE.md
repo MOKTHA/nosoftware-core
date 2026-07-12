@@ -4,6 +4,10 @@
 - Never stop to ask for confirmation or clarify steps in Auto Mode.
 - Proceed immediately to the next sub-task or testing phase without prompting.
 
+### Context Management
+1. **Monitor Context:** Run `/context` periodically to track your context window utilization.
+2. **Clear & Restart:** If utilization reaches 80%, immediately request a summary of the current state, type `/clear` to start a new session, and paste the summary into the fresh session. 
+
 ## Repository Role
 
 This repository is the **product and control plane** for an industrial AI app builder platform. It is the product control plane and orchestration layer, implemented as a monorepo with pnpm workspaces and Turbo for task orchestration.

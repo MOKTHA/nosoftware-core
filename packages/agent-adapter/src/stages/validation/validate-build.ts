@@ -4,7 +4,7 @@
  * Verifies that production build succeeds for generated code.
  */
 
-import type { GenerationStage, GenerationStageInput, GenerationStageOutput } from '../../generation-pipeline.js';
+import type { ValidationStage, ValidationStageInput, ValidationStageOutput } from '../../generation-pipeline.js';
 import type { ValidationEvidence } from '@heynxt/core-types';
 import { z } from 'zod';
 
@@ -40,17 +40,17 @@ export type BuildEvidenceMetadata = z.infer<typeof BuildEvidenceMetadata>;
 /*  Validation Stage Implementation                                   */
 /** ------------------------------------------------------------------ */
 
-export class ValidateBuildStage implements GenerationStage {
+export class ValidateBuildStage implements ValidationStage {
   readonly name = 'validate-build' as const;
   readonly description = 'Verify production build succeeds for generated code';
 
-  validateInput(input: GenerationStageInput): boolean {
+  validateInput(input: any): boolean {
     // Need source files with build configuration
-    return input.params.generatedSourcePath !== undefined &&
-           Object.keys(input.spec).length > 0;
+    return input.params?.generatedSourcePath !== undefined &&
+           Object.keys(input.spec || {}).length > 0;
   }
 
-  async execute(input: GenerationStageInput): Promise<GenerationStageOutput> {
+  async execute(input: ValidationStageInput): Promise<ValidationStageOutput> {
     const inputHash = await this.computeHash(JSON.stringify({
       spec: input.spec,
       blueprintPlan: input.blueprintPlan ?? null,
@@ -59,29 +59,31 @@ export class ValidateBuildStage implements GenerationStage {
 
     // Run build validation (simulated for Phase 7 scaffolding)
     const validationResult = await this.runBuildValidation(
-      input.params.generatedSourcePath as string,
+      input.params?.generatedSourcePath as string,
       input.spec
     );
 
-    // Create evidence artifacts
-    const evidence = this.createEvidenceArtifacts(validationResult);
+    // Create validation result
+    const checkId = crypto.randomUUID();
+    const status: 'passed' | 'failed' = validationResult.success ? 'passed' : 'failed';
 
     return {
       inputHash,
-      outputHash: inputHash,
-      artifacts: [
-        ...evidence.map(e => ({
-          id: e.id,
-          generationRunId: '00000000-0000-0000-0000-000000000000', // Will be set by caller
-          stageName: this.name,
-          kind: 'summary' as const,
-          relativePath: `validation/${this.name}/result.json`,
-          contentHash: crypto.randomUUID().slice(-64),
-          fileSizeBytes: 1024,
-          isNew: true,
-          description: `Build verification results for ${input.params.generatedSourcePath}`,
-          createdAt: new Date(),
-        })),
+      outputHash: await this.computeHash(JSON.stringify({ ...validationResult, status })),
+      results: [
+        {
+          id: checkId,
+          checkType: 'build',
+          status,
+          evidenceUrl: `validation/build/${checkId}/build-output.json`,
+          durationMs: validationResult.totalDurationMs,
+          outputLog: JSON.stringify(validationResult),
+          testSummary: `Build ${status}: ${validationResult.outputFileCount} files produced, size: ${(validationResult.outputSizeBytes / 1024).toFixed(1)}KB`,
+          issueCount: validationResult.success ? 0 : 1,
+          blocksPromotion: true,
+          startedAt: new Date(Date.now() - validationResult.totalDurationMs),
+          completedAt: new Date(),
+        },
       ],
       summary: validationResult.success
         ? `Production build succeeded in ${validationResult.totalDurationMs}ms`

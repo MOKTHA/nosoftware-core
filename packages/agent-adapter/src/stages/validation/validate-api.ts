@@ -4,7 +4,7 @@
  * Verifies generated API endpoints respond correctly with proper responses.
  */
 
-import type { GenerationStage, GenerationStageInput, GenerationStageOutput } from '../../generation-pipeline.js';
+import type { ValidationStage, ValidationStageInput, ValidationStageOutput } from '../../generation-pipeline.js';
 import type { ValidationEvidence } from '@heynxt/core-types';
 import { z } from 'zod';
 
@@ -56,17 +56,17 @@ export type ApiEvidenceMetadata = z.infer<typeof ApiEvidenceMetadata>;
 /*  Validation Stage Implementation                                   */
 /** ------------------------------------------------------------------ */
 
-export class ValidateApiStage implements GenerationStage {
+export class ValidateApiStage implements ValidationStage {
   readonly name = 'validate-api' as const;
   readonly description = 'Smoke test generated API endpoints (correct responses)';
 
-  validateInput(input: GenerationStageInput): boolean {
+  validateInput(input: any): boolean {
     // Need source files with API definitions
-    return input.params.generatedSourcePath !== undefined &&
-           Object.keys(input.spec).length > 0;
+    return input.params?.generatedSourcePath !== undefined &&
+           Object.keys(input.spec || {}).length > 0;
   }
 
-  async execute(input: GenerationStageInput): Promise<GenerationStageOutput> {
+  async execute(input: ValidationStageInput): Promise<ValidationStageOutput> {
     const inputHash = await this.computeHash(JSON.stringify({
       spec: input.spec,
       blueprintPlan: input.blueprintPlan ?? null,
@@ -75,29 +75,31 @@ export class ValidateApiStage implements GenerationStage {
 
     // Run API validation (simulated for Phase 7 scaffolding)
     const validationResult = await this.runApiValidation(
-      input.params.generatedSourcePath as string,
+      input.params?.generatedSourcePath as string,
       input.spec
     );
 
-    // Create evidence artifacts
-    const evidence = this.createEvidenceArtifacts(validationResult);
+    // Create validation result
+    const checkId = crypto.randomUUID();
+    const status: 'passed' | 'failed' = validationResult.endpointFailures === 0 ? 'passed' : 'failed';
 
     return {
       inputHash,
-      outputHash: inputHash,
-      artifacts: [
-        ...evidence.map(e => ({
-          id: e.id,
-          generationRunId: '00000000-0000-0000-0000-000000000000', // Will be set by caller
-          stageName: this.name,
-          kind: 'summary' as const,
-          relativePath: `validation/${this.name}/result.json`,
-          contentHash: crypto.randomUUID().slice(-64),
-          fileSizeBytes: 1024,
-          isNew: true,
-          description: `API smoke test results for ${input.params.generatedSourcePath}`,
-          createdAt: new Date(),
-        })),
+      outputHash: await this.computeHash(JSON.stringify({ ...validationResult, status })),
+      results: [
+        {
+          id: checkId,
+          checkType: 'api-smoke',
+          status,
+          evidenceUrl: `validation/api/${checkId}/endpoint-test-report.json`,
+          durationMs: Math.round(validationResult.avgResponseTimeMs * validationResult.totalEndpoints),
+          outputLog: JSON.stringify(validationResult),
+          testSummary: `${validationResult.endpointsPassed}/${validationResult.totalEndpoints} APIs responded correctly (avg response time: ${Math.round(validationResult.avgResponseTimeMs)}ms)`,
+          issueCount: validationResult.endpointFailures,
+          blocksPromotion: true,
+          startedAt: new Date(Date.now() - Math.round(validationResult.avgResponseTimeMs * validationResult.totalEndpoints)),
+          completedAt: new Date(),
+        },
       ],
       summary: `APIs verified: ${validationResult.endpointsPassed}/${validationResult.totalEndpoints} responded correctly (avg response time: ${Math.round(validationResult.avgResponseTimeMs)}ms)`,
       warnings: validationResult.warnings ?? [],

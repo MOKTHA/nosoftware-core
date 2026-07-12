@@ -7,45 +7,23 @@
  */
 
 import { z } from 'zod';
+import { ValidationCheckType, ValidationResult as Phase7ValidationResult } from './generation-pipeline.js';
 
 /** ------------------------------------------------------------------ */
-/*  Validation Check Types                                            */
-/** ------------------------------------------------------------------ */
-
-/**
- * Type of validation check being performed.
- * Phase 7 Exit Criteria: All automated checks must be defined and executable.
- */
-export const ValidationCheckType = z.enum([
-  'lint',                // ESLint/formatting checks on generated code
-  'typecheck',           // TypeScript strict mode compilation verification
-  'unit-tests',          // Unit test execution
-  'integration-tests',   // Integration test execution
-  'smoke-tests',         // Smoke tests (basic functionality)
-  'migration-verify',    // Migration apply and rollback testing
-  'build',               // Production build verification
-  'route-smoke',         // Route status checks (every route returns expected status)
-  'api-smoke',           // API endpoint smoke tests
-  'permissions-check',   // Role-based access enforcement verification
-]);
-
-export type ValidationCheckType = z.infer<typeof ValidationCheckType>;
-
-/** ------------------------------------------------------------------ */
-/*  Validation Results & Evidence                                     */
+/*  Legacy Types - Re-exported for backward compatibility           */
 /** ------------------------------------------------------------------ */
 
 /**
  * Result of a single validation check (Phase 7).
+ * This is an alias for the main ValidationResult type defined in generation-pipeline.ts.
  * Distinct from Phase 4's prompt ValidationResult.
- * Phase 7 Exit Criteria: Failed checks block promotion without override flag + reason.
  */
 export const ValidationRunResult = z.object({
   /** Unique ID for this validation result. */
   id: z.string().uuid(),
 
   /** Type of validation performed. */
-  checkType: ValidationCheckType,
+  checkType: z.lazy(() => ValidationCheckType),
 
   /** Status of the validation check. */
   status: z.enum(['passed', 'failed', 'skipped']),
@@ -71,6 +49,8 @@ export const ValidationRunResult = z.object({
   startedAt: z.coerce.date(),
   completedAt: z.coerce.date(),
 });
+
+export type ValidationRunResult = z.infer<typeof ValidationRunResult>;
 
 /** ------------------------------------------------------------------ */
 /*  Validation Run                                                    */
@@ -137,7 +117,7 @@ export const ValidationEvidence = z.object({
   validationRunId: z.string().uuid(),
 
   /** Which check produced this evidence. */
-  checkType: ValidationCheckType,
+  checkType: z.lazy(() => ValidationCheckType),
 
   /** Type of evidence (log file, screenshot, test report, diff). */
   kind: z.enum([
@@ -284,7 +264,7 @@ export const PRMetadata = z.object({
   /** All validation results attached as PR comments/links. */
   validationResultsSummary: z.array(
     z.object({
-      checkType: ValidationCheckType,
+      checkType: z.lazy(() => ValidationCheckType),
       status: z.enum(['passed', 'failed']),
       evidenceUrl: z.string().url(),
     })
@@ -305,6 +285,6 @@ export type PRMetadata = z.infer<typeof PRMetadata>;
 /*  Type Aliases                                                      */
 /** ------------------------------------------------------------------ */
 
-// Additional type aliases for convenience (renamed to avoid Phase 4 conflict)
-export type ValidationCheckResult = z.infer<typeof ValidationRunResult>;
+// Additional type aliases for convenience (using the main ValidationResult from generation-pipeline)
+export type ValidationCheckResult = Phase7ValidationResult;
 export type ValidationRunRecordType = z.infer<typeof ValidationRunRecord>;

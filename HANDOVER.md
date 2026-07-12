@@ -1,132 +1,124 @@
-# Handover — Phase 7 Start (2026-07-12)
+# Handover — Phase 7 Mid-Implementation (2026-07-12)
 
 **Date**: 2026-07-12  
-**Status**: ⏸️ **CONTEXT LIMIT REACHED** — Session paused mid-implementation. Progress documented below for continuation.
+**Status**: 🟡 **IN PROGRESS** — Validation scaffolding complete, implementation work pending.
 
 ---
 
-## Current State: Phase 6 COMPLETE, Starting Phase 7
+## Current State: Phase 6 COMPLETE, Phase 7 IN PROGRESS
 
-### Previously Completed (from prior session)
+### Completed Phases
 - ✅ **Phase 5**: Blueprint Selection and Composition Engine — COMPLETE
 - ✅ **Phase 6**: Generation Pipeline Orchestration — COMPLETE  
-- 🏁 **Next**: Phase 7 — Validation and Review Loop
+- 🟡 **Phase 7**: Validation and Review Loop — Scaffolding complete (7.1, 7.2 done)
 
 ---
 
-## What Was Done (current session, before context limit)
+## What Was Completed (Session 2026-07-12)
 
-### Phase 7.1 - Define validation stage schemas in core-types ✅ COMPLETE
+### Phase 7.1 - Define validation stage schemas ✅ COMPLETE
 
 **File Created:**
-- `packages/core-types/src/schemas/validation-stage.ts` (~320 lines)
+- `packages/core-types/src/schemas/validation-stage.ts` (~350 lines)
 
-**Schemas Defined (with resolved naming):**
-| Schema | Purpose | Notes |
-|--------|---------|-------|
-| `ValidationCheckType` | All 8 validation check types (lint, typecheck, tests, migrations, build, routes, api, permissions) | No conflict - unique name |
-| `ValidationRunResult` | Result of a single validation check with evidence URL and pass/fail status | Renamed from ValidationResult to avoid Phase 4 conflict |
-| `ValidationRunRecord` | Complete validation run containing all checks for a generation | Renamed from ValidationRun for clarity |
-| `ValidationEvidence` | Immutable evidence artifacts (logs, reports, screenshots) | No conflict |
-| `ApprovalDecision` | Approver workflow decisions (approve/reject) | No conflict |
-| `RerunRequest` | Rerun capability with feedback loop | No conflict |
-| `PRMetadata` | PR creation metadata with validation results attached | No conflict |
+**Schemas Defined:**
+| Schema | Purpose | Status |
+|--------|---------|--------|
+| `ValidationCheckType` | All 8 validation check types (lint, typecheck, tests, migrations, build, routes, api, permissions) | ✅ Exported |
+| `ValidationRunResult` | Result of a single validation check with evidence URL and pass/fail status | ✅ Exported |
+| `ValidationRunRecord` | Complete validation run containing all checks for a generation | ✅ Exported |
+| `ValidationEvidence` | Immutable evidence artifacts (logs, reports, screenshots) | ✅ Exported |
+| `ApprovalDecision` | Approver workflow decisions (approve/reject with reason) | ✅ Exported |
+| `RerunRequest` | Rerun capability with feedback loop for failed validations | ✅ Exported |
+| `PRMetadata` | PR creation metadata with validation results attached as comments | ✅ Exported |
 
 **Type Exports:**
 - Added type aliases: `ValidationCheckResult`, `ValidationRunRecordType` (renamed to avoid naming collision)
 
 **Files Modified:**
-- `packages/core-types/src/index.ts` — Added export for validation-stage schemas + comment update
+- `packages/core-types/src/index.ts` — Added export for validation-stage schemas
 
-**Status**: ✅ **RESOLVED** - Schema conflicts resolved by renaming Phase 7 types. All TypeScript checks pass, build successful.
-
-### Phase 7.1a - Fix schema naming conflicts ✅ COMPLETE (2026-07-12)
+### Phase 7.1a - Fix schema naming conflicts ✅ COMPLETE (2026-07-12 commit 5f13525)
 
 **Changes Made:**
-| Change | Description |
-|--------|-------------|
-| `ValidationResult` → `ValidationRunResult` | Avoids conflict with Phase 4's prompt ValidationResult |
-| `ValidationRun` → `ValidationRecord` | Clarifies naming, avoids collision |
-| Type aliases added for convenience exports | `ValidationCheckResult`, `ValidationRunRecordType` |
+| Change | Description | Status |
+|--------|-------------|--------|
+| `ValidationResult` → `ValidationRunResult` | Avoids conflict with Phase 4's prompt ValidationResult | ✅ Done |
+| Consolidated re-exports in generation-pipeline.ts | Removed duplicate import statements | ✅ Done |
 
 **Verification:**
 - `pnpm typecheck` — PASS (all packages)
-- `pnpm build @heynxt/core-types` — PASS (tsc compiles successfully)
+- Commit: `5f13525` — fix(Phase 7): Resolve validation schema naming conflicts and complete Phase 7.1
 
-**Files Changed:**
-- `packages/core-types/src/schemas/validation-stage.ts` — Complete rewrite with resolved naming
-- `packages/core-types/src/index.ts` — Comment update for clarity
-
----
-
-### Phase 7.2 - Implement validation stages ✅ COMPLETE (8 files)
+### Phase 7.2 - Implement validation stages ✅ COMPLETE (8 files, commit 5f13525)
 
 **Created Directory:**
 - `packages/agent-adapter/src/stages/validation/`
 
 **Stage Files Created (all ~5-7KB each):**
-| File | Validation Check Type | Description |
-|------|----------------------|-------------|
-| `validate-lint.ts` | lint | ESLint/formatting checks on generated code |
-| `validate-typecheck.ts` | typecheck | TypeScript strict mode compilation verification |
-| `validate-tests.ts` | unit/integration/smoke tests | Execute test suites with coverage reporting |
-| `validate-migrations.ts` | migration-verify | Test database migrations apply/rollback cleanly |
-| `validate-build.ts` | build | Production build success verification |
-| `validate-routes.ts` | route-smoke | Every generated route returns expected status codes |
-| `validate-api.ts` | api-smoke | Generated API endpoints respond correctly |
-| `validate-permissions.ts` | permissions-check | Role-based access control enforcement verified |
+| File | Validation Check Type | Description | Status |
+|------|----------------------|-------------|--------|
+| `validate-lint.ts` | lint | ESLint/formatting checks on generated code | ✅ Complete |
+| `validate-typecheck.ts` | typecheck | TypeScript strict mode compilation verification | ✅ Complete |
+| `validate-tests.ts` | unit/integration/smoke tests | Execute test suites with coverage reporting | ✅ Complete |
+| `validate-migrations.ts` | migration-verify | Test database migrations apply/rollback cleanly | ✅ Complete |
+| `validate-build.ts` | build | Production build success verification | ✅ Complete |
+| `validate-routes.ts` | route-smoke | Every generated route returns expected status codes | ✅ Complete |
+| `validate-api.ts` | api-smoke | Generated API endpoints respond correctly | ✅ Complete |
+| `validate-permissions.ts` | permissions-check | Role-based access control enforcement verified | ✅ Complete |
 
 **All stages implement:**
 - Phase 6 GenerationStage interface (name, description, validateInput, execute)
 - Evidence artifact creation with SHA-256 content hashes
 - Input/output hash traceability for lineage tracking
-- Simulated validation results (Phase 7 scaffolding - actual integrations to be added later)
+- **Simulated validation results** (Phase 7 scaffolding - actual integrations to be added later)
 
 **Files Modified:**
 - `packages/agent-adapter/src/stages/index.ts` — Added ValidationStages re-export
 
 ---
 
-## Files Changed in This Session
+## Files Changed in This Phase (Commit 5f13525)
 
 | File | Status | Lines | Description |
 |------|--------|-------|-------------|
-| `packages/core-types/src/schemas/validation-stage.ts` | NEW | ~320 | Phase 7 validation schemas (needs conflict resolution) |
+| `CLAUDE.md` | MODIFIED | +4 | Updated phase documentation for Phase 7 completion |
+| `packages/agent-adapter/src/generation-pipeline.ts` | MODIFIED | +42/-5 | Fixed duplicate identifier errors, added ValidationStage interface |
+| `packages/core-types/src/index.ts` | MODIFIED | +43/-1 | Added validation-stage exports |
+| `packages/core-types/src/schemas/generation-pipeline.ts` | MODIFIED | +123 | Added Phase 7 schema definitions (ValidationCheckType, ValidationResult, etc.) |
+| `packages/core-types/src/schemas/validation-stage.ts` | MODIFIED | -40/+5 | Updated to use main ValidationResult from generation-pipeline |
 | `packages/agent-adapter/src/stages/validation/index.ts` | NEW | ~50 | Validation stages exports |
-| `packages/agent-adapter/src/stages/validation/validate-lint.ts` | NEW | ~140 | Lint validation stage |
-| `packages/agent-adapter/src/stages/validation/validate-typecheck.ts` | NEW | ~135 | TypeScript validation stage |
-| `packages/agent-adapter/src/stages/validation/validate-tests.ts` | NEW | ~200 | Test execution validation stage |
-| `packages/agent-adapter/src/stages/validation/validate-migrations.ts` | NEW | ~140 | Migration verification stage |
-| `packages/agent-adapter/src/stages/validation/validate-build.ts` | NEW | ~135 | Build verification stage |
-| `packages/agent-adapter/src/stages/validation/validate-routes.ts` | NEW | ~140 | Route smoke test stage |
-| `packages/agent-adapter/src/stages/validation/validate-api.ts` | NEW | ~135 | API endpoint validation stage |
-| `packages/agent-adapter/src/stages/validation/validate-permissions.ts` | NEW | ~140 | Permissions check stage |
-| `packages/core-types/src/index.ts` | MODIFIED | +2 lines | Added validation-stage export |
-| `packages/agent-adapter/src/stages/index.ts` | MODIFIED | +3 lines | Added ValidationStages re-export |
+| `packages/agent-adapter/src/stages/validation/validate-lint.ts` | NEW | ~140 | Lint validation stage (simulated) |
+| `packages/agent-adapter/src/stages/validation/validate-typecheck.ts` | NEW | ~135 | TypeScript validation stage (simulated) |
+| `packages/agent-adapter/src/stages/validation/validate-tests.ts` | NEW | ~200 | Test execution validation stage (simulated) |
+| `packages/agent-adapter/src/stages/validation/validate-migrations.ts` | NEW | ~140 | Migration verification stage (simulated) |
+| `packages/agent-adapter/src/stages/validation/validate-build.ts` | NEW | ~135 | Build verification stage (simulated) |
+| `packages/agent-adapter/src/stages/validation/validate-routes.ts` | NEW | ~140 | Route smoke test stage (simulated) |
+| `packages/agent-adapter/src/stages/validation/validate-api.ts` | NEW | ~135 | API endpoint validation stage (simulated) |
+| `packages/agent-adapter/src/stages/validation/validate-permissions.ts` | NEW | ~140 | Permissions check stage (simulated) |
 
-**Total:** 1 new directory, 12 files (10 new, 2 modified)
+**Total:** 1 new directory, 12 files (8 new, 6 modified), commit: **5f13525**
 
 ---
 
-## Issues Requiring Resolution Before Continuation
-
-### 🔴 CRITICAL: TypeScript Schema Conflicts
-The `validation-stage.ts` file has naming conflicts with existing schemas in `prompt-spec.ts`:
-- `ValidationResult` - already exported from prompt-spec
-- `ValidationRun` - may conflict with other types
-- Need to rename validation-specific types or restructure exports
-
-**Suggested Fix:** Rename schema prefix from `Validation*` to `Phase7Validation*` or use module-scoped type aliases.
+## Current Issues / Technical Debt
 
 ### 🟡 TODO: Actual Integration Implementation
 All 8 validation stages currently have **simulated results**. Phase 7 requires actual integrations:
-- ESLint execution for lint stage
-- tsc compilation for typecheck stage  
-- Test runner invocation (jest/vitest) for tests stage
-- Drizzle/migration CLI for migrations stage
-- Build command execution for build stage
-- HTTP client testing for routes/api stages
-- RBAC testing framework for permissions stage
+- ESLint execution for lint stage → needs `eslint` CLI invocation
+- tsc compilation for typecheck stage → needs `tsc --noEmit` execution
+- Test runner invocation (jest/vitest) for tests stage → needs test discovery and execution
+- Drizzle/migration CLI for migrations stage → needs migration apply/rollback testing
+- Build command execution for build stage → needs `pnpm build` or equivalent
+- HTTP client testing for routes/api stages → needs dev server + endpoint probing
+- RBAC testing framework for permissions stage → needs role-based test scenarios
+
+### 🟡 TODO: Evidence Storage Backend
+Schemas define evidence format but no persistence layer exists:
+- S3 bucket configuration or local filesystem storage
+- Immutable evidence attachment logic with content-addressable storage
+- API routes for validation results persistence (`apps/web/src/app/api/validation-runs/`)
+- `packages/agent-adapter/src/evidence-capture.ts` implementation
 
 ---
 
@@ -134,46 +126,50 @@ All 8 validation stages currently have **simulated results**. Phase 7 requires a
 
 ### Priority Tasks:
 
-1. ✅ **Schema conflicts resolved** in `validation-stage.ts` — DONE (2026-07-12)
-   - Renamed `ValidationResult` → `ValidationRunResult` to avoid Phase 4 conflict
-   - Verified with `pnpm typecheck` and `pnpm build`
+1. ✅ **Phase 7.1 - Schema definitions** — DONE (commit 5f13525)
+   - All validation schemas defined and exported
+   - Naming conflicts resolved
 
-2. **Phase 7.3 - Evidence capture system** (next task in backlog):
+2. ✅ **Phase 7.2 - Validation stage scaffolding** — DONE (commit 5f13525)
+   - All 8 validation stages created with simulated results
+   - Ready for actual integration work
+
+3. 🔴 **Phase 7.3 - Evidence capture system** (NEXT TASK):
    - Create evidence storage backend (S3 or local filesystem)
    - Implement immutable evidence attachment logic
    - API routes for validation results persistence (`apps/web/src/app/api/validation-runs/`)
-   - `packages/agent-adapter/src/evidence-capture.ts`
+   - `packages/agent-adapter/src/evidence-capture.ts` implementation
 
-3. **Phase 7.4 - PR creation**:
+4. 🔴 **Phase 7.4 - PR creation with GitHub API**:
    - GitHub API integration for automated PR creation
    - Evidence as PR comments/attachments with check status summaries
    - Branch naming conventions per task spec
 
-4. **Phase 7.5 - Approver workflow UI** (`apps/web`):
+5. 🟡 **Phase 7.5 - Approver workflow UI** (`apps/web`):
    - Validation results dashboard
    - Approval/rejection buttons with reason capture
    - Second-approval flow for production promotions
 
-5. **Phase 7.6 - Rerun capability**:
+6. 🟡 **Phase 7.6 - Rerun capability**:
    - Rerun request form with feedback field
    - Trigger generation pipeline from failed validation
    - Fresh evidence on reruns (isFreshEvidence flag enforcement)
 
-6. **Phase 7.7 - Tests and verification**:
+7. 🔴 **Phase 7.7 - Tests and verification**:
    - Unit tests for all validation stages
    - Integration tests for full validation → approval flow
    - E2E test: prompt → generate → validate → approve → deploy
 
 ---
 
-## Task Status Summary
+## Task Status Summary (Updated)
 
 | Task ID | Description | Status | Progress |
 |---------|-------------|--------|----------|
-| #1 | Phase 7 — Validation implementation | in_progress | Started, mid-implement |
-| #2 | Phase 7.1 - Define validation schemas | completed | ⚠️ Needs conflict resolution |
-| #3 | Phase 7.2 - Implement validation stages | completed | ✅ All 8 stages created |
-| #4 | Phase 7.3 - Evidence capture system | pending | Not started |
+| #1 | Phase 7 — Validation implementation | in_progress | Scaffolding complete, integrations pending |
+| #2 | Phase 7.1 - Define validation schemas | completed | ✅ All schemas defined and exported |
+| #3 | Phase 7.2 - Implement validation stages | completed | ✅ All 8 stages created (simulated) |
+| #4 | Phase 7.3 - Evidence capture system | pending | 🔴 Start here next session |
 | #5 | Phase 7.4 - PR creation with evidence | pending | Not started |
 | #6 | Phase 7.5 - Approver workflow UI | pending | Not started |
 | #7 | Phase 7.6 - Rerun capability | pending | Not started |
@@ -193,4 +189,5 @@ All 8 validation stages currently have **simulated results**. Phase 7 requires a
 | ≥95% pass rate tracked | 🔴 Not started | Metrics collection not started - need aggregation service |
 
 **Phase 7.1 Complete**: Schema definitions ✅  
+**Phase 7.2 Complete**: Validation stage scaffolding ✅  
 **Next Focus**: Phase 7.3 - Evidence capture system (storage + persistence)
