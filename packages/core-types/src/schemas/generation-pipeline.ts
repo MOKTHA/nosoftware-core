@@ -283,6 +283,7 @@ export const ValidationCheckType = z.enum([
   'route-smoke',         // Route status checks (every route returns expected status)
   'api-smoke',           // API endpoint smoke tests
   'permissions-check',   // Role-based access enforcement verification
+  'pr-creation',         // Phase 7.4: Pull request creation with evidence attachment
 ]);
 
 export type ValidationCheckType = z.infer<typeof ValidationCheckType>;
@@ -300,6 +301,7 @@ export const ValidationStageName = z.enum([
   'validate-routes',
   'validate-api',
   'validate-permissions',
+  'create-pr', // Phase 7.4: PR creation stage
 ]);
 
 export type ValidationStageName = z.infer<typeof ValidationStageName>;

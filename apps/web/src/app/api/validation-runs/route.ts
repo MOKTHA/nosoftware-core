@@ -20,6 +20,7 @@ import { z } from 'zod';
 
 import { db, validationRuns, validationResults, generationRuns } from '@heynxt/persistence';
 import { getEvidenceCaptureService } from '@heynxt/agent-adapter';
+import type { ValidationCheckType } from '@heynxt/core-types';
 
 import { badRequest, errorResponse, parseJsonBody } from '@/lib/api';
 import { insertAuditEntry } from '@/lib/audit';
@@ -34,7 +35,7 @@ const CreateValidationRunInput = z.object({
   generationRunId: z.string().uuid(),
   results: z.array(z.object({
     id: z.string().uuid(),
-    checkType: z.enum(['lint', 'typecheck', 'unit-tests', 'integration-tests', 'smoke-tests', 'build', 'routes', 'api-smoke', 'permissions-check', 'migration-verify', 'route-smoke']),
+    checkType: z.enum(['lint', 'typecheck', 'unit-tests', 'integration-tests', 'smoke-tests', 'build', 'routes', 'api-smoke', 'permissions-check', 'migration-verify', 'route-smoke', 'pr-creation']),
     status: z.enum(['passed', 'failed', 'skipped']),
     completedAt: z.coerce.date(),
     startedAt: z.coerce.date(),
@@ -53,8 +54,8 @@ type CreateValidationRunInput = z.infer<typeof CreateValidationRunInput>;
 /** Zod schema for query parameters. */
 const ValidationRunsQueryParams = z.object({
   generationRunId: z.string().uuid().optional(),
-  checkType: z.enum(['lint', 'typecheck', 'tests', 'migrations', 'build', 'routes', 'api', 'permissions']).optional(),
-  status: z.enum(['passed', 'failed']).optional(),
+  checkType: z.enum(['lint', 'typecheck', 'unit-tests', 'integration-tests', 'smoke-tests', 'build', 'routes', 'api-smoke', 'permissions-check', 'migration-verify', 'route-smoke', 'pr-creation']).optional(),
+  status: z.enum(['passed', 'failed', 'skipped']).optional(),
 });
 
 // ---------------------------------------------------------------------------
@@ -220,14 +221,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Insert validation results (one per check result)
-    const resultInserts = input.results.map((result): StoredValidationCheckResult => ({
-      ...result,
-      evidenceUrl: result.evidenceUrl,
-      outputLog: result.outputLog ?? null,
-      testSummary: result.testSummary ?? null,
-      issueCount: result.issueCount ?? 0,
-      blocksPromotion: result.blocksPromotion ?? false,
-    })).map(result => ({
+    const resultInserts = input.results.map(result => ({
       validationRunId: created.id,
       id: randomUUID(),
       checkType: result.checkType as ValidationCheckType,

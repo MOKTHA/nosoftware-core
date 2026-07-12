@@ -13,6 +13,7 @@ export { ValidateBuildStage } from './validate-build.js';
 export { ValidateRoutesStage } from './validate-routes.js';
 export { ValidateApiStage } from './validate-api.js';
 export { ValidatePermissionsStage } from './validate-permissions.js';
+export { CreatePRStage } from './create-pr.js';
 
 // Result schemas and metadata types
 export {
@@ -52,3 +53,20 @@ export {
   PermissionTestResult,
   PermissionsEvidenceMetadata,
 } from './validate-permissions.js';
+
+// PR Creation result schemas and metadata types (Phase 7.4)
+export {
+  PRCreationResult,
+  PREvidenceMetadata,
+} from './create-pr.js';
+
+// GitHub API integration utilities (Phase 7.4)
+export {
+  GitHubConfig,
+  CheckStatusEnum,
+  ValidationSummaryComment,
+  GitHubAPIClient,
+  generateBranchName,
+  generatePRTitle,
+  generatePRBody,
+} from './github-api.js';
