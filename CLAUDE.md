@@ -5,7 +5,7 @@
 - Proceed immediately to the next sub-task or testing phase without prompting.
 
 ### Context Management
-1. **Monitor Context:** Run `/context` periodically to track your context window utilization.
+1. **Monitor Context:** Run `/context` periodically(every minute) to track your context window utilization.
 2. **Clear & Restart:** If utilization reaches 80%, immediately request a summary of the current state, type `/clear` to start a new session, and paste the summary into the fresh session. 
 
 ## Repository Role

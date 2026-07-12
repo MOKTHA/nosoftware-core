@@ -70,3 +70,14 @@ export {
   agentStatusEnum,
   executionResultStatusEnum,
 } from './agent-spec.js';
+
+// Validation runs (Phase 7.3)
+export {
+  validationRuns,
+  type ValidationRun,
+} from './validation-run.js';
+
+export {
+  validationResults,
+  type ValidationResultDbRecord as ValidationResultRecord,
+} from './validation-results.js';

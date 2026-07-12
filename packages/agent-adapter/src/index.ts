@@ -55,3 +55,6 @@ export {
 
 // Re-export core types for stage implementations
 export type { GenerationArtifact } from '@heynxt/core-types';
+
+// Evidence capture (Phase 7.3) - content-addressable storage for validation evidence
+export * from './evidence-capture.js';
