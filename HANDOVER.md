@@ -38,14 +38,14 @@
 
 ## What Was Completed (Session 2026-07-12)
 
-### Phase 7.3 - Evidence capture system ✅ COMPLETE (just committed d87196f)
+### Phase 7.3 - Evidence capture system ✅ COMPLETE
 
 **Files Created:**
 | File | Description | Status |
 |------|-------------|--------|
 | `packages/persistence/src/schema/validation-run.ts` | Drizzle schema for validation run tracking (`validationRuns`, `ValidationRun`) | ✅ Complete |
 | `packages/persistence/src/schema/validation-results.ts` | Schema for individual stage results (`validationResults`, `ValidationResultRecord`) | ✅ Complete |
-| `apps/web/src/app/api/validation-runs/route.ts` | Next.js API route with GET/POST handlers for CRUD operations (~200 lines) | ✅ Complete |
+| `apps/web/src/app/api/validation-runs/route.ts` | Next.js API route with GET/POST handlers for CRUD operations (~200 lines) | ✅ Complete (type errors fixed in commit ce3c67e) |
 | `packages/agent-adapter/src/evidence-capture.ts` | Content-addressable storage module (SHA-256 hashing, file persistence) | ✅ Complete |
 
 **Files Modified:**
@@ -54,7 +54,18 @@
 | `packages/persistence/src/schema/index.ts` | Added exports for validation-run and validation-results schemas | ✅ Done |
 | `packages/agent-adapter/src/index.ts` | Export evidence-capture module | ✅ Done |
 
-**Commit**: `d87196f` — feat(Phase 7.3): Implement validation runs schema, results storage, evidence capture, and API routes (7 files changed, 786 insertions)
+**Commits:**
+- `d87196f` — feat(Phase 7.3): Implement validation runs schema, results storage, evidence capture, and API routes (initial scaffolding)
+- `ce3c67e` — fix(Phase 7): Fix validation-runs route type errors and schema mismatches (type fixes, enum consistency, dependencies added)
+
+**Type Fixes Applied (commit ce3c67e):**
+| Issue | Fix | Status |
+|-------|-----|--------|
+| Entity type mismatch ('validationRun' vs 'validation-run') | Updated auditEntityTypeEnum in both persistence and core-types | ✅ Done |
+| checkType enum mismatches across files | Unified to: lint, typecheck, unit-tests, integration-tests, smoke-tests, migration-verify, build, route-smoke, api-smoke, permissions-check, pr-creation | ✅ Done |
+| Missing dependencies (@octokit/rest, @octokit/types, execa) | Added to agent-adapter package.json | ✅ Done |
+| github-api.ts type import errors | Fixed using Endpoints types from @octokit/types | ✅ Done |
+| validate-lint.ts implicit any error | Added explicit type annotation for filter callback | ✅ Done |
 
 ### Phase 7.1 - Define validation stage schemas ✅ COMPLETE
 
