@@ -263,3 +263,126 @@ export const StageDependencies: Record<GenerationStageName, GenerationStageName[
   ],
 };
 
+/** ------------------------------------------------------------------ */
+/*  Validation Stage Types (Phase 7)                                */
+/** ------------------------------------------------------------------ */
+
+/**
+ * Type of validation check being performed.
+ * Phase 7 Exit Criteria: All automated checks must be defined and executable.
+ * Note: This is distinct from prompt-spec's ValidationResult which is for LLM output validation.
+ */
+export const ValidationCheckType = z.enum([
+  'lint',                // ESLint/formatting checks on generated code
+  'typecheck',           // TypeScript strict mode compilation verification
+  'unit-tests',          // Unit test execution
+  'integration-tests',   // Integration test execution
+  'smoke-tests',         // Smoke tests (basic functionality)
+  'migration-verify',    // Migration apply and rollback testing
+  'build',               // Production build verification
+  'route-smoke',         // Route status checks (every route returns expected status)
+  'api-smoke',           // API endpoint smoke tests
+  'permissions-check',   // Role-based access enforcement verification
+]);
+
+export type ValidationCheckType = z.infer<typeof ValidationCheckType>;
+
+/**
+ * A validation stage performs automated checks on generated outputs.
+ * Phase 7 Exit Criteria: Failed checks block promotion without override flag + reason.
+ */
+export const ValidationStageName = z.enum([
+  'validate-lint',
+  'validate-typecheck',
+  'validate-tests',
+  'validate-migrations',
+  'validate-build',
+  'validate-routes',
+  'validate-api',
+  'validate-permissions',
+]);
+
+export type ValidationStageName = z.infer<typeof ValidationStageName>;
+
+/**
+ * Result of a single validation check (Phase 7).
+ * Note: This is distinct from Phase 4's prompt ValidationResult which validates LLM output.
+ * Phase 7 Exit Criteria: Failed checks block promotion without override flag + reason.
+ */
+export const ValidationResult = z.object({
+  /** Unique ID for this validation result. */
+  id: z.string().uuid(),
+
+  /** Type of validation performed. */
+  checkType: ValidationCheckType,
+
+  /** Status of the validation check. */
+  status: z.enum(['passed', 'failed', 'skipped']),
+
+  /** Evidence URL/path - where logs, reports, screenshots are stored. */
+  evidenceUrl: z.string().url(),
+
+  /** Execution duration in milliseconds. */
+  durationMs: z.number().int().nonnegative(),
+
+  /** Detailed output/logs from the validation run. */
+  outputLog: z.string(),
+
+  /** Test summary (e.g., "12/15 tests passed"). */
+  testSummary: z.string().nullish(),
+
+  /** Number of issues found (errors, warnings). */
+  issueCount: z.number().int().nonnegative().default(0),
+
+  /** Whether this check blocks promotion when failed. */
+  blocksPromotion: z.boolean().default(true),
+
+  startedAt: z.coerce.date(),
+  completedAt: z.coerce.date(),
+});
+
+export type ValidationResult = z.infer<typeof ValidationResult>;
+
+/** Output produced by a validation stage. Contains validation results and evidence. */
+export const ValidationStageOutputSchema = z.object({
+  /** Input hash this output was derived from. */
+  inputHash: z.string(),
+
+  /** Output hash for downstream stages to reference. */
+  outputHash: z.string(),
+
+  /** Validation results produced by this stage. */
+  results: z.array(ValidationResult),
+
+  /** Human-readable summary of what was validated. */
+  summary: z.string(),
+
+  /** Warnings during validation (non-fatal). */
+  warnings: z.array(z.string()).default([]),
+});
+
+export type ValidationStageOutput = z.infer<typeof ValidationStageOutputSchema>;
+
+/** Alias for backward compatibility with agent-adapter imports */
+export const ValidationStageOutput = ValidationStageOutputSchema;
+
+/** Input passed to a validation stage. Contains artifacts to validate. */
+export const ValidationStageInputSchema = z.object({
+  /** The normalized spec in canonical form. */
+  spec: z.record(z.unknown()),
+
+  /** Resolved blueprint plan snapshot (for context). */
+  blueprintPlan: z.record(z.unknown()).nullish(),
+
+  /** Artifacts produced by previous stages (to be validated). */
+  artifactsToValidate: z.array(z.string()).optional(), // artifact IDs or paths
+
+  /** Stage-specific validation parameters. */
+  params: z.record(z.unknown()).default({}),
+});
+
+export type ValidationStageInput = z.infer<typeof ValidationStageInputSchema>;
+
+/** Alias for backward compatibility with agent-adapter imports */
+export const ValidationStageInput = ValidationStageInputSchema;
+

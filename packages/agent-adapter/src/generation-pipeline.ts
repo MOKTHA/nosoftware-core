@@ -15,6 +15,12 @@ import type {
   GenerationStageOutput as CoreGenerationStageOutput,
   GenerationPipelineExecution,
   CreatePipelineInput,
+  // Phase 7 validation types
+  ValidationCheckType,
+  ValidationResult,
+  ValidationStageInput,
+  ValidationStageOutput,
+  ValidationStageName,
 } from '@heynxt/core-types';
 
 // Re-export core types for use in tests and stages
@@ -27,6 +33,16 @@ export type {
 // Also export the aliased types under their original names
 export type GenerationStageInput = CoreGenerationStageInput;
 export type GenerationStageOutput = CoreGenerationStageOutput;
+
+// Phase 7 validation types (re-exported from core-types)
+// Note: These are imported above and re-exported for convenience in agent-adapter consumers
+export type {
+  ValidationCheckType,
+  ValidationResult,
+  ValidationStageName,
+  ValidationStageInput,
+  ValidationStageOutput,
+};
 
 /** ------------------------------------------------------------------ */
 /*  Pipeline Stage Interface                                        */
@@ -59,6 +75,35 @@ export interface GenerationStage {
    * Called before execution to catch missing dependencies early.
    */
   validateInput(input: GenerationStageInput): boolean;
+}
+
+/** ------------------------------------------------------------------ */
+/*  Validation Stage Interface (Phase 7)                            */
+/** ------------------------------------------------------------------ */
+
+/**
+ * A validation stage performs automated checks on generated outputs.
+ * Phase 7 Exit Criteria: Failed checks block promotion without override flag + reason.
+ */
+export interface ValidationStage {
+  /** Unique name of this stage (must match ValidationStageName enum). */
+  readonly name: ValidationStageName;
+
+  /** Human-readable description of what this validation does. */
+  readonly description: string;
+
+  /**
+   * Execute this validation stage given the input.
+   * @param input - Artifacts to validate and spec context
+   * @returns Output containing validation results and evidence URLs
+   */
+  execute(input: ValidationStageInput): Promise<ValidationStageOutput>;
+
+  /**
+   * Validate whether this stage can run with the given input.
+   * Called before execution to catch missing dependencies early.
+   */
+  validateInput(input: GenerationStageInput): boolean; // Uses GenerationStageInput for compatibility
 }
 
 /** ------------------------------------------------------------------ */

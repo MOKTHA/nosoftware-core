@@ -46,7 +46,8 @@
  *   PromptSpec, SpecTemplate, ParsedIntent, PromptContext
  *   AppType, ScreenDefinition, ApiEndpointDefinition
  *   ParseResult, ValidationErrors (Phase 4 prompt validation)
- *   Note: Phase 7 uses ValidationCheckResult and ValidationRunRecord to avoid conflicts
+ *   Note: Phase 7 uses ValidationResult (from generation-pipeline) for validation check results;
+ *         ValidationRunResult and ValidationRunRecord from validation-stage are legacy names.
  */
 
 // Control plane — identity and tenancy
@@ -79,8 +80,41 @@ export * from './schemas/blueprint.js';
 // Prompt-to-spec engine (Phase 4)
 export * from './schemas/prompt-spec.js';
 
-// Generation pipeline orchestration (Phase 6)
-export * from './schemas/generation-pipeline.js';
+// Generation pipeline orchestration (Phase 6 + Phase 7 validation types)
+export {
+  GenerationStageName,
+  GenerationStageExecution,
+  GenerationArtifact,
+  GenerationStageInput,
+  GenerationStageOutput,
+  GenerationPipelineExecution,
+  CreatePipelineInput,
+  RequiredStages,
+  StageExecutionOrder,
+  StageDependencies,
+} from './schemas/generation-pipeline.js';
 
-// Validation and review loop (Phase 7)
-export * from './schemas/validation-stage.js';
+// Validation and review loop (Phase 7) - main types defined in generation-pipeline for unified access
+export {
+  ValidationCheckType,
+  ValidationResult, // Phase 7 validation check result (distinct from Phase 4 prompt ValidationResult)
+  ValidationStageInput,
+  ValidationStageOutput,
+  ValidationStageName,
+} from './schemas/generation-pipeline.js';
+
+// Legacy Phase 7 exports (for backward compatibility - re-exported from generation-pipeline via validation-stage.ts)
+export {
+  ValidationRunResult,
+  ValidationRunRecord,
+  ValidationEvidence,
+  ApprovalDecision,
+  RerunRequest,
+  PRMetadata,
+} from './schemas/validation-stage.js';
+
+// Type aliases for convenience (Phase 7)
+export type {
+  ValidationCheckResult as ValidationCheckTypeCore, // Alias for ValidationResult
+  ValidationRunRecordType as ValidationRunRecordTypeAlias, // Alias for ValidationRunRecord
+} from './schemas/validation-stage.js';

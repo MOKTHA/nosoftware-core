@@ -4,7 +4,7 @@
  * Runs ESLint/formatting checks on generated code.
  */
 
-import type { GenerationStage, GenerationStageInput, GenerationStageOutput } from '../../generation-pipeline.js';
+import type { ValidationStage, ValidationStageInput, ValidationStageOutput } from '../../generation-pipeline.js';
 import type { ValidationResult, ValidationEvidence } from '@heynxt/core-types';
 import { z } from 'zod';
 
@@ -38,17 +38,17 @@ export type LintEvidenceMetadata = z.infer<typeof LintEvidenceMetadata>;
 /*  Validation Stage Implementation                                   */
 /** ------------------------------------------------------------------ */
 
-export class ValidateLintStage implements GenerationStage {
+export class ValidateLintStage implements ValidationStage {
   readonly name = 'validate-lint' as const;
   readonly description = 'Validate lint checks (ESLint/formatting) on generated code';
 
-  validateInput(input: GenerationStageInput): boolean {
+  validateInput(input: any): boolean {
     // Need source files to lint
-    return input.params.generatedSourcePath !== undefined &&
-           Object.keys(input.spec).length > 0;
+    return input.params?.generatedSourcePath !== undefined &&
+           Object.keys(input.spec || {}).length > 0;
   }
 
-  async execute(input: GenerationStageInput): Promise<GenerationStageOutput> {
+  async execute(input: ValidationStageInput): Promise<ValidationStageOutput> {
     const inputHash = await this.computeHash(JSON.stringify({
       spec: input.spec,
       blueprintPlan: input.blueprintPlan ?? null,
@@ -57,29 +57,31 @@ export class ValidateLintStage implements GenerationStage {
 
     // Run lint validation (simulated for Phase 7 scaffolding)
     const validationResult = await this.runLintValidation(
-      input.params.generatedSourcePath as string,
+      input.params?.generatedSourcePath as string,
       input.spec
     );
 
-    // Create evidence artifacts
-    const evidence = this.createEvidenceArtifacts(validationResult);
+    // Create validation result
+    const checkId = crypto.randomUUID();
+    const status: 'passed' | 'failed' = validationResult.totalErrors === 0 ? 'passed' : 'failed';
 
     return {
       inputHash,
-      outputHash: inputHash,
-      artifacts: [
-        ...evidence.map(e => ({
-          id: e.id,
-          generationRunId: '00000000-0000-0000-0000-000000000000', // Will be set by caller
-          stageName: this.name,
-          kind: 'summary' as const,
-          relativePath: `validation/${this.name}/result.json`,
-          contentHash: crypto.randomUUID().slice(-64),
-          fileSizeBytes: 1024,
-          isNew: true,
-          description: `Lint validation results for ${input.params.generatedSourcePath}`,
-          createdAt: new Date(),
-        })),
+      outputHash: await this.computeHash(JSON.stringify({ ...validationResult, status })),
+      results: [
+        {
+          id: checkId,
+          checkType: 'lint',
+          status,
+          evidenceUrl: `validation/lint/${checkId}/eslint-output.json`,
+          durationMs: 150,
+          outputLog: JSON.stringify(validationResult),
+          testSummary: `${validationResult.totalFiles} files checked, ${validationResult.totalErrors} errors, ${validationResult.totalWarnings} warnings`,
+          issueCount: validationResult.totalErrors + Math.floor(validationResult.totalWarnings / 2),
+          blocksPromotion: true,
+          startedAt: new Date(Date.now() - 150),
+          completedAt: new Date(),
+        },
       ],
       summary: `Lint check completed: ${validationResult.totalErrors} errors, ${validationResult.totalWarnings} warnings`,
       warnings: validationResult.warnings ?? [],
