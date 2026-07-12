@@ -4,6 +4,7 @@
  * Verifies TypeScript strict mode compilation of generated code.
  */
 
+import { execa } from 'execa';
 import type { ValidationStage, ValidationStageInput, ValidationStageOutput } from '../../generation-pipeline.js';
 import type { ValidationEvidence } from '@heynxt/core-types';
 import { z } from 'zod';
@@ -49,7 +50,7 @@ export class ValidateTypeCheckStage implements ValidationStage {
       params: input.params,
     }));
 
-    // Run typecheck validation (simulated for Phase 7 scaffolding)
+    // Run typecheck validation with actual tsc execution
     const validationResult = await this.runTypeCheckValidation(
       input.params?.generatedSourcePath as string,
       input.spec
@@ -68,12 +69,12 @@ export class ValidateTypeCheckStage implements ValidationStage {
           checkType: 'typecheck',
           status,
           evidenceUrl: `validation/typecheck/${checkId}/tsc-output.json`,
-          durationMs: 3500,
+          durationMs: validationResult.durationMs ?? 0,
           outputLog: JSON.stringify(validationResult),
           testSummary: `${validationResult.totalFiles} files checked, ${validationResult.totalErrors} errors`,
           issueCount: validationResult.totalErrors,
           blocksPromotion: true,
-          startedAt: new Date(Date.now() - 3500),
+          startedAt: new Date(Date.now() - (validationResult.durationMs ?? 0)),
           completedAt: new Date(),
         },
       ],
@@ -88,29 +89,93 @@ export class ValidateTypeCheckStage implements ValidationStage {
   private async runTypeCheckValidation(
     sourcePath: string,
     spec: Record<string, unknown>
-  ): Promise<TypeCheckValidationResult & { warnings?: string[] }> {
-    // Phase 7 Scaffolding: This will be implemented with actual tsc execution
+  ): Promise<TypeCheckValidationResult & { durationMs?: number; warnings?: string[] }> {
+    const startTime = Date.now();
 
-    // Simulated typecheck results for scaffolding
-    const hasErrors = false; // Will be determined by actual tsc run
+    try {
+      // Execute tsc --noEmit to check types without emitting files
+      const result = await execa('npx', ['tsc', '--noEmit', '--pretty'], {
+        cwd: sourcePath || process.cwd(),
+        timeout: 120000, // 2 minute timeout for type checking
+      });
 
-    return {
-      totalFiles: 15,
-      filesWithErrors: hasErrors ? 3 : 0,
-      totalErrors: hasErrors ? 8 : 0,
-      strictMode: true,
-      warnings: [
-        'Generated code should include proper type annotations',
-        'Consider adding @ts-expect-error comments for intentional any types',
-      ],
-    };
+      const durationMs = Date.now() - startTime;
+
+      // Parse tsc output for error counts
+      let totalFiles = 0;
+      let filesWithErrors = 0;
+      let totalErrors = 0;
+
+      const lines = result.stdout.split('\n').filter((l: string) => l.trim());
+      totalFiles = lines.length > 0 ? Math.max(lines.filter(l => l.includes('.ts')).length, 1) : 1;
+
+      // Count errors from tsc output format (file.ts:line:column - error message)
+      for (const line of lines) {
+        if (line.match(/error TS\d+:/)) {
+          totalErrors++;
+          filesWithErrors++;
+        }
+      }
+
+      return {
+        totalFiles,
+        filesWithErrors,
+        totalErrors,
+        strictMode: true,
+        durationMs,
+        warnings: [
+          'Generated code should include proper type annotations',
+          'Consider adding @ts-expect-error comments for intentional any types',
+        ],
+      };
+
+    } catch (error) {
+      const durationMs = Date.now() - startTime;
+      const errorMsg = error instanceof Error ? error.message : String(error);
+
+      // Check if it's a no-errors exit code (0 means success, non-zero means errors found)
+      const execaError = error as any;
+      if (execaError.exitCode === 2 && errorMsg.includes('Found')) {
+        // TypeScript found type errors - parse them from stderr
+        const lines = (error as any).stderr?.split('\n').filter((l: string) => l.trim()) || [];
+        let totalErrors = 0;
+        let filesWithErrors = new Set<string>();
+
+        for (const line of lines) {
+          if (line.match(/error TS\d+:/)) {
+            totalErrors++;
+            const match = line.match(/^([^:]+)/);
+            if (match) filesWithErrors.add(match[1]);
+          }
+        }
+
+        return {
+          totalFiles: Math.max(filesWithErrors.size, 1),
+          filesWithErrors: filesWithErrors.size,
+          totalErrors,
+          strictMode: true,
+          durationMs,
+          warnings: ['TypeScript found type errors in generated code'],
+        };
+      }
+
+      // Return error metrics rather than throwing - this allows validation to continue
+      return {
+        totalFiles: 0,
+        filesWithErrors: 1,
+        totalErrors: 1,
+        strictMode: true,
+        durationMs,
+        warnings: [`TypeScript execution failed: ${errorMsg}`],
+      };
+    }
   }
 
   /**
    * Create evidence artifacts from typecheck validation results.
    */
   private createEvidenceArtifacts(
-    result: TypeCheckValidationResult & { warnings?: string[] }
+    result: TypeCheckValidationResult & { warnings?: string[]; durationMs?: number }
   ): Array<ValidationEvidence> {
     const timestamp = new Date().toISOString();
 

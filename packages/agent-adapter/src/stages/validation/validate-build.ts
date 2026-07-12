@@ -1,9 +1,4 @@
-/**
- * @heynxt/agent-adapter — Phase 7 Validation Stage: Build Verification
- *
- * Verifies that production build succeeds for generated code.
- */
-
+import { execa } from 'execa';
 import type { ValidationStage, ValidationStageInput, ValidationStageOutput } from '../../generation-pipeline.js';
 import type { ValidationEvidence } from '@heynxt/core-types';
 import { z } from 'zod';
@@ -57,7 +52,7 @@ export class ValidateBuildStage implements ValidationStage {
       params: input.params,
     }));
 
-    // Run build validation (simulated for Phase 7 scaffolding)
+    // Run build validation with actual build execution
     const validationResult = await this.runBuildValidation(
       input.params?.generatedSourcePath as string,
       input.spec
@@ -99,21 +94,170 @@ export class ValidateBuildStage implements ValidationStage {
     sourcePath: string,
     spec: Record<string, unknown>
   ): Promise<BuildValidationResult & { warnings?: string[] }> {
-    // Phase 7 Scaffolding: This will be implemented with actual build execution
+    const startTime = Date.now();
 
-    const hasFailure = false; // Will be determined by actual build run
+    try {
+      // Auto-detect build tool (npm, pnpm, yarn)
+      let buildCommand: string[];
+      const hasPnpm = await this.checkPackageManager(sourcePath, 'pnpm');
+      const hasYarn = await this.checkPackageManager(sourcePath, 'yarn');
 
-    return {
-      success: !hasFailure,
-      totalDurationMs: hasFailure ? 45000 : 38200,
-      outputSizeBytes: hasFailure ? 0 : 1250000,
-      outputFileCount: hasFailure ? 0 : 342,
-      bundleAnalysisPerformed: true,
-      warnings: [
-        'Consider optimizing bundle size with code splitting',
-        'Large bundles may impact initial load time',
-      ],
-    };
+      if (hasPnpm) {
+        buildCommand = ['pnpm', 'build'];
+      } else if (hasYarn) {
+        buildCommand = ['yarn', 'build'];
+      } else {
+        buildCommand = ['npm', 'run', 'build'];
+      }
+
+      const result = await execa(buildCommand[0], buildCommand.slice(1), {
+        cwd: sourcePath || process.cwd(),
+        timeout: 300000, // 5 minute timeout for production builds
+      });
+
+      const durationMs = Date.now() - startTime;
+
+      // Calculate output directory stats
+      let outputFileCount = 0;
+      let outputSizeBytes = 0;
+
+      try {
+        const fsModule = await import('fs');
+        const pathModule = await import('path');
+        const buildDir = pathModule.join(sourcePath || process.cwd(), 'dist', 'build', '.next');
+
+        if (fsModule.existsSync(buildDir)) {
+          outputFileCount = this.countFilesInDirectory(buildDir);
+          outputSizeBytes = this.calculateDirectorySize(buildDir);
+        } else {
+          // Try common build directories
+          const possibleDirs = ['dist', 'build', '.next'];
+          for (const dir of possibleDirs) {
+            const testDir = pathModule.join(sourcePath || process.cwd(), dir);
+            if (fsModule.existsSync(testDir)) {
+              outputFileCount = this.countFilesInDirectory(testDir);
+              outputSizeBytes = this.calculateDirectorySize(testDir);
+              break;
+            }
+          }
+        }
+
+        // Default values if directory doesn't exist yet
+        if (outputFileCount === 0 && result.exitCode === 0) {
+          outputFileCount = 1; // At least package.json or similar
+          outputSizeBytes = 4096; // Approximate minimum size
+        }
+      } catch {
+        // Stats calculation failed, use defaults
+        outputFileCount = 1;
+        outputSizeBytes = 4096;
+      }
+
+      return {
+        success: result.exitCode === 0,
+        totalDurationMs: durationMs,
+        outputSizeBytes,
+        outputFileCount,
+        bundleAnalysisPerformed: false, // Would require additional tooling
+        warnings: [
+          'Consider enabling bundle analysis for production builds',
+          'Large bundles may impact initial load time',
+        ],
+      };
+
+    } catch (error) {
+      const durationMs = Date.now() - startTime;
+      const errorMsg = error instanceof Error ? error.message : String(error);
+
+      return {
+        success: false,
+        totalDurationMs: durationMs,
+        outputSizeBytes: 0,
+        outputFileCount: 0,
+        bundleAnalysisPerformed: false,
+        warnings: [`Build failed: ${errorMsg}`],
+      };
+    }
+  }
+
+  /**
+   * Check if a package manager exists in the project.
+   */
+  private async checkPackageManager(cwd: string, pmName: string): Promise<boolean> {
+    try {
+      const fs = await import('fs');
+      const path = await import('path');
+
+      // Check for lock file specific to this package manager
+      if (pmName === 'pnpm') {
+        return fs.existsSync(path.join(cwd, 'pnpm-lock.yaml'));
+      } else if (pmName === 'yarn') {
+        return fs.existsSync(path.join(cwd, 'yarn.lock')) ||
+               fs.existsSync(path.join(cwd, '.yarn', 'yarnrc.yml'));
+      } else {
+        // npm - check for package-lock.json or node_modules/.package-lock.json
+        const pkgLock = await import('path');
+        return fs.existsSync(pkgLock.join(cwd, 'package-lock.json')) ||
+               fs.existsSync(path.join(cwd, 'node_modules', '.package-lock.json'));
+      }
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Count files in a directory recursively.
+   */
+  private countFilesInDirectory(dir: string): number {
+    const fs = require('fs');
+    let count = 0;
+
+    function walk(currentDir: string) {
+      try {
+        const entries = fs.readdirSync(currentDir, { withFileTypes: true });
+        for (const entry of entries) {
+          if (entry.isDirectory()) {
+            walk(path.join(currentDir, entry.name));
+          } else {
+            count++;
+          }
+        }
+      } catch {
+        // Directory may not be readable, skip it
+      }
+    }
+
+    const path = require('path');
+    walk(dir);
+    return count;
+  }
+
+  /**
+   * Calculate directory size in bytes.
+   */
+  private calculateDirectorySize(dir: string): number {
+    const fs = require('fs');
+    let size = 0;
+
+    function walk(currentDir: string) {
+      try {
+        const entries = fs.readdirSync(currentDir, { withFileTypes: true });
+        for (const entry of entries) {
+          if (entry.isDirectory()) {
+            walk(path.join(currentDir, entry.name));
+          } else {
+            const stat = fs.statSync(path.join(currentDir, entry.name));
+            size += stat.size;
+          }
+        }
+      } catch {
+        // Directory may not be readable, skip it
+      }
+    }
+
+    const path = require('path');
+    walk(dir);
+    return size;
   }
 
   /**
