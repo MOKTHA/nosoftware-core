@@ -20,10 +20,14 @@
   "dependencies": {
     "@heynxt/core-types": "workspace:*",
     "@heynxt/prompt-spec": "workspace:*",
+    "@octokit/rest": "^21.1.1",
+    "@octokit/types": "^16.0.0",
+    "@octokit/webhooks-types": "^7.0.0",
     "zod": "^3.23.0"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0",
+    "@types/node": "^20.19.43",
+    "execa": "^9.6.1",
     "typescript": "^5.5.0"
   }
 }

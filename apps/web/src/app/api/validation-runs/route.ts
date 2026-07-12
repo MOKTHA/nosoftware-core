@@ -20,7 +20,7 @@ import { z } from 'zod';
 
 import { db, validationRuns, validationResults as vrTable, generationRuns } from '@heynxt/persistence';
 import { getEvidenceCaptureService } from '@heynxt/agent-adapter';
-import type { ValidationCheckType } from '@heynxt/core-types';
+import { ValidationRunResult } from '@heynxt/core-types';
 
 import { badRequest, errorResponse, parseJsonBody } from '@/lib/api';
 import { insertAuditEntry } from '@/lib/audit';
@@ -33,19 +33,7 @@ export const revalidate = 0;
 /** Zod schema for creating a validation run. */
 const CreateValidationRunInput = z.object({
   generationRunId: z.string().uuid(),
-  results: z.array(z.object({
-    id: z.string().uuid(),
-    checkType: z.enum(['lint', 'typecheck', 'unit-tests', 'integration-tests', 'smoke-tests', 'build', 'routes', 'api-smoke', 'permissions-check', 'migration-verify', 'route-smoke', 'pr-creation']),
-    status: z.enum(['passed', 'failed', 'skipped']),
-    completedAt: z.coerce.date(),
-    startedAt: z.coerce.date(),
-    durationMs: z.number().int().nonnegative(),
-    evidenceUrl: z.string().url(),
-    outputLog: z.string().nullish(),
-    testSummary: z.string().nullish(),
-    issueCount: z.number().int().nonnegative(),
-    blocksPromotion: z.boolean().default(false),
-  })),
+  results: z.array(ValidationRunResult),
   metadata: z.record(z.unknown()).optional(),
 });
 
@@ -54,7 +42,7 @@ type CreateValidationRunInput = z.infer<typeof CreateValidationRunInput>;
 /** Zod schema for query parameters. */
 const ValidationRunsQueryParams = z.object({
   generationRunId: z.string().uuid().optional(),
-  checkType: z.enum(['lint', 'typecheck', 'unit-tests', 'integration-tests', 'smoke-tests', 'build', 'routes', 'api-smoke', 'permissions-check', 'migration-verify', 'route-smoke', 'pr-creation']).optional(),
+  checkType: z.enum(['lint', 'typecheck', 'unit-tests', 'integration-tests', 'smoke-tests', 'migration-verify', 'build', 'route-smoke', 'api-smoke', 'permissions-check', 'pr-creation']).optional(),
   status: z.enum(['passed', 'failed', 'skipped']).optional(),
 });
 
@@ -172,29 +160,23 @@ export async function POST(req: NextRequest) {
     // Parse request body
     const input = CreateValidationRunInput.parse(await parseJsonBody(req));
 
-    // Validate generation run exists and user has permission
-    const genRunsExists = await db
-      .select({ id: 1 })
-      .from(vrTable)
-      .innerJoin(
-        validationRuns,
-        sql`${vrTable.validationRunId} = ${validationRuns.id}`
-      )
-      .where(eq(validationRuns.generationRunId, input.generationRunId))
+    // Validate generation run exists and get its workspace ID
+    const genRunsList = await db
+      .select({ id: generationRuns.id, workspaceId: generationRuns.workspaceId })
+      .from(generationRuns)
+      .where(eq(generationRuns.id, input.generationRunId))
       .limit(1);
 
-    if (genRunsExists.length === 0) {
-      // Check generation run directly via Drizzle table
-      const genRunExists = await db
-        .select({ id: 1 })
-        .from(generationRuns)
-        .where(eq(generationRuns.id, input.generationRunId))
-        .limit(1);
-
-      if (genRunExists.length === 0) {
-        return errorResponse(badRequest(`Generation run ${input.generationRunId} not found`));
-      }
+    if (genRunsList.length === 0) {
+      return errorResponse(badRequest(`Generation run ${input.generationRunId} not found`));
     }
+
+    const genRunData = genRunsList[0];
+    if (!genRunData || !genRunData.workspaceId) {
+      throw new Error('Generation run missing workspace ID');
+    }
+
+    const workspaceId = genRunData.workspaceId;
 
     const now = new Date();
     const validationRunId = randomUUID();
@@ -224,7 +206,7 @@ export async function POST(req: NextRequest) {
     const resultInserts = input.results.map(result => ({
       validationRunId: created.id,
       id: randomUUID(),
-      checkType: result.checkType as ValidationCheckType,
+      checkType: result.checkType as 'lint' | 'typecheck' | 'unit-tests' | 'integration-tests' | 'smoke-tests' | 'migration-verify' | 'build' | 'route-smoke' | 'api-smoke' | 'permissions-check' | 'pr-creation',
       status: result.status as 'passed' | 'failed',
       evidenceUrl: result.evidenceUrl,
       outputLog: result.outputLog ?? null,
@@ -239,7 +221,7 @@ export async function POST(req: NextRequest) {
     // Record in audit log (best-effort)
     try {
       await insertAuditEntry({
-        workspaceId: 'default-workspace', // TODO: Use actual workspace from session.user.workspaceId when available
+        workspaceId: workspaceId!,
         entityType: 'validation-run',
         entityId: created.id,
         action: 'created',

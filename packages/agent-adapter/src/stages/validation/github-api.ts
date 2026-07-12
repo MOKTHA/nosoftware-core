@@ -4,7 +4,14 @@
  * Provides GitHub API client for creating pull requests and attaching validation evidence as comments.
  */
 
+import { Octokit } from '@octokit/rest';
+import type { Endpoints } from '@octokit/types';
 import { z } from 'zod';
+
+// Type aliases for GitHub API response data types
+type PullCreateResponse = Endpoints['POST /repos/{owner}/{repo}/pulls']['response']['data'];
+type IssueCommentCreateResponse = Endpoints['POST /repos/{owner}/{repo}/issues/{issue_number}/comments']['response']['data'];
+type CompareCommitsWithBaseheadResponse = Endpoints['GET /repos/{owner}/{repo}/compare/{basehead}']['response']['data'];
 
 /** Configuration for GitHub API access. */
 export const GitHubConfig = z.object({
@@ -49,13 +56,13 @@ export type ValidationSummaryComment = z.infer<typeof ValidationSummaryComment>;
 
 /** GitHub API client for creating PRs and attaching evidence. */
 export class GitHubAPIClient {
-  private readonly token: string;
+  private readonly octokit: Octokit;
   private readonly repoOwner: string;
   private readonly repoName: string;
   private readonly baseBranch: string;
 
   constructor(config: GitHubConfig) {
-    this.token = config.token;
+    this.octokit = new Octokit({ auth: config.token });
     this.repoOwner = config.repoOwner;
     this.repoName = config.repoName;
     this.baseBranch = config.baseBranch;
@@ -70,21 +77,41 @@ export class GitHubAPIClient {
     body: string;
     validationResults: ValidationSummaryComment['checks'];
   }): Promise<{ prNumber: number; prUrl: string; commentId?: number }> {
-    // Phase 7.4 Scaffolding: This will be implemented with actual GitHub API via Octokit
+    try {
+      // Create PR via GitHub API
+      const response = await this.octokit.rest.pulls.create({
+        owner: this.repoOwner,
+        repo: this.repoName,
+        title: params.title,
+        body: params.body,
+        head: params.branchName,
+        base: this.baseBranch,
+        draft: false,
+      });
 
-    // Simulated PR creation for scaffolding
-    const mockPrNumber = Math.floor(Math.random() * 1000) + 50;
-    const prUrl = `https://github.com/${this.repoOwner}/${this.repoName}/pull/${mockPrNumber}`;
+      const prNumber = response.data.number;
+      const prUrl = response.data.html_url;
 
-    console.log(`[GitHubAPI] Would create PR #${mockPrNumber} from ${params.branchName} to ${this.baseBranch}`);
-    console.log(`[GitHubAPI] Title: ${params.title}`);
-    console.log(`[GitHubAPI] Validation checks attached: ${params.validationResults.length} checks`);
+      console.log(`[GitHubAPI] Created PR #${prNumber} from ${params.branchName} to ${this.baseBranch}`);
 
-    return {
-      prNumber: mockPrNumber,
-      prUrl,
-      commentId: undefined, // Would be set when evidence is attached as comment
-    };
+      // Attach validation evidence as comment
+      let commentId: number | undefined = undefined;
+      if (params.validationResults.length > 0) {
+        const commentResponse = await this.attachEvidenceComment({
+          prNumber,
+          runId: crypto.randomUUID(),
+          timestamp: new Date(),
+          overallStatus: params.validationResults.every(c => c.status === 'passed') ? 'passed' : 'failed',
+          checks: params.validationResults,
+        });
+        commentId = commentResponse;
+      }
+
+      return { prNumber, prUrl, commentId };
+    } catch (error) {
+      console.error('[GitHubAPI] Failed to create PR:', error);
+      throw new Error(`Failed to create pull request: ${error instanceof Error ? error.message : String(error)}`);
+    }
   }
 
   /**
@@ -102,13 +129,22 @@ export class GitHubAPIClient {
       issueCount?: number;
     }>;
   }): Promise<number> {
-    // Phase 7.4 Scaffolding: This will be implemented with actual GitHub API
-
     const commentBody = this.formatEvidenceComment(params);
-    console.log(`[GitHubAPI] Would attach evidence comment to PR #${params.prNumber}`);
 
-    // Simulated comment creation - returns mock comment ID
-    return Math.floor(Math.random() * 10000) + 1;
+    try {
+      const response = await this.octokit.rest.issues.createComment({
+        owner: this.repoOwner,
+        repo: this.repoName,
+        issue_number: params.prNumber,
+        body: commentBody,
+      });
+
+      console.log(`[GitHubAPI] Attached evidence comment to PR #${params.prNumber}`);
+      return (response.data as IssueCommentCreateResponse).id;
+    } catch (error) {
+      console.error('[GitHubAPI] Failed to attach comment:', error);
+      throw new Error(`Failed to attach validation comment: ${error instanceof Error ? error.message : String(error)}`);
+    }
   }
 
   /**
@@ -148,12 +184,48 @@ ${checkRows}
     requiredChecks: Array<{ checkType: string; status: CheckStatus }>;
     completedAt?: Date;
   }> {
-    // Phase 7.4 Scaffolding: This will query GitHub PR checks API
+    try {
+      // Query GitHub PR for combined status of all checks
+      const response = await this.octokit.rest.pulls.get({
+        owner: this.repoOwner,
+        repo: this.repoName,
+        pull_number: params.prNumber,
+      });
 
-    return {
-      canMerge: true, // Would be determined by actual GitHub API checks
-      requiredChecks: [],
-    };
+      const merged = response.data.merged;
+      const mergeable = response.data.mergeable !== null && response.data.mergeable !== undefined;
+
+      return {
+        canMerge: merged || (mergeable === true),
+        requiredChecks: [], // Would be populated from GitHub check runs API
+        completedAt: response.data.merged_at ? new Date(response.data.merged_at) : undefined,
+      };
+    } catch (error) {
+      console.error('[GitHubAPI] Failed to get PR validation status:', error);
+      return { canMerge: false, requiredChecks: [] };
+    }
+  }
+
+  /**
+   * Verify branch exists and is up-to-date with base branch.
+   */
+  async verifyBranch(params: { branchName: string }): Promise<{ exists: boolean; ahead?: number; behind?: number }> {
+    try {
+      const response = await this.octokit.rest.repos.compareCommitsWithBasehead({
+        owner: this.repoOwner,
+        repo: this.repoName,
+        basehead: `${this.baseBranch}...${params.branchName}`,
+      });
+
+      return {
+        exists: true,
+        ahead: (response.data as any).ahead_count,
+        behind: (response.data as any).behind_count,
+      };
+    } catch (error) {
+      // Branch doesn't exist or error accessing it
+      return { exists: false };
+    }
   }
 }
 

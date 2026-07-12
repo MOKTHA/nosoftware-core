@@ -4,6 +4,7 @@
  * Runs ESLint/formatting checks on generated code.
  */
 
+import { execa } from 'execa';
 import type { ValidationStage, ValidationStageInput, ValidationStageOutput } from '../../generation-pipeline.js';
 import type { ValidationResult, ValidationEvidence } from '@heynxt/core-types';
 import { z } from 'zod';
@@ -55,7 +56,7 @@ export class ValidateLintStage implements ValidationStage {
       params: input.params,
     }));
 
-    // Run lint validation (simulated for Phase 7 scaffolding)
+    // Run lint validation with actual ESLint execution
     const validationResult = await this.runLintValidation(
       input.params?.generatedSourcePath as string,
       input.spec
@@ -74,12 +75,12 @@ export class ValidateLintStage implements ValidationStage {
           checkType: 'lint',
           status,
           evidenceUrl: `validation/lint/${checkId}/eslint-output.json`,
-          durationMs: 150,
+          durationMs: validationResult.durationMs ?? 0,
           outputLog: JSON.stringify(validationResult),
           testSummary: `${validationResult.totalFiles} files checked, ${validationResult.totalErrors} errors, ${validationResult.totalWarnings} warnings`,
           issueCount: validationResult.totalErrors + Math.floor(validationResult.totalWarnings / 2),
           blocksPromotion: true,
-          startedAt: new Date(Date.now() - 150),
+          startedAt: new Date(Date.now() - (validationResult.durationMs ?? 0)),
           completedAt: new Date(),
         },
       ],
@@ -94,30 +95,91 @@ export class ValidateLintStage implements ValidationStage {
   private async runLintValidation(
     sourcePath: string,
     spec: Record<string, unknown>
-  ): Promise<LintValidationResult & { warnings?: string[] }> {
-    // Phase 7 Scaffolding: This will be implemented with actual ESLint integration
+  ): Promise<LintValidationResult & { durationMs?: number; warnings?: string[] }> {
+    const startTime = Date.now();
 
-    // Simulated lint results for scaffolding
-    const hasErrors = false; // Will be determined by actual lint run
+    try {
+      // Execute ESLint on generated code
+      const result = await execa('npx', ['eslint', sourcePath, '--format', 'json', '--output-file', '/dev/null'], {
+        cwd: process.cwd(),
+        timeout: 60000, // 1 minute timeout
+      });
 
-    return {
-      totalFiles: 12,
-      filesWithErrors: hasErrors ? 2 : 0,
-      filesWithWarnings: 3,
-      totalErrors: hasErrors ? 5 : 0,
-      totalWarnings: 8,
-      warnings: [
-        'Some ESLint rules may need configuration for generated code',
-        'Consider adding custom ESLint config for domain-specific patterns',
-      ],
-    };
+      const durationMs = Date.now() - startTime;
+
+      // Parse ESLint JSON output (would be written to file in production)
+      // For now, parse from stdout if available
+      let totalFiles = 0;
+      let filesWithErrors = 0;
+      let filesWithWarnings = 0;
+      let totalErrors = 0;
+      let totalWarnings = 0;
+
+      try {
+        const eslintOutput = JSON.parse(result.stdout);
+        if (Array.isArray(eslintOutput)) {
+          totalFiles = eslintOutput.length;
+          for (const file of eslintOutput) {
+            if (file.errorCount! > 0) filesWithErrors++;
+            if (file.warningCount! > 0) filesWithWarnings++;
+            totalErrors += file.errorCount!;
+            totalWarnings += file.warningCount!;
+          }
+        }
+      } catch {
+        // Fallback: parse from stdout as plain text
+        const lines = result.stdout.split('\n').filter((l: string) => l.trim());
+        totalFiles = Math.max(lines.length, 1);
+
+        if (result.exitCode === 0) {
+          return {
+            totalFiles,
+            filesWithErrors: 0,
+            filesWithWarnings: 0,
+            totalErrors: 0,
+            totalWarnings: 0,
+            durationMs,
+          };
+        }
+      }
+
+      const hasErrors = totalErrors > 0;
+
+      return {
+        totalFiles,
+        filesWithErrors: hasErrors ? filesWithErrors : 0,
+        filesWithWarnings,
+        totalErrors: hasErrors ? totalErrors : 0,
+        totalWarnings,
+        durationMs,
+        warnings: [
+          'Some ESLint rules may need configuration for generated code',
+          'Consider adding custom ESLint config for domain-specific patterns',
+        ],
+      };
+
+    } catch (error) {
+      const durationMs = Date.now() - startTime;
+      const errorMsg = error instanceof Error ? error.message : String(error);
+
+      // Return error metrics rather than throwing - this allows validation to continue
+      return {
+        totalFiles: 0,
+        filesWithErrors: 1,
+        filesWithWarnings: 0,
+        totalErrors: 1,
+        totalWarnings: 0,
+        durationMs,
+        warnings: [`ESLint execution failed: ${errorMsg}`],
+      };
+    }
   }
 
   /**
    * Create evidence artifacts from lint validation results.
    */
   private createEvidenceArtifacts(
-    result: LintValidationResult & { warnings?: string[] }
+    result: LintValidationResult & { warnings?: string[]; durationMs?: number }
   ): Array<ValidationEvidence> {
     const timestamp = new Date().toISOString();
 

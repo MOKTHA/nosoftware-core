@@ -13,6 +13,9 @@ import { ValidationCheckType, ValidationResult as Phase7ValidationResult } from 
 /*  Legacy Types - Re-exported for backward compatibility           */
 /** ------------------------------------------------------------------ */
 
+/** Alias for the main ValidationCheckType from generation-pipeline. */
+export const ValidationCheckTypeExtended = ValidationCheckType;
+
 /**
  * Result of a single validation check (Phase 7).
  * This is an alias for the main ValidationResult type defined in generation-pipeline.ts.
@@ -23,7 +26,7 @@ export const ValidationRunResult = z.object({
   id: z.string().uuid(),
 
   /** Type of validation performed. */
-  checkType: z.lazy(() => ValidationCheckType),
+  checkType: ValidationCheckTypeExtended,
 
   /** Status of the validation check. */
   status: z.enum(['passed', 'failed', 'skipped']),
@@ -264,7 +267,7 @@ export const PRMetadata = z.object({
   /** All validation results attached as PR comments/links. */
   validationResultsSummary: z.array(
     z.object({
-      checkType: z.lazy(() => ValidationCheckType),
+      checkType: ValidationCheckType,
       status: z.enum(['passed', 'failed']),
       evidenceUrl: z.string().url(),
     })
@@ -284,6 +287,9 @@ export type PRMetadata = z.infer<typeof PRMetadata>;
 /** ------------------------------------------------------------------ */
 /*  Type Aliases                                                      */
 /** ------------------------------------------------------------------ */
+
+// Type exports
+export type ValidationCheckTypeExtended = z.infer<typeof ValidationCheckTypeExtended>;
 
 // Additional type aliases for convenience (using the main ValidationResult from generation-pipeline)
 export type ValidationCheckResult = Phase7ValidationResult;

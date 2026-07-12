@@ -36,7 +36,7 @@ export const validationResults = pgTable('validation_results', {
     .references(() => validationRuns.id),
 
   /** Type of validation check performed. */
-  checkType: text('checkType', { enum: ['lint', 'typecheck', 'unit-tests', 'integration-tests', 'smoke-tests', 'build', 'routes', 'api-smoke', 'permissions-check', 'migration-verify', 'route-smoke'] })
+  checkType: text('checkType', { enum: ['lint', 'typecheck', 'unit-tests', 'integration-tests', 'smoke-tests', 'migration-verify', 'build', 'route-smoke', 'api-smoke', 'permissions-check', 'pr-creation'] })
     .notNull(),
 
   /** Result status of this specific check. */
