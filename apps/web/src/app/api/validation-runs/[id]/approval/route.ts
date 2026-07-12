@@ -64,7 +64,7 @@ export async function POST(
 
     // Verify user has approver permission for the workspace
     const validationRun = await db
-      .select({ workspaceId: validationRuns.workspaceId })
+      .select({ workspaceId: validationRuns.workspaceId, generationRunId: validationRuns.generationRunId })
       .from(validationRuns)
       .where(eq(validationRuns.id, validationRunId))
       .limit(1);
@@ -73,7 +73,12 @@ export async function POST(
       return errorResponse(badRequest(`Validation run ${validationRunId} not found`));
     }
 
-    const workspaceId = validationRun[0].workspaceId;
+    const validationRunData = validationRun[0];
+    if (!validationRunData?.workspaceId || !validationRunData.generationRunId) {
+      throw new Error('Validation run missing required fields');
+    }
+
+    const workspaceId = validationRunData.workspaceId;
     await requirePermission('approval:write', userId, workspaceId);
 
     // Check if user already made a decision on this validation run
@@ -158,7 +163,7 @@ export async function GET(
 
     // Verify user has approver permission for the workspace
     const validationRun = await db
-      .select({ workspaceId: validationRuns.workspaceId })
+      .select({ workspaceId: validationRuns.workspaceId, generationRunId: validationRuns.generationRunId })
       .from(validationRuns)
       .where(eq(validationRuns.id, validationRunId))
       .limit(1);
@@ -167,7 +172,12 @@ export async function GET(
       return errorResponse(badRequest(`Validation run ${validationRunId} not found`));
     }
 
-    const workspaceId = validationRun[0].workspaceId;
+    const validationRunData = validationRun[0];
+    if (!validationRunData?.workspaceId || !validationRunData.generationRunId) {
+      throw new Error('Validation run missing required fields');
+    }
+
+    const workspaceId = validationRunData.workspaceId;
     await requirePermission('approval:read', userId, workspaceId);
 
     // Fetch approval decisions for this validation run

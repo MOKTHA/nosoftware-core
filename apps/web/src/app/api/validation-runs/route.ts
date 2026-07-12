@@ -172,7 +172,7 @@ export async function POST(req: NextRequest) {
     }
 
     const genRunData = genRunsList[0];
-    if (!genRunData || !genRunData.workspaceId) {
+    if (!genRunData?.workspaceId) {
       throw new Error('Generation run missing workspace ID');
     }
 
@@ -203,18 +203,21 @@ export async function POST(req: NextRequest) {
     }
 
     // Insert validation results (one per check result)
-    const resultInserts = input.results.map(result => ({
-      validationRunId: created.id,
-      id: randomUUID(),
-      checkType: result.checkType as 'lint' | 'typecheck' | 'unit-tests' | 'integration-tests' | 'smoke-tests' | 'migration-verify' | 'build' | 'route-smoke' | 'api-smoke' | 'permissions-check' | 'pr-creation',
-      status: result.status as 'passed' | 'failed',
-      evidenceUrl: result.evidenceUrl,
-      outputLog: result.outputLog ?? null,
-      testSummary: result.testSummary ?? null,
-      issueCount: result.issueCount ?? 0,
-      blocksPromotion: result.blocksPromotion ?? false,
-      createdAt: now,
-    }));
+    const resultInserts = input.results.map(result => {
+      const validatedCheckType = result.checkType as 'lint' | 'typecheck' | 'unit-tests' | 'integration-tests' | 'smoke-tests' | 'migration-verify' | 'build' | 'route-smoke' | 'api-smoke' | 'permissions-check' | 'pr-creation';
+      return {
+        validationRunId: created.id,
+        id: randomUUID(),
+        checkType: validatedCheckType,
+        status: result.status as 'passed' | 'failed',
+        evidenceUrl: result.evidenceUrl,
+        outputLog: result.outputLog ?? null,
+        testSummary: result.testSummary ?? null,
+        issueCount: result.issueCount ?? 0,
+        blocksPromotion: result.blocksPromotion ?? false,
+        createdAt: now,
+      };
+    });
 
     await db.insert(vrTable).values(resultInserts);
 

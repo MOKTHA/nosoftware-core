@@ -4,8 +4,11 @@
  * Tracks approval/rejection decisions on generated apps for promotion.
  */
 
-import { pgTable, uuid, varchar, text, timestamp, boolean, ForeignKeyRef } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, text, timestamp, boolean } from 'drizzle-orm/pg-core';
 import type { InferSelectModel, InferInsertModel } from 'drizzle-orm';
+
+import { users } from './users.js';
+import { generationRuns } from './generation-runs.js';
 
 /**
  * Approval decision table - stores approver decisions on generated apps.
@@ -28,7 +31,7 @@ export const approvalDecisions = pgTable('approval_decisions', {
   /** Who made this approval decision (user ID). */
   approvedBy: uuid('approved_by')
     .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
+    .references(() => 'users' as any, { onDelete: 'cascade' }),
 
   /** Approval timestamp. */
   decidedAt: timestamp('decided_at').notNull().defaultNow(),
@@ -43,7 +46,7 @@ export const approvalDecisions = pgTable('approval_decisions', {
   requiresSecondApproval: boolean('requires_second_approval').notNull().default(false),
 
   /** Second approval status and details. */
-  secondApproverId: uuid('second_approver_id').references(() => users.id, { onDelete: 'set null' }),
+  secondApproverId: uuid('second_approver_id').references(() => 'users' as any, { onDelete: 'set null' }),
   secondApprovedAt: timestamp('second_approved_at'),
 
   /** Timestamp of this record. */
@@ -72,7 +75,7 @@ export const rerunRequests = pgTable('rerun_requests', {
   /** Who requested the rerun (user ID). */
   requestedBy: uuid('requested_by')
     .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
+    .references(() => 'users' as any, { onDelete: 'cascade' }),
 
   /** Request timestamp. */
   requestedAt: timestamp('requested_at').notNull().defaultNow(),
@@ -83,7 +86,7 @@ export const rerunRequests = pgTable('rerun_requests', {
     .default('pending'),
 
   /** The new generation run ID (after completion). */
-  newGenerationRunId: uuid('new_generation_run_id').references(() => generationRuns.id, { onDelete: 'set null' }),
+  newGenerationRunId: uuid('new_generation_run_id').references(() => 'generation_runs' as any, { onDelete: 'set null' }),
 
   /** Timestamp of this record. */
   createdAt: timestamp('created_at').notNull().defaultNow(),

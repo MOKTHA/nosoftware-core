@@ -110,8 +110,9 @@ export class ValidateBuildStage implements ValidationStage {
         buildCommand = ['npm', 'run', 'build'];
       }
 
-      const result = await execa(buildCommand[0], buildCommand.slice(1), {
-        cwd: sourcePath || process.cwd(),
+      const effectiveCwd = sourcePath || process.cwd();
+      const result = await execa(buildCommand[0] as string, buildCommand.slice(1) as string[], {
+        cwd: effectiveCwd,
         timeout: 300000, // 5 minute timeout for production builds
       });
 
@@ -124,7 +125,7 @@ export class ValidateBuildStage implements ValidationStage {
       try {
         const fsModule = await import('fs');
         const pathModule = await import('path');
-        const buildDir = pathModule.join(sourcePath || process.cwd(), 'dist', 'build', '.next');
+        const buildDir = pathModule.join(effectiveCwd, 'dist', 'build', '.next');
 
         if (fsModule.existsSync(buildDir)) {
           outputFileCount = this.countFilesInDirectory(buildDir);
@@ -133,7 +134,7 @@ export class ValidateBuildStage implements ValidationStage {
           // Try common build directories
           const possibleDirs = ['dist', 'build', '.next'];
           for (const dir of possibleDirs) {
-            const testDir = pathModule.join(sourcePath || process.cwd(), dir);
+            const testDir = pathModule.join(effectiveCwd, dir);
             if (fsModule.existsSync(testDir)) {
               outputFileCount = this.countFilesInDirectory(testDir);
               outputSizeBytes = this.calculateDirectorySize(testDir);

@@ -140,19 +140,7 @@ export class LocalEvidenceStorage implements EvidenceStorage {
 /*  Evidence Capture Service                                          */
 /** ------------------------------------------------------------------ */
 
-export interface ValidationCheckResult {
-  id: string;
-  checkType: 'lint' | 'typecheck' | 'unit-tests' | 'integration-tests' | 'smoke-tests' | 'build' | 'api-smoke' | 'permissions-check' | 'migration-verify' | 'route-smoke';
-  status: 'passed' | 'failed' | 'skipped';
-  completedAt: Date;
-  startedAt: Date;
-  durationMs: number;
-  evidenceUrl: string;
-  outputLog?: string | null;
-  testSummary?: string | null;
-  issueCount: number;
-  blocksPromotion: boolean;
-}
+import type { ValidationResult as ValidationCheckResult } from '@heynxt/core-types';
 
 export interface EvidenceCaptureService {
   /** Create validation run record and store all evidence artifacts. */

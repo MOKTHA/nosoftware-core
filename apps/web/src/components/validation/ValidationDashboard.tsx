@@ -8,6 +8,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import type { ValidationResult as ValidationCheckResult } from '@heynxt/core-types';
 
 interface ValidationRun {
   id: string;
@@ -16,15 +17,6 @@ interface ValidationRun {
   promotionBlocked: boolean;
   results: ValidationCheckResult[];
   createdAt: string;
-}
-
-interface ValidationCheckResult {
-  checkType: string;
-  status: 'passed' | 'failed' | 'skipped';
-  testSummary?: string;
-  issueCount: number;
-  blocksPromotion: boolean;
-  evidenceUrl?: string;
 }
 
 interface ApprovalDecision {

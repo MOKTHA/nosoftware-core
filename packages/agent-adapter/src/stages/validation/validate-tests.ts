@@ -140,8 +140,9 @@ export class ValidateTestsStage implements ValidationStage {
         command = ['npm', 'test', '--', '--passWithNoTests'];
       }
 
-      const result = await execa(command[0], command.slice(1), {
-        cwd: sourcePath || process.cwd(),
+      const effectiveCwd = sourcePath || process.cwd();
+      const result = await execa(command[0] as string, command.slice(1) as string[], {
+        cwd: effectiveCwd,
         timeout: 300000, // 5 minute timeout for test execution
         reject: false, // Don't throw on non-zero exit code - parse manually
       });
@@ -160,8 +161,8 @@ export class ValidateTestsStage implements ValidationStage {
 
       // Parse Jest/Vitest output patterns
       const testMatch = stdout.match(/(\d+)\s+tests?/);
-      if (testMatch) {
-        totalTests = parseInt(testMatch[1], 10);
+      if (testMatch && testMatch[1]) {
+        totalTests = parseInt(testMatch[1], 10) || 0;
       }
 
       // Look for pass/fail counts in various formats
@@ -177,13 +178,13 @@ export class ValidateTestsStage implements ValidationStage {
 
       // Try to extract coverage percentage
       const coverageMatch = stdout.match(/(Coverage|coverage):?[^0-9]*([0-9]+\.?[0-9]*)%/);
-      if (coverageMatch) {
+      if (coverageMatch && coverageMatch[2]) {
         coveragePercent = parseFloat(coverageMatch[2]);
       } else {
         // Fallback: check coverage directory for .json files
         const fs = await import('fs');
-        const path = await import('path');
-        const coverageDir = path.join(sourcePath || process.cwd(), 'coverage', 'coverage-final.json');
+        const pathModule = await import('path');
+        const coverageDir = pathModule.join(effectiveCwd, 'coverage', 'coverage-final.json');
         if (fs.existsSync(coverageDir)) {
           try {
             const coverageData = JSON.parse(fs.readFileSync(coverageDir, 'utf-8'));

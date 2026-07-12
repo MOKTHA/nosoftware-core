@@ -135,8 +135,9 @@ export class ValidateMigrationsStage implements ValidationStage {
       const dbPath = ':memory:'; // Use in-memory SQLite for testing
 
       // Run migrations apply
-      const applyResult = await execa(applyCommand[0], applyCommand.slice(1), {
-        cwd: sourcePath || process.cwd(),
+      const effectiveCwd = sourcePath || process.cwd();
+      const applyResult = await execa(applyCommand[0] as string, applyCommand.slice(1) as string[], {
+        cwd: effectiveCwd,
         env: { ...process.env, DATABASE_URL: `sqlite://${dbPath}` },
         timeout: 60000, // 1 minute for migration apply
       });
@@ -149,8 +150,8 @@ export class ValidateMigrationsStage implements ValidationStage {
 
       if (driver === 'prisma') {
         const migratedMatch = applyResult.stdout.match(/Migration\s+(\d+)\s+completed/);
-        if (migratedMatch) {
-          totalMigrations = parseInt(migratedMatch[1], 10);
+        if (migratedMatch && migratedMatch[1]) {
+          totalMigrations = parseInt(migratedMatch[1], 10) || 0;
           migrationsApplied = totalMigrations;
         } else {
           const stdoutLines = applyResult.stdout.split('\n');
@@ -164,8 +165,8 @@ export class ValidateMigrationsStage implements ValidationStage {
       } else {
         // Knex
         const migratedMatch = applyResult.stdout.match(/(\d+) migration/);
-        if (migratedMatch) {
-          totalMigrations = parseInt(migratedMatch[1], 10);
+        if (migratedMatch && migratedMatch[1]) {
+          totalMigrations = parseInt(migratedMatch[1], 10) || 0;
           migrationsApplied = totalMigrations;
         } else {
           const stdoutLines = applyResult.stdout.split('\n');
@@ -178,8 +179,8 @@ export class ValidateMigrationsStage implements ValidationStage {
       let rollbackSuccessful = false;
       if (applyResult.exitCode === 0 && migrationsApplied > 0) {
         try {
-          await execa(rollbackCommand[0], rollbackCommand.slice(1), {
-            cwd: sourcePath || process.cwd(),
+          await execa(rollbackCommand[0] as string, rollbackCommand.slice(1) as string[], {
+            cwd: effectiveCwd,
             env: { ...process.env, DATABASE_URL: `sqlite://${dbPath}` },
             timeout: 60000,
             reject: false, // Don't throw - check exit code manually

@@ -182,6 +182,7 @@ export class ValidatePermissionsStage implements ValidationStage {
       // If no endpoints with RBAC were detected, fall back to simulated results
       if (totalChecks === 0) {
         totalChecks = 48;
+        const hasRbacDetection = rbacSystem !== 'none';
         checksPassed = hasRbacDetection ? Math.floor(totalChecks * 0.95) : Math.floor(totalChecks * 0.7);
         testResults.length = 0; // Clear the array
 
@@ -259,8 +260,8 @@ export class ValidatePermissionsStage implements ValidationStage {
         // Check for custom RBAC implementation patterns in source code
         const srcPath = path.join(cwd, 'src');
         if (await fs.promises.access(srcPath).then(() => true).catch(() => false)) {
-          const rbacFiles = this.findRbacFiles(srcPath);
-          if (rbacFiles.length > 0) return 'custom';
+          const apiFiles = this.findApiFiles(srcPath);
+          if (apiFiles.length > 0) return 'custom';
 
           // Check for auth middleware patterns
           const hasAuthMiddleware = await this.hasAuthMiddleware(cwd);

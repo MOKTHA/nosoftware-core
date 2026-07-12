@@ -13,7 +13,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'node:crypto';
-import { eq, and, inArray as drizzleInArray } from 'drizzle-orm';
+import { eq, and, inArray } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { db, rerunRequests, validationRuns } from '@heynxt/persistence';
@@ -65,7 +65,12 @@ export async function POST(
       return errorResponse(badRequest(`Validation run ${validationRunId} not found`));
     }
 
-    const workspaceId = validationRun[0].workspaceId;
+    const validationRunData = validationRun[0];
+    if (!validationRunData?.workspaceId || !validationRunData.generationRunId) {
+      throw new Error('Validation run missing required fields');
+    }
+
+    const workspaceId = validationRunData.workspaceId;
     await requirePermission('generation:write', userId, workspaceId);
 
     // Check if user already has a pending rerun request for this validation run
@@ -74,9 +79,9 @@ export async function POST(
       .from(rerunRequests)
       .where(
         and(
-          eq(rerunRequests.originalGenerationRunId, validationRun[0].generationRunId),
+          eq(rerunRequests.originalGenerationRunId, validationRunData.generationRunId),
           eq(rerunRequests.requestedBy, userId),
-          drizzleInArray(rerunRequests.status, ['pending', 'processing'])
+          inArray(rerunRequests.status, ['pending', 'processing'])
         )
       )
       .limit(1);
@@ -91,7 +96,7 @@ export async function POST(
       .insert(rerunRequests)
       .values({
         id: randomUUID(),
-        originalGenerationRunId: validationRun[0].generationRunId,
+        originalGenerationRunId: validationRunData.generationRunId,
         feedback: input.feedback,
         requestedBy: userId,
         status: 'pending',
@@ -142,7 +147,7 @@ export async function GET(
 
     // Verify user has generation permission for the workspace
     const validationRun = await db
-      .select({ workspaceId: validationRuns.workspaceId })
+      .select({ workspaceId: validationRuns.workspaceId, generationRunId: validationRuns.generationRunId })
       .from(validationRuns)
       .where(eq(validationRuns.id, validationRunId))
       .limit(1);
@@ -151,7 +156,12 @@ export async function GET(
       return errorResponse(badRequest(`Validation run ${validationRunId} not found`));
     }
 
-    const workspaceId = validationRun[0].workspaceId;
+    const validationRunData = validationRun[0];
+    if (!validationRunData?.workspaceId || !validationRunData.generationRunId) {
+      throw new Error('Validation run missing required fields');
+    }
+
+    const workspaceId = validationRunData.workspaceId;
     await requirePermission('generation:read', userId, workspaceId);
 
     // Fetch rerun requests for this validation run's generation
@@ -165,7 +175,7 @@ export async function GET(
         newGenerationRunId: rerunRequests.newGenerationRunId,
       })
       .from(rerunRequests)
-      .where(eq(rerunRequests.originalGenerationRunId, validationRun[0].generationRunId))
+      .where(eq(rerunRequests.originalGenerationRunId, validationRunData.generationRunId))
       .orderBy(rerunRequests.requestedAt);
 
     return NextResponse.json(
