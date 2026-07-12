@@ -51,6 +51,7 @@ export const AuditEntityType = z.enum([
   'user',
   'role-assignment',
   'invitation',
+  'validation-run',
 ]);
 
 /**

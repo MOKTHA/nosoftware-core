@@ -18,7 +18,7 @@ import { randomUUID } from 'node:crypto';
 import { eq, and, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { db, validationRuns, validationResults, generationRuns } from '@heynxt/persistence';
+import { db, validationRuns, validationResults as vrTable, generationRuns } from '@heynxt/persistence';
 import { getEvidenceCaptureService } from '@heynxt/agent-adapter';
 import type { ValidationCheckType } from '@heynxt/core-types';
 
@@ -88,17 +88,17 @@ export async function GET(req: NextRequest) {
       const subConditions = [];
 
       if (params.checkType) {
-        subConditions.push(eq(validationResults.checkType, params.checkType));
+        subConditions.push(eq(vrTable.checkType, params.checkType));
       }
 
       if (params.status) {
-        subConditions.push(eq(validationResults.status, params.status as any));
+        subConditions.push(eq(vrTable.status, params.status as any));
       }
 
       conditions.push(
-        sql`${validationResults.validationRunId} IN (
+        sql`${vrTable.validationRunId} IN (
           SELECT vr.id FROM ${validationRuns} v
-          JOIN ${validationResults} vr ON vr.validationRunId = v.id
+          JOIN ${vrTable} vr ON vr.validationRunId = v.id
           WHERE ${eq(validationRuns.generationRunId, params.generationRunId)}
             AND (${subConditions.length > 0 ? and(...(subConditions as any)) : 'true'})
         )`
@@ -115,13 +115,13 @@ export async function GET(req: NextRequest) {
         status: validationRuns.status,
         createdAt: validationRuns.createdAt,
         updatedAt: validationRuns.updatedAt,
-        checkType: validationResults.checkType,
-        resultStatus: validationResults.status as any,
+        checkType: vrTable.checkType,
+        resultStatus: vrTable.status as any,
       })
       .from(validationRuns)
       .innerJoin(
-        validationResults,
-        sql`${validationRuns.id} = ${validationResults.validationRunId}`
+        vrTable,
+        sql`${validationRuns.id} = ${vrTable.validationRunId}`
       )
       .where(where);
 
@@ -175,10 +175,10 @@ export async function POST(req: NextRequest) {
     // Validate generation run exists and user has permission
     const genRunsExists = await db
       .select({ id: 1 })
-      .from(validationResults)
+      .from(vrTable)
       .innerJoin(
         validationRuns,
-        sql`${validationResults.validationRunId} = ${validationRuns.id}`
+        sql`${vrTable.validationRunId} = ${validationRuns.id}`
       )
       .where(eq(validationRuns.generationRunId, input.generationRunId))
       .limit(1);
@@ -231,14 +231,15 @@ export async function POST(req: NextRequest) {
       testSummary: result.testSummary ?? null,
       issueCount: result.issueCount ?? 0,
       blocksPromotion: result.blocksPromotion ?? false,
+      createdAt: now,
     }));
 
-    await db.insert(validationResults).values(resultInserts);
+    await db.insert(vrTable).values(resultInserts);
 
     // Record in audit log (best-effort)
     try {
       await insertAuditEntry({
-        workspaceId: session.user.workspaceId,
+        workspaceId: 'default-workspace', // TODO: Use actual workspace from session.user.workspaceId when available
         entityType: 'validation-run',
         entityId: created.id,
         action: 'created',
