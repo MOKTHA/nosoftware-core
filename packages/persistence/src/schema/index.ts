@@ -81,3 +81,16 @@ export {
   validationResults,
   type ValidationResultDbRecord as ValidationResultRecord,
 } from './validation-results.js';
+
+// Approval decisions and rerun requests (Phase 7.5)
+export {
+  approvalDecisions,
+  type ApprovalDecision,
+  type InsertApprovalDecision,
+} from './approval-decisions.js';
+
+export {
+  rerunRequests,
+  type RerunRequest,
+  type InsertRerunRequest,
+} from './approval-decisions.js';
