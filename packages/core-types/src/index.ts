@@ -118,3 +118,33 @@ export type {
   ValidationCheckResult as ValidationCheckTypeCore, // Alias for ValidationResult
   ValidationRunRecordType as ValidationRunRecordTypeAlias, // Alias for ValidationRunRecord
 } from './schemas/validation-stage.js';
+
+// ============================================================================
+// Phase 8 — Industrial Runtime Services (NEW - schemas defined in this session)
+// Exported as separate namespace to avoid conflicts with existing exports
+// ============================================================================
+
+/** Workflow definitions and state machines */
+export * as workflowDefinitions from './schemas/workflow-definitions.js';
+
+/** Runtime events (PLC signals, barcode scans, sensor data) */
+export * as runtimeEvents from './schemas/runtime-events.js';
+
+/** Rules engine (business rules evaluated at runtime) */
+export * as rulesEngine from './schemas/rules-engine.js';
+
+/** Notification service (email, Slack, webhook) */
+export * as notifications from './schemas/notifications.js';
+
+/** File/evidence service (artifact persistence and serving) */
+export * as fileEvidenceService from './schemas/file-evidence-service.js';
+
+/** KPI aggregation (OEE, throughput, quality metrics) */
+export * as kpiAggregation from './schemas/kpi-aggregation.js';
+
+// Export schema unions for convenience (Phase 8)
+export { RuleDefinitionSchema } from './schemas/rules-engine.js';
+export { FileEvidenceServiceSchema } from './schemas/file-evidence-service.js';
+
+// ============================================================================
+// Phase 8 exports complete - all runtime service schemas are now available
