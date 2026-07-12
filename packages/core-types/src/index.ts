@@ -80,3 +80,6 @@ export * from './schemas/prompt-spec.js';
 
 // Generation pipeline orchestration (Phase 6)
 export * from './schemas/generation-pipeline.js';
+
+// Validation and review loop (Phase 7)
+export * from './schemas/validation-stage.js';
