@@ -600,7 +600,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "apps_web_src_app_api_invitations_accept_route",
-      "community": 176,
+      "community": 1,
       "norm_label": "route.ts"
     },
     {
@@ -610,7 +610,7 @@
       "source_location": "L58",
       "_origin": "ast",
       "id": "apps_web_src_app_api_invitations_accept_route_get",
-      "community": 176,
+      "community": 1,
       "norm_label": "get()"
     },
     {
@@ -750,7 +750,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "apps_web_src_app_api_tasks_id_execute_route",
-      "community": 234,
+      "community": 1,
       "norm_label": "route.ts"
     },
     {
@@ -790,7 +790,7 @@
       "source_location": "L204",
       "_origin": "ast",
       "id": "apps_web_src_app_api_tasks_id_execute_route_rationale_204",
-      "community": 234,
+      "community": 1,
       "norm_label": "todo: stream events to client via sse or store in db"
     },
     {
@@ -822,96 +822,6 @@
       "id": "apps_web_src_app_api_tasks_route_post",
       "community": 1,
       "norm_label": "post()"
-    },
-    {
-      "label": "route.ts",
-      "file_type": "code",
-      "source_file": "apps/web/src/app/api/validation-runs/[id]/approval/route.ts",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "apps_web_src_app_api_validation_runs_id_approval_route",
-      "community": 1,
-      "norm_label": "route.ts"
-    },
-    {
-      "label": "CreateApprovalDecisionInput",
-      "file_type": "code",
-      "source_file": "apps/web/src/app/api/validation-runs/[id]/approval/route.ts",
-      "source_location": "L28",
-      "_origin": "ast",
-      "id": "apps_web_src_app_api_validation_runs_id_approval_route_createapprovaldecisioninput",
-      "community": 1,
-      "norm_label": "createapprovaldecisioninput"
-    },
-    {
-      "label": "ApprovalQueryParams",
-      "file_type": "code",
-      "source_file": "apps/web/src/app/api/validation-runs/[id]/approval/route.ts",
-      "source_location": "L45",
-      "_origin": "ast",
-      "id": "apps_web_src_app_api_validation_runs_id_approval_route_approvalqueryparams",
-      "community": 1,
-      "norm_label": "approvalqueryparams"
-    },
-    {
-      "label": "POST()",
-      "file_type": "code",
-      "source_file": "apps/web/src/app/api/validation-runs/[id]/approval/route.ts",
-      "source_location": "L53",
-      "_origin": "ast",
-      "id": "apps_web_src_app_api_validation_runs_id_approval_route_post",
-      "community": 1,
-      "norm_label": "post()"
-    },
-    {
-      "label": "GET()",
-      "file_type": "code",
-      "source_file": "apps/web/src/app/api/validation-runs/[id]/approval/route.ts",
-      "source_location": "L149",
-      "_origin": "ast",
-      "id": "apps_web_src_app_api_validation_runs_id_approval_route_get",
-      "community": 1,
-      "norm_label": "get()"
-    },
-    {
-      "label": "route.ts",
-      "file_type": "code",
-      "source_file": "apps/web/src/app/api/validation-runs/[id]/rerun/route.ts",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "apps_web_src_app_api_validation_runs_id_rerun_route",
-      "community": 1,
-      "norm_label": "route.ts"
-    },
-    {
-      "label": "CreateRerunRequestInput",
-      "file_type": "code",
-      "source_file": "apps/web/src/app/api/validation-runs/[id]/rerun/route.ts",
-      "source_location": "L28",
-      "_origin": "ast",
-      "id": "apps_web_src_app_api_validation_runs_id_rerun_route_creatererunrequestinput",
-      "community": 1,
-      "norm_label": "creatererunrequestinput"
-    },
-    {
-      "label": "POST()",
-      "file_type": "code",
-      "source_file": "apps/web/src/app/api/validation-runs/[id]/rerun/route.ts",
-      "source_location": "L42",
-      "_origin": "ast",
-      "id": "apps_web_src_app_api_validation_runs_id_rerun_route_post",
-      "community": 1,
-      "norm_label": "post()"
-    },
-    {
-      "label": "GET()",
-      "file_type": "code",
-      "source_file": "apps/web/src/app/api/validation-runs/[id]/rerun/route.ts",
-      "source_location": "L136",
-      "_origin": "ast",
-      "id": "apps_web_src_app_api_validation_runs_id_rerun_route_get",
-      "community": 1,
-      "norm_label": "get()"
     },
     {
       "label": "route.ts",
@@ -1170,7 +1080,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "apps_web_src_app_layout",
-      "community": 47,
+      "community": 8,
       "norm_label": "layout.tsx"
     },
     {
@@ -1180,7 +1090,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "apps_web_src_app_layout_metadata",
-      "community": 47,
+      "community": 8,
       "norm_label": "metadata"
     },
     {
@@ -1190,7 +1100,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "apps_web_src_app_layout_rootlayout",
-      "community": 47,
+      "community": 8,
       "norm_label": "rootlayout()"
     },
     {
@@ -1500,7 +1410,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "apps_web_src_components_usermenu",
-      "community": 47,
+      "community": 8,
       "norm_label": "usermenu.tsx"
     },
     {
@@ -1510,7 +1420,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "apps_web_src_components_usermenu_sessionuser",
-      "community": 47,
+      "community": 8,
       "norm_label": "sessionuser"
     },
     {
@@ -1520,7 +1430,7 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "apps_web_src_components_usermenu_usermenuprops",
-      "community": 47,
+      "community": 8,
       "norm_label": "usermenuprops"
     },
     {
@@ -1530,7 +1440,7 @@
       "source_location": "L36",
       "_origin": "ast",
       "id": "apps_web_src_components_usermenu_initialsfor",
-      "community": 47,
+      "community": 8,
       "norm_label": "initialsfor()"
     },
     {
@@ -1540,7 +1450,7 @@
       "source_location": "L50",
       "_origin": "ast",
       "id": "apps_web_src_components_usermenu_handlesignout",
-      "community": 47,
+      "community": 8,
       "norm_label": "handlesignout()"
     },
     {
@@ -1550,58 +1460,8 @@
       "source_location": "L58",
       "_origin": "ast",
       "id": "apps_web_src_components_usermenu_usermenu",
-      "community": 47,
+      "community": 8,
       "norm_label": "usermenu()"
-    },
-    {
-      "label": "ValidationDashboard.tsx",
-      "file_type": "code",
-      "source_file": "apps/web/src/components/validation/ValidationDashboard.tsx",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "apps_web_src_components_validation_validationdashboard",
-      "community": 236,
-      "norm_label": "validationdashboard.tsx"
-    },
-    {
-      "label": "ValidationRun",
-      "file_type": "code",
-      "source_file": "apps/web/src/components/validation/ValidationDashboard.tsx",
-      "source_location": "L13",
-      "_origin": "ast",
-      "id": "apps_web_src_components_validation_validationdashboard_validationrun",
-      "community": 236,
-      "norm_label": "validationrun"
-    },
-    {
-      "label": "ApprovalDecision",
-      "file_type": "code",
-      "source_file": "apps/web/src/components/validation/ValidationDashboard.tsx",
-      "source_location": "L22",
-      "_origin": "ast",
-      "id": "apps_web_src_components_validation_validationdashboard_approvaldecision",
-      "community": 236,
-      "norm_label": "approvaldecision"
-    },
-    {
-      "label": "ValidationDashboard()",
-      "file_type": "code",
-      "source_file": "apps/web/src/components/validation/ValidationDashboard.tsx",
-      "source_location": "L32",
-      "_origin": "ast",
-      "id": "apps_web_src_components_validation_validationdashboard_validationdashboard",
-      "community": 236,
-      "norm_label": "validationdashboard()"
-    },
-    {
-      "label": "ValidationRunCard()",
-      "file_type": "code",
-      "source_file": "apps/web/src/components/validation/ValidationDashboard.tsx",
-      "source_location": "L181",
-      "_origin": "ast",
-      "id": "apps_web_src_components_validation_validationdashboard_validationruncard",
-      "community": 236,
-      "norm_label": "validationruncard()"
     },
     {
       "label": "api.ts",
@@ -1660,7 +1520,7 @@
       "source_location": "L49",
       "_origin": "ast",
       "id": "apps_web_src_lib_api_notfound",
-      "community": 176,
+      "community": 1,
       "norm_label": "notfound()"
     },
     {
@@ -1730,7 +1590,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "apps_web_src_lib_audit",
-      "community": 176,
+      "community": 1,
       "norm_label": "audit.ts"
     },
     {
@@ -1740,7 +1600,7 @@
       "source_location": "L44",
       "_origin": "ast",
       "id": "apps_web_src_lib_audit_insertauditentryparams",
-      "community": 176,
+      "community": 1,
       "norm_label": "insertauditentryparams"
     },
     {
@@ -1750,7 +1610,7 @@
       "source_location": "L68",
       "_origin": "ast",
       "id": "apps_web_src_lib_audit_orgscope",
-      "community": 176,
+      "community": 1,
       "norm_label": "orgscope"
     },
     {
@@ -1760,7 +1620,7 @@
       "source_location": "L79",
       "_origin": "ast",
       "id": "apps_web_src_lib_audit_resolveorganizationid",
-      "community": 176,
+      "community": 1,
       "norm_label": "resolveorganizationid()"
     },
     {
@@ -1780,7 +1640,7 @@
       "source_location": "L179",
       "_origin": "ast",
       "id": "apps_web_src_lib_audit_insertstatuschangeentry",
-      "community": 176,
+      "community": 1,
       "norm_label": "insertstatuschangeentry()"
     },
     {
@@ -1860,7 +1720,7 @@
       "source_location": "L32",
       "_origin": "ast",
       "id": "apps_web_src_lib_session_getsession",
-      "community": 47,
+      "community": 1,
       "norm_label": "getsession()"
     },
     {
@@ -3326,10 +3186,20 @@
       "norm_label": ".delete()"
     },
     {
+      "label": "ValidationCheckResult",
+      "file_type": "code",
+      "source_file": "packages/agent-adapter/src/evidence-capture.ts",
+      "source_location": "L143",
+      "_origin": "ast",
+      "id": "packages_agent_adapter_src_evidence_capture_validationcheckresult",
+      "community": 64,
+      "norm_label": "validationcheckresult"
+    },
+    {
       "label": "EvidenceCaptureService",
       "file_type": "code",
       "source_file": "packages/agent-adapter/src/evidence-capture.ts",
-      "source_location": "L145",
+      "source_location": "L157",
       "_origin": "ast",
       "id": "packages_agent_adapter_src_evidence_capture_evidencecaptureservice",
       "community": 64,
@@ -3339,7 +3209,7 @@
       "label": ".captureValidationRun()",
       "file_type": "code",
       "source_file": "packages/agent-adapter/src/evidence-capture.ts",
-      "source_location": "L147",
+      "source_location": "L159",
       "_origin": "ast",
       "id": "packages_agent_adapter_src_evidence_capture_evidencecaptureservice_capturevalidationrun",
       "community": 64,
@@ -3349,7 +3219,7 @@
       "label": ".getValidationRun()",
       "file_type": "code",
       "source_file": "packages/agent-adapter/src/evidence-capture.ts",
-      "source_location": "L150",
+      "source_location": "L162",
       "_origin": "ast",
       "id": "packages_agent_adapter_src_evidence_capture_evidencecaptureservice_getvalidationrun",
       "community": 64,
@@ -3359,7 +3229,7 @@
       "label": ".listValidationRuns()",
       "file_type": "code",
       "source_file": "packages/agent-adapter/src/evidence-capture.ts",
-      "source_location": "L153",
+      "source_location": "L165",
       "_origin": "ast",
       "id": "packages_agent_adapter_src_evidence_capture_evidencecaptureservice_listvalidationruns",
       "community": 64,
@@ -3369,7 +3239,7 @@
       "label": "StoredValidationRun",
       "file_type": "code",
       "source_file": "packages/agent-adapter/src/evidence-capture.ts",
-      "source_location": "L157",
+      "source_location": "L169",
       "_origin": "ast",
       "id": "packages_agent_adapter_src_evidence_capture_storedvalidationrun",
       "community": 64,
@@ -3379,7 +3249,7 @@
       "label": "getEvidenceStorage()",
       "file_type": "code",
       "source_file": "packages/agent-adapter/src/evidence-capture.ts",
-      "source_location": "L169",
+      "source_location": "L181",
       "_origin": "ast",
       "id": "packages_agent_adapter_src_evidence_capture_getevidencestorage",
       "community": 64,
@@ -3389,7 +3259,7 @@
       "label": "DefaultEvidenceCaptureService",
       "file_type": "code",
       "source_file": "packages/agent-adapter/src/evidence-capture.ts",
-      "source_location": "L177",
+      "source_location": "L189",
       "_origin": "ast",
       "id": "packages_agent_adapter_src_evidence_capture_defaultevidencecaptureservice",
       "community": 64,
@@ -3399,7 +3269,7 @@
       "label": ".constructor()",
       "file_type": "code",
       "source_file": "packages/agent-adapter/src/evidence-capture.ts",
-      "source_location": "L180",
+      "source_location": "L192",
       "_origin": "ast",
       "id": "packages_agent_adapter_src_evidence_capture_defaultevidencecaptureservice_constructor",
       "community": 64,
@@ -3409,7 +3279,7 @@
       "label": ".captureValidationRun()",
       "file_type": "code",
       "source_file": "packages/agent-adapter/src/evidence-capture.ts",
-      "source_location": "L184",
+      "source_location": "L196",
       "_origin": "ast",
       "id": "packages_agent_adapter_src_evidence_capture_defaultevidencecaptureservice_capturevalidationrun",
       "community": 64,
@@ -3419,7 +3289,7 @@
       "label": ".createEvidenceArtifacts()",
       "file_type": "code",
       "source_file": "packages/agent-adapter/src/evidence-capture.ts",
-      "source_location": "L226",
+      "source_location": "L238",
       "_origin": "ast",
       "id": "packages_agent_adapter_src_evidence_capture_defaultevidencecaptureservice_createevidenceartifacts",
       "community": 64,
@@ -3429,7 +3299,7 @@
       "label": ".getValidationRun()",
       "file_type": "code",
       "source_file": "packages/agent-adapter/src/evidence-capture.ts",
-      "source_location": "L261",
+      "source_location": "L273",
       "_origin": "ast",
       "id": "packages_agent_adapter_src_evidence_capture_defaultevidencecaptureservice_getvalidationrun",
       "community": 64,
@@ -3439,7 +3309,7 @@
       "label": ".listValidationRuns()",
       "file_type": "code",
       "source_file": "packages/agent-adapter/src/evidence-capture.ts",
-      "source_location": "L286",
+      "source_location": "L298",
       "_origin": "ast",
       "id": "packages_agent_adapter_src_evidence_capture_defaultevidencecaptureservice_listvalidationruns",
       "community": 64,
@@ -3449,7 +3319,7 @@
       "label": ".persistRunMetadata()",
       "file_type": "code",
       "source_file": "packages/agent-adapter/src/evidence-capture.ts",
-      "source_location": "L324",
+      "source_location": "L336",
       "_origin": "ast",
       "id": "packages_agent_adapter_src_evidence_capture_defaultevidencecaptureservice_persistrunmetadata",
       "community": 64,
@@ -3459,7 +3329,7 @@
       "label": "getEvidenceCaptureService()",
       "file_type": "code",
       "source_file": "packages/agent-adapter/src/evidence-capture.ts",
-      "source_location": "L345",
+      "source_location": "L357",
       "_origin": "ast",
       "id": "packages_agent_adapter_src_evidence_capture_getevidencecaptureservice",
       "community": 64,
@@ -4152,7 +4022,7 @@
       "source_location": "L255",
       "_origin": "ast",
       "id": "packages_agent_adapter_src_runtime_stubagentruntime_spawn",
-      "community": 2,
+      "community": 234,
       "norm_label": ".spawn()"
     },
     {
@@ -4162,7 +4032,7 @@
       "source_location": "L269",
       "_origin": "ast",
       "id": "packages_agent_adapter_src_runtime_stubagentruntime_validateconfig",
-      "community": 234,
+      "community": 2,
       "norm_label": ".validateconfig()"
     },
     {
@@ -5589,7 +5459,7 @@
       "label": ".checkPackageManager()",
       "file_type": "code",
       "source_file": "packages/agent-adapter/src/stages/validation/validate-build.ts",
-      "source_location": "L187",
+      "source_location": "L186",
       "_origin": "ast",
       "id": "packages_agent_adapter_src_stages_validation_validate_build_validatebuildstage_checkpackagemanager",
       "community": 177,
@@ -5599,7 +5469,7 @@
       "label": ".countFilesInDirectory()",
       "file_type": "code",
       "source_file": "packages/agent-adapter/src/stages/validation/validate-build.ts",
-      "source_location": "L212",
+      "source_location": "L211",
       "_origin": "ast",
       "id": "packages_agent_adapter_src_stages_validation_validate_build_validatebuildstage_countfilesindirectory",
       "community": 177,
@@ -5609,7 +5479,7 @@
       "label": ".calculateDirectorySize()",
       "file_type": "code",
       "source_file": "packages/agent-adapter/src/stages/validation/validate-build.ts",
-      "source_location": "L239",
+      "source_location": "L238",
       "_origin": "ast",
       "id": "packages_agent_adapter_src_stages_validation_validate_build_validatebuildstage_calculatedirectorysize",
       "community": 177,
@@ -5619,7 +5489,7 @@
       "label": ".createEvidenceArtifacts()",
       "file_type": "code",
       "source_file": "packages/agent-adapter/src/stages/validation/validate-build.ts",
-      "source_location": "L267",
+      "source_location": "L266",
       "_origin": "ast",
       "id": "packages_agent_adapter_src_stages_validation_validate_build_validatebuildstage_createevidenceartifacts",
       "community": 177,
@@ -5629,7 +5499,7 @@
       "label": ".computeHash()",
       "file_type": "code",
       "source_file": "packages/agent-adapter/src/stages/validation/validate-build.ts",
-      "source_location": "L301",
+      "source_location": "L300",
       "_origin": "ast",
       "id": "packages_agent_adapter_src_stages_validation_validate_build_validatebuildstage_computehash",
       "community": 177,
@@ -5799,7 +5669,7 @@
       "label": ".checkMigrationTool()",
       "file_type": "code",
       "source_file": "packages/agent-adapter/src/stages/validation/validate-migrations.ts",
-      "source_location": "L226",
+      "source_location": "L225",
       "_origin": "ast",
       "id": "packages_agent_adapter_src_stages_validation_validate_migrations_validatemigrationsstage_checkmigrationtool",
       "community": 183,
@@ -5809,7 +5679,7 @@
       "label": ".createEvidenceArtifacts()",
       "file_type": "code",
       "source_file": "packages/agent-adapter/src/stages/validation/validate-migrations.ts",
-      "source_location": "L258",
+      "source_location": "L257",
       "_origin": "ast",
       "id": "packages_agent_adapter_src_stages_validation_validate_migrations_validatemigrationsstage_createevidenceartifacts",
       "community": 183,
@@ -5819,7 +5689,7 @@
       "label": ".computeHash()",
       "file_type": "code",
       "source_file": "packages/agent-adapter/src/stages/validation/validate-migrations.ts",
-      "source_location": "L292",
+      "source_location": "L291",
       "_origin": "ast",
       "id": "packages_agent_adapter_src_stages_validation_validate_migrations_validatemigrationsstage_computehash",
       "community": 183,
@@ -5909,7 +5779,7 @@
       "label": ".detectRbacSystem()",
       "file_type": "code",
       "source_file": "packages/agent-adapter/src/stages/validation/validate-permissions.ts",
-      "source_location": "L242",
+      "source_location": "L241",
       "_origin": "ast",
       "id": "packages_agent_adapter_src_stages_validation_validate_permissions_validatepermissionsstage_detectrbacsystem",
       "community": 171,
@@ -5919,7 +5789,7 @@
       "label": ".hasAuthMiddleware()",
       "file_type": "code",
       "source_file": "packages/agent-adapter/src/stages/validation/validate-permissions.ts",
-      "source_location": "L282",
+      "source_location": "L281",
       "_origin": "ast",
       "id": "packages_agent_adapter_src_stages_validation_validate_permissions_validatepermissionsstage_hasauthmiddleware",
       "community": 171,
@@ -5929,7 +5799,7 @@
       "label": ".extractRolesFromSource()",
       "file_type": "code",
       "source_file": "packages/agent-adapter/src/stages/validation/validate-permissions.ts",
-      "source_location": "L319",
+      "source_location": "L318",
       "_origin": "ast",
       "id": "packages_agent_adapter_src_stages_validation_validate_permissions_validatepermissionsstage_extractrolesfromsource",
       "community": 171,
@@ -5939,7 +5809,7 @@
       "label": ".findEndpointsWithRbac()",
       "file_type": "code",
       "source_file": "packages/agent-adapter/src/stages/validation/validate-permissions.ts",
-      "source_location": "L365",
+      "source_location": "L364",
       "_origin": "ast",
       "id": "packages_agent_adapter_src_stages_validation_validate_permissions_validatepermissionsstage_findendpointswithrbac",
       "community": 171,
@@ -5949,7 +5819,7 @@
       "label": ".findFilesByPattern()",
       "file_type": "code",
       "source_file": "packages/agent-adapter/src/stages/validation/validate-permissions.ts",
-      "source_location": "L415",
+      "source_location": "L414",
       "_origin": "ast",
       "id": "packages_agent_adapter_src_stages_validation_validate_permissions_validatepermissionsstage_findfilesbypattern",
       "community": 171,
@@ -5959,7 +5829,7 @@
       "label": ".findApiFiles()",
       "file_type": "code",
       "source_file": "packages/agent-adapter/src/stages/validation/validate-permissions.ts",
-      "source_location": "L447",
+      "source_location": "L446",
       "_origin": "ast",
       "id": "packages_agent_adapter_src_stages_validation_validate_permissions_validatepermissionsstage_findapifiles",
       "community": 171,
@@ -5969,7 +5839,7 @@
       "label": ".createEvidenceArtifacts()",
       "file_type": "code",
       "source_file": "packages/agent-adapter/src/stages/validation/validate-permissions.ts",
-      "source_location": "L478",
+      "source_location": "L477",
       "_origin": "ast",
       "id": "packages_agent_adapter_src_stages_validation_validate_permissions_validatepermissionsstage_createevidenceartifacts",
       "community": 171,
@@ -5979,7 +5849,7 @@
       "label": ".computeHash()",
       "file_type": "code",
       "source_file": "packages/agent-adapter/src/stages/validation/validate-permissions.ts",
-      "source_location": "L501",
+      "source_location": "L500",
       "_origin": "ast",
       "id": "packages_agent_adapter_src_stages_validation_validate_permissions_validatepermissionsstage_computehash",
       "community": 171,
@@ -6239,7 +6109,7 @@
       "label": ".checkToolExists()",
       "file_type": "code",
       "source_file": "packages/agent-adapter/src/stages/validation/validate-tests.ts",
-      "source_location": "L247",
+      "source_location": "L246",
       "_origin": "ast",
       "id": "packages_agent_adapter_src_stages_validation_validate_tests_validatetestsstage_checktoolexists",
       "community": 181,
@@ -6249,7 +6119,7 @@
       "label": ".detectDomain()",
       "file_type": "code",
       "source_file": "packages/agent-adapter/src/stages/validation/validate-tests.ts",
-      "source_location": "L263",
+      "source_location": "L262",
       "_origin": "ast",
       "id": "packages_agent_adapter_src_stages_validation_validate_tests_validatetestsstage_detectdomain",
       "community": 181,
@@ -6259,7 +6129,7 @@
       "label": ".createEvidenceArtifacts()",
       "file_type": "code",
       "source_file": "packages/agent-adapter/src/stages/validation/validate-tests.ts",
-      "source_location": "L282",
+      "source_location": "L281",
       "_origin": "ast",
       "id": "packages_agent_adapter_src_stages_validation_validate_tests_validatetestsstage_createevidenceartifacts",
       "community": 181,
@@ -6269,7 +6139,7 @@
       "label": ".computeHash()",
       "file_type": "code",
       "source_file": "packages/agent-adapter/src/stages/validation/validate-tests.ts",
-      "source_location": "L327",
+      "source_location": "L326",
       "_origin": "ast",
       "id": "packages_agent_adapter_src_stages_validation_validate_tests_validatetestsstage_computehash",
       "community": 181,
@@ -10039,7 +9909,7 @@
       "label": "RoleName",
       "file_type": "code",
       "source_file": "packages/core-types/src/schemas/rbac.ts",
-      "source_location": "L97",
+      "source_location": "L92",
       "_origin": "ast",
       "id": "packages_core_types_src_schemas_rbac_rolename",
       "community": 25,
@@ -10049,7 +9919,7 @@
       "label": "RoleDefinition",
       "file_type": "code",
       "source_file": "packages/core-types/src/schemas/rbac.ts",
-      "source_location": "L107",
+      "source_location": "L102",
       "_origin": "ast",
       "id": "packages_core_types_src_schemas_rbac_roledefinition",
       "community": 25,
@@ -10059,7 +9929,7 @@
       "label": "ROLE_DEFINITIONS",
       "file_type": "code",
       "source_file": "packages/core-types/src/schemas/rbac.ts",
-      "source_location": "L122",
+      "source_location": "L117",
       "_origin": "ast",
       "id": "packages_core_types_src_schemas_rbac_role_definitions",
       "community": 25,
@@ -10069,7 +9939,7 @@
       "label": "getRolePermissions()",
       "file_type": "code",
       "source_file": "packages/core-types/src/schemas/rbac.ts",
-      "source_location": "L199",
+      "source_location": "L191",
       "_origin": "ast",
       "id": "packages_core_types_src_schemas_rbac_getrolepermissions",
       "community": 25,
@@ -10079,7 +9949,7 @@
       "label": "RoleAssignment",
       "file_type": "code",
       "source_file": "packages/core-types/src/schemas/rbac.ts",
-      "source_location": "L210",
+      "source_location": "L202",
       "_origin": "ast",
       "id": "packages_core_types_src_schemas_rbac_roleassignment",
       "community": 25,
@@ -10192,7 +10062,7 @@
       "source_location": "L138",
       "_origin": "ast",
       "id": "packages_core_types_src_schemas_task_payload_createtaskpayloadinput",
-      "community": 234,
+      "community": 44,
       "norm_label": "createtaskpayloadinput"
     },
     {
@@ -10322,7 +10192,7 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "packages_core_types_src_schemas_user_user",
-      "community": 176,
+      "community": 1,
       "norm_label": "user"
     },
     {
@@ -10342,7 +10212,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "packages_core_types_src_schemas_validation_stage",
-      "community": 79,
+      "community": 176,
       "norm_label": "validation-stage.ts"
     },
     {
@@ -10352,7 +10222,7 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "packages_core_types_src_schemas_validation_stage_validationrunresult",
-      "community": 79,
+      "community": 176,
       "norm_label": "validationrunresult"
     },
     {
@@ -10362,7 +10232,7 @@
       "source_location": "L66",
       "_origin": "ast",
       "id": "packages_core_types_src_schemas_validation_stage_validationrunrecord",
-      "community": 79,
+      "community": 176,
       "norm_label": "validationrunrecord"
     },
     {
@@ -10372,7 +10242,7 @@
       "source_location": "L115",
       "_origin": "ast",
       "id": "packages_core_types_src_schemas_validation_stage_validationevidence",
-      "community": 79,
+      "community": 176,
       "norm_label": "validationevidence"
     },
     {
@@ -10382,7 +10252,7 @@
       "source_location": "L162",
       "_origin": "ast",
       "id": "packages_core_types_src_schemas_validation_stage_approvaldecision",
-      "community": 79,
+      "community": 176,
       "norm_label": "approvaldecision"
     },
     {
@@ -10392,7 +10262,7 @@
       "source_location": "L205",
       "_origin": "ast",
       "id": "packages_core_types_src_schemas_validation_stage_rerunrequest",
-      "community": 79,
+      "community": 176,
       "norm_label": "rerunrequest"
     },
     {
@@ -10402,7 +10272,7 @@
       "source_location": "L245",
       "_origin": "ast",
       "id": "packages_core_types_src_schemas_validation_stage_prmetadata",
-      "community": 79,
+      "community": 176,
       "norm_label": "prmetadata"
     },
     {
@@ -10412,7 +10282,7 @@
       "source_location": "L292",
       "_origin": "ast",
       "id": "packages_core_types_src_schemas_validation_stage_validationchecktypeextended",
-      "community": 79,
+      "community": 176,
       "norm_label": "validationchecktypeextended"
     },
     {
@@ -10422,7 +10292,7 @@
       "source_location": "L295",
       "_origin": "ast",
       "id": "packages_core_types_src_schemas_validation_stage_validationcheckresult",
-      "community": 79,
+      "community": 176,
       "norm_label": "validationcheckresult"
     },
     {
@@ -10432,7 +10302,7 @@
       "source_location": "L296",
       "_origin": "ast",
       "id": "packages_core_types_src_schemas_validation_stage_validationrunrecordtype",
-      "community": 79,
+      "community": 176,
       "norm_label": "validationrunrecordtype"
     },
     {
@@ -12176,76 +12046,6 @@
       "norm_label": "agentexecutionresults"
     },
     {
-      "label": "approval-decisions.ts",
-      "file_type": "code",
-      "source_file": "packages/persistence/src/schema/approval-decisions.ts",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "packages_persistence_src_schema_approval_decisions",
-      "community": 3,
-      "norm_label": "approval-decisions.ts"
-    },
-    {
-      "label": "approvalDecisions",
-      "file_type": "code",
-      "source_file": "packages/persistence/src/schema/approval-decisions.ts",
-      "source_location": "L16",
-      "_origin": "ast",
-      "id": "packages_persistence_src_schema_approval_decisions_approvaldecisions",
-      "community": 3,
-      "norm_label": "approvaldecisions"
-    },
-    {
-      "label": "ApprovalDecision",
-      "file_type": "code",
-      "source_file": "packages/persistence/src/schema/approval-decisions.ts",
-      "source_location": "L57",
-      "_origin": "ast",
-      "id": "packages_persistence_src_schema_approval_decisions_approvaldecision",
-      "community": 3,
-      "norm_label": "approvaldecision"
-    },
-    {
-      "label": "InsertApprovalDecision",
-      "file_type": "code",
-      "source_file": "packages/persistence/src/schema/approval-decisions.ts",
-      "source_location": "L58",
-      "_origin": "ast",
-      "id": "packages_persistence_src_schema_approval_decisions_insertapprovaldecision",
-      "community": 3,
-      "norm_label": "insertapprovaldecision"
-    },
-    {
-      "label": "rerunRequests",
-      "file_type": "code",
-      "source_file": "packages/persistence/src/schema/approval-decisions.ts",
-      "source_location": "L63",
-      "_origin": "ast",
-      "id": "packages_persistence_src_schema_approval_decisions_rerunrequests",
-      "community": 3,
-      "norm_label": "rerunrequests"
-    },
-    {
-      "label": "RerunRequest",
-      "file_type": "code",
-      "source_file": "packages/persistence/src/schema/approval-decisions.ts",
-      "source_location": "L96",
-      "_origin": "ast",
-      "id": "packages_persistence_src_schema_approval_decisions_rerunrequest",
-      "community": 3,
-      "norm_label": "rerunrequest"
-    },
-    {
-      "label": "InsertRerunRequest",
-      "file_type": "code",
-      "source_file": "packages/persistence/src/schema/approval-decisions.ts",
-      "source_location": "L97",
-      "_origin": "ast",
-      "id": "packages_persistence_src_schema_approval_decisions_insertrerunrequest",
-      "community": 3,
-      "norm_label": "insertrerunrequest"
-    },
-    {
       "label": "artifacts.ts",
       "file_type": "code",
       "source_file": "packages/persistence/src/schema/artifacts.ts",
@@ -12659,7 +12459,7 @@
       "label": "ValidationRun",
       "file_type": "code",
       "source_file": "packages/persistence/src/schema/validation-run.ts",
-      "source_location": "L62",
+      "source_location": "L56",
       "_origin": "ast",
       "id": "packages_persistence_src_schema_validation_run_validationrun",
       "community": 3,
@@ -16772,7 +16572,7 @@
       "source_location": "L101",
       "_origin": "ast",
       "id": "foundation_key_design_decisions",
-      "community": 5,
+      "community": 228,
       "norm_label": "\ud83c\udfaf key design decisions"
     },
     {
@@ -16782,7 +16582,7 @@
       "source_location": "L103",
       "_origin": "ast",
       "id": "foundation_1_monorepo_with_pnpm_turbo",
-      "community": 5,
+      "community": 228,
       "norm_label": "1. monorepo with pnpm + turbo"
     },
     {
@@ -16792,7 +16592,7 @@
       "source_location": "L108",
       "_origin": "ast",
       "id": "foundation_2_contract_first_architecture",
-      "community": 5,
+      "community": 228,
       "norm_label": "2. contract-first architecture"
     },
     {
@@ -16802,7 +16602,7 @@
       "source_location": "L113",
       "_origin": "ast",
       "id": "foundation_3_agent_substrate_pattern",
-      "community": 5,
+      "community": 228,
       "norm_label": "3. agent substrate pattern"
     },
     {
@@ -16812,7 +16612,7 @@
       "source_location": "L120",
       "_origin": "ast",
       "id": "foundation_4_industrial_blueprint_sources",
-      "community": 5,
+      "community": 228,
       "norm_label": "4. industrial blueprint sources"
     },
     {
@@ -16822,7 +16622,7 @@
       "source_location": "L128",
       "_origin": "ast",
       "id": "foundation_5_typescript_configuration",
-      "community": 5,
+      "community": 228,
       "norm_label": "5. typescript configuration"
     },
     {
@@ -16842,7 +16642,7 @@
       "source_location": "L158",
       "_origin": "ast",
       "id": "foundation_documentation_structure",
-      "community": 5,
+      "community": 237,
       "norm_label": "\ud83d\udcda documentation structure"
     },
     {
@@ -16852,7 +16652,7 @@
       "source_location": "L160",
       "_origin": "ast",
       "id": "foundation_root_documentation",
-      "community": 5,
+      "community": 237,
       "norm_label": "root documentation"
     },
     {
@@ -16862,7 +16662,7 @@
       "source_location": "L166",
       "_origin": "ast",
       "id": "foundation_architecture_documentation",
-      "community": 5,
+      "community": 237,
       "norm_label": "architecture documentation"
     },
     {
@@ -16872,7 +16672,7 @@
       "source_location": "L175",
       "_origin": "ast",
       "id": "foundation_architecture_decision_records",
-      "community": 5,
+      "community": 237,
       "norm_label": "architecture decision records"
     },
     {
@@ -16982,7 +16782,7 @@
       "source_location": "L288",
       "_origin": "ast",
       "id": "foundation_getting_started",
-      "community": 5,
+      "community": 236,
       "norm_label": "\ud83d\ude80 getting started"
     },
     {
@@ -16992,7 +16792,7 @@
       "source_location": "L290",
       "_origin": "ast",
       "id": "foundation_prerequisites",
-      "community": 5,
+      "community": 236,
       "norm_label": "prerequisites"
     },
     {
@@ -17002,7 +16802,7 @@
       "source_location": "L294",
       "_origin": "ast",
       "id": "foundation_installation",
-      "community": 5,
+      "community": 236,
       "norm_label": "installation"
     },
     {
@@ -17012,7 +16812,7 @@
       "source_location": "L303",
       "_origin": "ast",
       "id": "foundation_development_commands",
-      "community": 5,
+      "community": 236,
       "norm_label": "development commands"
     },
     {
@@ -17022,7 +16822,7 @@
       "source_location": "L321",
       "_origin": "ast",
       "id": "foundation_verification",
-      "community": 5,
+      "community": 236,
       "norm_label": "verification"
     },
     {
@@ -17052,7 +16852,7 @@
       "source_location": "L349",
       "_origin": "ast",
       "id": "foundation_notes",
-      "community": 5,
+      "community": 238,
       "norm_label": "\ud83d\udcdd notes"
     },
     {
@@ -17062,7 +16862,7 @@
       "source_location": "L351",
       "_origin": "ast",
       "id": "foundation_assumptions_made",
-      "community": 5,
+      "community": 238,
       "norm_label": "assumptions made"
     },
     {
@@ -17072,7 +16872,7 @@
       "source_location": "L358",
       "_origin": "ast",
       "id": "foundation_known_limitations",
-      "community": 5,
+      "community": 238,
       "norm_label": "known limitations"
     },
     {
@@ -17082,7 +16882,7 @@
       "source_location": "L365",
       "_origin": "ast",
       "id": "foundation_future_considerations",
-      "community": 5,
+      "community": 238,
       "norm_label": "future considerations"
     },
     {
@@ -17106,214 +16906,214 @@
       "norm_label": "handover.md"
     },
     {
-      "label": "Handover \u2014 Phase 7 COMPLETE (2026-07-12)",
+      "label": "Handover \u2014 Phase 7 Mid-Implementation (2026-07-12)",
       "file_type": "document",
       "source_file": "HANDOVER.md",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "handover_handover_phase_7_complete_2026_07_12",
+      "id": "handover_handover_phase_7_mid_implementation_2026_07_12",
       "community": 17,
-      "norm_label": "handover \u2014 phase 7 complete (2026-07-12)"
+      "norm_label": "handover \u2014 phase 7 mid-implementation (2026-07-12)"
     },
     {
-      "label": "Current State: Phase 7 COMPLETE, Ready for Phase 8 Planning",
+      "label": "Latest Update: Session 2026-07-12 (Post-handover commit 287d6d6)",
       "file_type": "document",
       "source_file": "HANDOVER.md",
       "source_location": "L8",
       "_origin": "ast",
-      "id": "handover_current_state_phase_7_complete_ready_for_phase_8_planning",
+      "id": "handover_latest_update_session_2026_07_12_post_handover_commit_287d6d6",
       "community": 17,
-      "norm_label": "current state: phase 7 complete, ready for phase 8 planning"
+      "norm_label": "latest update: session 2026-07-12 (post-handover commit 287d6d6)"
+    },
+    {
+      "label": "Phase 7 - Validation Stages Implementation \u2705 COMPLETE (just committed)",
+      "file_type": "document",
+      "source_file": "HANDOVER.md",
+      "source_location": "L10",
+      "_origin": "ast",
+      "id": "handover_phase_7_validation_stages_implementation_complete_just_committed",
+      "community": 17,
+      "norm_label": "phase 7 - validation stages implementation \u2705 complete (just committed)"
+    },
+    {
+      "label": "Latest Update: Session 2026-07-12 (Post-handover commit d87196f)",
+      "file_type": "document",
+      "source_file": "HANDOVER.md",
+      "source_location": "L39",
+      "_origin": "ast",
+      "id": "handover_latest_update_session_2026_07_12_post_handover_commit_d87196f",
+      "community": 17,
+      "norm_label": "latest update: session 2026-07-12 (post-handover commit d87196f)"
+    },
+    {
+      "label": "Phase 7.3 - Evidence capture system \u2705 COMPLETE",
+      "file_type": "document",
+      "source_file": "HANDOVER.md",
+      "source_location": "L41",
+      "_origin": "ast",
+      "id": "handover_phase_7_3_evidence_capture_system_complete",
+      "community": 17,
+      "norm_label": "phase 7.3 - evidence capture system \u2705 complete"
+    },
+    {
+      "label": "Current State: Phase 6 COMPLETE, Phase 7 IN PROGRESS",
+      "file_type": "document",
+      "source_file": "HANDOVER.md",
+      "source_location": "L61",
+      "_origin": "ast",
+      "id": "handover_current_state_phase_6_complete_phase_7_in_progress",
+      "community": 17,
+      "norm_label": "current state: phase 6 complete, phase 7 in progress"
     },
     {
       "label": "Completed Phases",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L10",
+      "source_location": "L63",
       "_origin": "ast",
       "id": "handover_completed_phases",
       "community": 17,
       "norm_label": "completed phases"
     },
     {
-      "label": "What Was Just Completed: Phase 7 Complete Implementation",
+      "label": "What Was Completed (Session 2026-07-12)",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L17",
+      "source_location": "L70",
       "_origin": "ast",
-      "id": "handover_what_was_just_completed_phase_7_complete_implementation",
+      "id": "handover_what_was_completed_session_2026_07_12",
       "community": 17,
-      "norm_label": "what was just completed: phase 7 complete implementation"
+      "norm_label": "what was completed (session 2026-07-12)"
     },
     {
-      "label": "Full Implementation Summary",
+      "label": "Phase 7.3 - Evidence capture system \u2705 COMPLETE",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L19",
+      "source_location": "L72",
       "_origin": "ast",
-      "id": "handover_full_implementation_summary",
+      "id": "handover_phase_7_3_evidence_capture_system_complete_72",
       "community": 17,
-      "norm_label": "full implementation summary"
+      "norm_label": "phase 7.3 - evidence capture system \u2705 complete"
     },
     {
-      "label": "Files Created (Phase 7)",
+      "label": "Phase 7.1 - Define validation stage schemas \u2705 COMPLETE",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L35",
+      "source_location": "L101",
       "_origin": "ast",
-      "id": "handover_files_created_phase_7",
+      "id": "handover_phase_7_1_define_validation_stage_schemas_complete",
       "community": 17,
-      "norm_label": "files created (phase 7)"
+      "norm_label": "phase 7.1 - define validation stage schemas \u2705 complete"
     },
     {
-      "label": "Core Schemas (`packages/core-types`)",
+      "label": "Phase 7.1a - Fix schema naming conflicts \u2705 COMPLETE (2026-07-12 commit 5f13525)",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L37",
+      "source_location": "L123",
       "_origin": "ast",
-      "id": "handover_core_schemas_packages_core_types",
+      "id": "handover_phase_7_1a_fix_schema_naming_conflicts_complete_2026_07_12_commit_5f13525",
       "community": 17,
-      "norm_label": "core schemas (`packages/core-types`)"
+      "norm_label": "phase 7.1a - fix schema naming conflicts \u2705 complete (2026-07-12 commit 5f13525)"
     },
     {
-      "label": "Validation Stages (`packages/agent-adapter/src/stages/validation/`)",
+      "label": "Phase 7.2 - Implement validation stages \u2705 COMPLETE (8 files, commit 5f13525)",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L40",
+      "source_location": "L135",
       "_origin": "ast",
-      "id": "handover_validation_stages_packages_agent_adapter_src_stages_validation",
+      "id": "handover_phase_7_2_implement_validation_stages_complete_8_files_commit_5f13525",
       "community": 17,
-      "norm_label": "validation stages (`packages/agent-adapter/src/stages/validation/`)"
+      "norm_label": "phase 7.2 - implement validation stages \u2705 complete (8 files, commit 5f13525)"
     },
     {
-      "label": "GitHub Integration (`packages/agent-adapter/src/stages/validation/`)",
+      "label": "Files Changed in This Phase (Commit 5f13525)",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L53",
+      "source_location": "L163",
       "_origin": "ast",
-      "id": "handover_github_integration_packages_agent_adapter_src_stages_validation",
+      "id": "handover_files_changed_in_this_phase_commit_5f13525",
       "community": 17,
-      "norm_label": "github integration (`packages/agent-adapter/src/stages/validation/`)"
+      "norm_label": "files changed in this phase (commit 5f13525)"
     },
     {
-      "label": "Persistence Schemas (`packages/persistence/src/schema/`)",
+      "label": "Current Issues / Technical Debt",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L59",
+      "source_location": "L186",
       "_origin": "ast",
-      "id": "handover_persistence_schemas_packages_persistence_src_schema",
+      "id": "handover_current_issues_technical_debt",
       "community": 17,
-      "norm_label": "persistence schemas (`packages/persistence/src/schema/`)"
+      "norm_label": "current issues / technical debt"
     },
     {
-      "label": "API Routes (`apps/web/src/app/api/validation-runs/`)",
+      "label": "\ud83d\udfe1 TODO: Actual Integration Implementation for Validation Stages",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L64",
+      "source_location": "L188",
       "_origin": "ast",
-      "id": "handover_api_routes_apps_web_src_app_api_validation_runs",
+      "id": "handover_todo_actual_integration_implementation_for_validation_stages",
       "community": 17,
-      "norm_label": "api routes (`apps/web/src/app/api/validation-runs/`)"
+      "norm_label": "\ud83d\udfe1 todo: actual integration implementation for validation stages"
     },
     {
-      "label": "UI Components (`apps/web/src/components/validation/`)",
+      "label": "\u2705 DONE: Evidence Storage Backend (Phase 7.3)",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L71",
+      "source_location": "L198",
       "_origin": "ast",
-      "id": "handover_ui_components_apps_web_src_components_validation",
+      "id": "handover_done_evidence_storage_backend_phase_7_3",
       "community": 17,
-      "norm_label": "ui components (`apps/web/src/components/validation/`)"
+      "norm_label": "\u2705 done: evidence storage backend (phase 7.3)"
     },
     {
-      "label": "Latest Commits (Session 2026-07-12)",
+      "label": "\ud83d\udd34 TODO: Evidence Storage Backend Implementation Details",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L76",
+      "source_location": "L204",
       "_origin": "ast",
-      "id": "handover_latest_commits_session_2026_07_12",
+      "id": "handover_todo_evidence_storage_backend_implementation_details",
       "community": 17,
-      "norm_label": "latest commits (session 2026-07-12)"
+      "norm_label": "\ud83d\udd34 todo: evidence storage backend implementation details"
     },
     {
-      "label": "Exit Criteria Status (Phase 7)",
+      "label": "Next Session Recommendations (CONTEXT LIMIT REACHED)",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L89",
+      "source_location": "L212",
       "_origin": "ast",
-      "id": "handover_exit_criteria_status_phase_7",
+      "id": "handover_next_session_recommendations_context_limit_reached",
       "community": 17,
-      "norm_label": "exit criteria status (phase 7)"
+      "norm_label": "next session recommendations (context limit reached)"
     },
     {
-      "label": "Next Session Recommendations",
+      "label": "Priority Tasks:",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L104",
+      "source_location": "L214",
       "_origin": "ast",
-      "id": "handover_next_session_recommendations",
+      "id": "handover_priority_tasks",
       "community": 17,
-      "norm_label": "next session recommendations"
+      "norm_label": "priority tasks:"
     },
     {
-      "label": "Immediate Priority: Complete Phase 7 Verification",
+      "label": "Task Status Summary (Updated)",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L106",
+      "source_location": "L262",
       "_origin": "ast",
-      "id": "handover_immediate_priority_complete_phase_7_verification",
+      "id": "handover_task_status_summary_updated",
       "community": 17,
-      "norm_label": "immediate priority: complete phase 7 verification"
+      "norm_label": "task status summary (updated)"
     },
     {
-      "label": "Next Phases (After Phase 7 Verification)",
+      "label": "Exit Criteria Progress (Phase 7)",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L112",
+      "source_location": "L277",
       "_origin": "ast",
-      "id": "handover_next_phases_after_phase_7_verification",
+      "id": "handover_exit_criteria_progress_phase_7",
       "community": 17,
-      "norm_label": "next phases (after phase 7 verification)"
-    },
-    {
-      "label": "Technical Debt / Open Questions",
-      "file_type": "document",
-      "source_file": "HANDOVER.md",
-      "source_location": "L130",
-      "_origin": "ast",
-      "id": "handover_technical_debt_open_questions",
-      "community": 17,
-      "norm_label": "technical debt / open questions"
-    },
-    {
-      "label": "Task Status Summary",
-      "file_type": "document",
-      "source_file": "HANDOVER.md",
-      "source_location": "L141",
-      "_origin": "ast",
-      "id": "handover_task_status_summary",
-      "community": 17,
-      "norm_label": "task status summary"
-    },
-    {
-      "label": "Graphify Update Required",
-      "file_type": "document",
-      "source_file": "HANDOVER.md",
-      "source_location": "L156",
-      "_origin": "ast",
-      "id": "handover_graphify_update_required",
-      "community": 17,
-      "norm_label": "graphify update required"
-    },
-    {
-      "label": "Summary",
-      "file_type": "document",
-      "source_file": "HANDOVER.md",
-      "source_location": "L168",
-      "_origin": "ast",
-      "id": "handover_summary",
-      "community": 17,
-      "norm_label": "summary"
+      "norm_label": "exit criteria progress (phase 7)"
     },
     {
       "label": "README.md",
@@ -18492,7 +18292,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "docs_adr_0002_agent_substrate_decision",
-      "community": 49,
+      "community": 47,
       "norm_label": "decision"
     },
     {
@@ -18502,7 +18302,7 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "docs_adr_0002_agent_substrate_agent_substrate_architecture",
-      "community": 49,
+      "community": 47,
       "norm_label": "agent substrate architecture"
     },
     {
@@ -18512,7 +18312,7 @@
       "source_location": "L77",
       "_origin": "ast",
       "id": "docs_adr_0002_agent_substrate_key_patterns_from_vercel_coding_agent_template",
-      "community": 49,
+      "community": 47,
       "norm_label": "key patterns from vercel coding-agent-template"
     },
     {
@@ -18522,7 +18322,7 @@
       "source_location": "L79",
       "_origin": "ast",
       "id": "docs_adr_0002_agent_substrate_1_adapter_pattern_with_uniform_contract",
-      "community": 49,
+      "community": 47,
       "norm_label": "1. adapter pattern with uniform contract"
     },
     {
@@ -18532,7 +18332,7 @@
       "source_location": "L102",
       "_origin": "ast",
       "id": "docs_adr_0002_agent_substrate_2_sandboxed_execution",
-      "community": 49,
+      "community": 47,
       "norm_label": "2. sandboxed execution"
     },
     {
@@ -18542,7 +18342,7 @@
       "source_location": "L110",
       "_origin": "ast",
       "id": "docs_adr_0002_agent_substrate_3_streaming_output",
-      "community": 49,
+      "community": 47,
       "norm_label": "3. streaming output"
     },
     {
@@ -18552,7 +18352,7 @@
       "source_location": "L118",
       "_origin": "ast",
       "id": "docs_adr_0002_agent_substrate_4_credential_management",
-      "community": 49,
+      "community": 47,
       "norm_label": "4. credential management"
     },
     {
@@ -18562,7 +18362,7 @@
       "source_location": "L125",
       "_origin": "ast",
       "id": "docs_adr_0002_agent_substrate_5_resumable_sessions",
-      "community": 49,
+      "community": 47,
       "norm_label": "5. resumable sessions"
     },
     {
@@ -18572,7 +18372,7 @@
       "source_location": "L132",
       "_origin": "ast",
       "id": "docs_adr_0002_agent_substrate_adaptation_for_heynxt",
-      "community": 49,
+      "community": 47,
       "norm_label": "adaptation for heynxt"
     },
     {
@@ -18582,7 +18382,7 @@
       "source_location": "L145",
       "_origin": "ast",
       "id": "docs_adr_0002_agent_substrate_agent_spec_schema",
-      "community": 49,
+      "community": 47,
       "norm_label": "agent spec schema"
     },
     {
@@ -18592,7 +18392,7 @@
       "source_location": "L174",
       "_origin": "ast",
       "id": "docs_adr_0002_agent_substrate_execution_flow",
-      "community": 49,
+      "community": 47,
       "norm_label": "execution flow"
     },
     {
@@ -20552,7 +20352,7 @@
       "source_location": "L44",
       "_origin": "ast",
       "id": "docs_architecture_overview_architectural_layers",
-      "community": 228,
+      "community": 31,
       "norm_label": "architectural layers"
     },
     {
@@ -20562,7 +20362,7 @@
       "source_location": "L46",
       "_origin": "ast",
       "id": "docs_architecture_overview_layer_1_shared_schema_layer_heynxt_core_types",
-      "community": 228,
+      "community": 31,
       "norm_label": "layer 1: shared schema layer (`@heynxt/core-types`)"
     },
     {
@@ -20572,7 +20372,7 @@
       "source_location": "L61",
       "_origin": "ast",
       "id": "docs_architecture_overview_layer_2_domain_models_layer_heynxt_domain_models",
-      "community": 228,
+      "community": 31,
       "norm_label": "layer 2: domain models layer (`@heynxt/domain-models`)"
     },
     {
@@ -20582,7 +20382,7 @@
       "source_location": "L85",
       "_origin": "ast",
       "id": "docs_architecture_overview_layer_3_blueprint_registry_layer_heynxt_blueprint_registry",
-      "community": 228,
+      "community": 31,
       "norm_label": "layer 3: blueprint registry layer (`@heynxt/blueprint-registry`)"
     },
     {
@@ -20592,7 +20392,7 @@
       "source_location": "L103",
       "_origin": "ast",
       "id": "docs_architecture_overview_layer_4_prompt_to_spec_layer_heynxt_prompt_spec",
-      "community": 228,
+      "community": 31,
       "norm_label": "layer 4: prompt-to-spec layer (`@heynxt/prompt-spec`)"
     },
     {
@@ -20602,7 +20402,7 @@
       "source_location": "L117",
       "_origin": "ast",
       "id": "docs_architecture_overview_layer_5_agent_adapter_layer_heynxt_agent_adapter",
-      "community": 228,
+      "community": 31,
       "norm_label": "layer 5: agent adapter layer (`@heynxt/agent-adapter`)"
     },
     {
@@ -20612,7 +20412,7 @@
       "source_location": "L138",
       "_origin": "ast",
       "id": "docs_architecture_overview_layer_6_control_plane_ui_apps_web",
-      "community": 228,
+      "community": 31,
       "norm_label": "layer 6: control plane ui (`apps/web`)"
     },
     {
@@ -21752,7 +21552,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "graphify_readme",
-      "community": 56,
+      "community": 46,
       "norm_label": "readme.md"
     },
     {
@@ -25482,483 +25282,6 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "apps/web/src/app/api/validation-runs/[id]/approval/route.ts",
-      "source_location": "L45",
-      "weight": 1.0,
-      "source": "apps_web_src_app_api_validation_runs_id_approval_route",
-      "target": "apps_web_src_app_api_validation_runs_id_approval_route_approvalqueryparams",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/src/app/api/validation-runs/[id]/approval/route.ts",
-      "source_location": "L42",
-      "weight": 1.0,
-      "source": "apps_web_src_app_api_validation_runs_id_approval_route",
-      "target": "apps_web_src_app_api_validation_runs_id_approval_route_createapprovaldecisioninput",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/src/app/api/validation-runs/[id]/approval/route.ts",
-      "source_location": "L149",
-      "weight": 1.0,
-      "source": "apps_web_src_app_api_validation_runs_id_approval_route",
-      "target": "apps_web_src_app_api_validation_runs_id_approval_route_get",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/src/app/api/validation-runs/[id]/approval/route.ts",
-      "source_location": "L53",
-      "weight": 1.0,
-      "source": "apps_web_src_app_api_validation_runs_id_approval_route",
-      "target": "apps_web_src_app_api_validation_runs_id_approval_route_post",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/src/app/api/validation-runs/[id]/approval/route.ts",
-      "source_location": "L22",
-      "weight": 1.0,
-      "source": "apps_web_src_app_api_validation_runs_id_approval_route",
-      "target": "apps_web_src_lib_api",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/src/app/api/validation-runs/[id]/approval/route.ts",
-      "source_location": "L22",
-      "weight": 1.0,
-      "source": "apps_web_src_app_api_validation_runs_id_approval_route",
-      "target": "apps_web_src_lib_api_badrequest",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/src/app/api/validation-runs/[id]/approval/route.ts",
-      "source_location": "L22",
-      "weight": 1.0,
-      "source": "apps_web_src_app_api_validation_runs_id_approval_route",
-      "target": "apps_web_src_lib_api_errorresponse",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/src/app/api/validation-runs/[id]/approval/route.ts",
-      "source_location": "L22",
-      "weight": 1.0,
-      "source": "apps_web_src_app_api_validation_runs_id_approval_route",
-      "target": "apps_web_src_lib_api_parsejsonbody",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/src/app/api/validation-runs/[id]/approval/route.ts",
-      "source_location": "L21",
-      "weight": 1.0,
-      "source": "apps_web_src_app_api_validation_runs_id_approval_route",
-      "target": "apps_web_src_lib_rbac",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/src/app/api/validation-runs/[id]/approval/route.ts",
-      "source_location": "L21",
-      "weight": 1.0,
-      "source": "apps_web_src_app_api_validation_runs_id_approval_route",
-      "target": "apps_web_src_lib_rbac_requirepermission",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/src/app/api/validation-runs/[id]/approval/route.ts",
-      "source_location": "L20",
-      "weight": 1.0,
-      "source": "apps_web_src_app_api_validation_runs_id_approval_route",
-      "target": "apps_web_src_lib_session",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/src/app/api/validation-runs/[id]/approval/route.ts",
-      "source_location": "L20",
-      "weight": 1.0,
-      "source": "apps_web_src_app_api_validation_runs_id_approval_route",
-      "target": "apps_web_src_lib_session_requireauth",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/web/src/app/api/validation-runs/[id]/approval/route.ts",
-      "source_location": "L63",
-      "weight": 1.0,
-      "source": "apps_web_src_app_api_validation_runs_id_approval_route_post",
-      "target": "apps_web_src_app_api_validation_runs_id_approval_route_createapprovaldecisioninput"
-    },
-    {
-      "relation": "references",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/web/src/app/api/validation-runs/[id]/approval/route.ts",
-      "source_location": "L159",
-      "weight": 1.0,
-      "source": "apps_web_src_app_api_validation_runs_id_approval_route_get",
-      "target": "apps_web_src_app_api_validation_runs_id_approval_route_approvalqueryparams"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/web/src/app/api/validation-runs/[id]/approval/route.ts",
-      "source_location": "L73",
-      "weight": 1.0,
-      "source": "apps_web_src_app_api_validation_runs_id_approval_route_post",
-      "target": "apps_web_src_lib_api_badrequest"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/web/src/app/api/validation-runs/[id]/approval/route.ts",
-      "source_location": "L73",
-      "weight": 1.0,
-      "source": "apps_web_src_app_api_validation_runs_id_approval_route_post",
-      "target": "apps_web_src_lib_api_errorresponse"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/web/src/app/api/validation-runs/[id]/approval/route.ts",
-      "source_location": "L63",
-      "weight": 1.0,
-      "source": "apps_web_src_app_api_validation_runs_id_approval_route_post",
-      "target": "apps_web_src_lib_api_parsejsonbody"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/web/src/app/api/validation-runs/[id]/approval/route.ts",
-      "source_location": "L81",
-      "weight": 1.0,
-      "source": "apps_web_src_app_api_validation_runs_id_approval_route_post",
-      "target": "apps_web_src_lib_rbac_requirepermission"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/web/src/app/api/validation-runs/[id]/approval/route.ts",
-      "source_location": "L58",
-      "weight": 1.0,
-      "source": "apps_web_src_app_api_validation_runs_id_approval_route_post",
-      "target": "apps_web_src_lib_session_requireauth"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/web/src/app/api/validation-runs/[id]/approval/route.ts",
-      "source_location": "L171",
-      "weight": 1.0,
-      "source": "apps_web_src_app_api_validation_runs_id_approval_route_get",
-      "target": "apps_web_src_lib_api_badrequest"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/web/src/app/api/validation-runs/[id]/approval/route.ts",
-      "source_location": "L171",
-      "weight": 1.0,
-      "source": "apps_web_src_app_api_validation_runs_id_approval_route_get",
-      "target": "apps_web_src_lib_api_errorresponse"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/web/src/app/api/validation-runs/[id]/approval/route.ts",
-      "source_location": "L179",
-      "weight": 1.0,
-      "source": "apps_web_src_app_api_validation_runs_id_approval_route_get",
-      "target": "apps_web_src_lib_rbac_requirepermission"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/web/src/app/api/validation-runs/[id]/approval/route.ts",
-      "source_location": "L154",
-      "weight": 1.0,
-      "source": "apps_web_src_app_api_validation_runs_id_approval_route_get",
-      "target": "apps_web_src_lib_session_requireauth"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/src/app/api/validation-runs/[id]/rerun/route.ts",
-      "source_location": "L36",
-      "weight": 1.0,
-      "source": "apps_web_src_app_api_validation_runs_id_rerun_route",
-      "target": "apps_web_src_app_api_validation_runs_id_rerun_route_creatererunrequestinput",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/src/app/api/validation-runs/[id]/rerun/route.ts",
-      "source_location": "L136",
-      "weight": 1.0,
-      "source": "apps_web_src_app_api_validation_runs_id_rerun_route",
-      "target": "apps_web_src_app_api_validation_runs_id_rerun_route_get",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/src/app/api/validation-runs/[id]/rerun/route.ts",
-      "source_location": "L42",
-      "weight": 1.0,
-      "source": "apps_web_src_app_api_validation_runs_id_rerun_route",
-      "target": "apps_web_src_app_api_validation_runs_id_rerun_route_post",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/src/app/api/validation-runs/[id]/rerun/route.ts",
-      "source_location": "L22",
-      "weight": 1.0,
-      "source": "apps_web_src_app_api_validation_runs_id_rerun_route",
-      "target": "apps_web_src_lib_api",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/src/app/api/validation-runs/[id]/rerun/route.ts",
-      "source_location": "L22",
-      "weight": 1.0,
-      "source": "apps_web_src_app_api_validation_runs_id_rerun_route",
-      "target": "apps_web_src_lib_api_badrequest",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/src/app/api/validation-runs/[id]/rerun/route.ts",
-      "source_location": "L22",
-      "weight": 1.0,
-      "source": "apps_web_src_app_api_validation_runs_id_rerun_route",
-      "target": "apps_web_src_lib_api_errorresponse",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/src/app/api/validation-runs/[id]/rerun/route.ts",
-      "source_location": "L22",
-      "weight": 1.0,
-      "source": "apps_web_src_app_api_validation_runs_id_rerun_route",
-      "target": "apps_web_src_lib_api_parsejsonbody",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/src/app/api/validation-runs/[id]/rerun/route.ts",
-      "source_location": "L21",
-      "weight": 1.0,
-      "source": "apps_web_src_app_api_validation_runs_id_rerun_route",
-      "target": "apps_web_src_lib_rbac",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/src/app/api/validation-runs/[id]/rerun/route.ts",
-      "source_location": "L21",
-      "weight": 1.0,
-      "source": "apps_web_src_app_api_validation_runs_id_rerun_route",
-      "target": "apps_web_src_lib_rbac_requirepermission",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/src/app/api/validation-runs/[id]/rerun/route.ts",
-      "source_location": "L20",
-      "weight": 1.0,
-      "source": "apps_web_src_app_api_validation_runs_id_rerun_route",
-      "target": "apps_web_src_lib_session",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/src/app/api/validation-runs/[id]/rerun/route.ts",
-      "source_location": "L20",
-      "weight": 1.0,
-      "source": "apps_web_src_app_api_validation_runs_id_rerun_route",
-      "target": "apps_web_src_lib_session_requireauth",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/web/src/app/api/validation-runs/[id]/rerun/route.ts",
-      "source_location": "L52",
-      "weight": 1.0,
-      "source": "apps_web_src_app_api_validation_runs_id_rerun_route_post",
-      "target": "apps_web_src_app_api_validation_runs_id_rerun_route_creatererunrequestinput"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/web/src/app/api/validation-runs/[id]/rerun/route.ts",
-      "source_location": "L65",
-      "weight": 1.0,
-      "source": "apps_web_src_app_api_validation_runs_id_rerun_route_post",
-      "target": "apps_web_src_lib_api_badrequest"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/web/src/app/api/validation-runs/[id]/rerun/route.ts",
-      "source_location": "L65",
-      "weight": 1.0,
-      "source": "apps_web_src_app_api_validation_runs_id_rerun_route_post",
-      "target": "apps_web_src_lib_api_errorresponse"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/web/src/app/api/validation-runs/[id]/rerun/route.ts",
-      "source_location": "L52",
-      "weight": 1.0,
-      "source": "apps_web_src_app_api_validation_runs_id_rerun_route_post",
-      "target": "apps_web_src_lib_api_parsejsonbody"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/web/src/app/api/validation-runs/[id]/rerun/route.ts",
-      "source_location": "L73",
-      "weight": 1.0,
-      "source": "apps_web_src_app_api_validation_runs_id_rerun_route_post",
-      "target": "apps_web_src_lib_rbac_requirepermission"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/web/src/app/api/validation-runs/[id]/rerun/route.ts",
-      "source_location": "L47",
-      "weight": 1.0,
-      "source": "apps_web_src_app_api_validation_runs_id_rerun_route_post",
-      "target": "apps_web_src_lib_session_requireauth"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/web/src/app/api/validation-runs/[id]/rerun/route.ts",
-      "source_location": "L155",
-      "weight": 1.0,
-      "source": "apps_web_src_app_api_validation_runs_id_rerun_route_get",
-      "target": "apps_web_src_lib_api_badrequest"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/web/src/app/api/validation-runs/[id]/rerun/route.ts",
-      "source_location": "L155",
-      "weight": 1.0,
-      "source": "apps_web_src_app_api_validation_runs_id_rerun_route_get",
-      "target": "apps_web_src_lib_api_errorresponse"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/web/src/app/api/validation-runs/[id]/rerun/route.ts",
-      "source_location": "L163",
-      "weight": 1.0,
-      "source": "apps_web_src_app_api_validation_runs_id_rerun_route_get",
-      "target": "apps_web_src_lib_rbac_requirepermission"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/web/src/app/api/validation-runs/[id]/rerun/route.ts",
-      "source_location": "L141",
-      "weight": 1.0,
-      "source": "apps_web_src_app_api_validation_runs_id_rerun_route_get",
-      "target": "apps_web_src_lib_session_requireauth"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/api/validation-runs/route.ts",
       "source_location": "L40",
       "weight": 1.0,
@@ -26200,7 +25523,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/src/app/api/validation-runs/route.ts",
-      "source_location": "L230",
+      "source_location": "L223",
       "weight": 1.0,
       "source": "apps_web_src_app_api_validation_runs_route_post",
       "target": "apps_web_src_lib_audit_insertauditentry"
@@ -27157,46 +26480,6 @@
       "weight": 1.0,
       "source": "apps_web_src_components_usermenu_usermenu",
       "target": "apps_web_src_components_usermenu_initialsfor",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/src/components/validation/ValidationDashboard.tsx",
-      "source_location": "L22",
-      "weight": 1.0,
-      "source": "apps_web_src_components_validation_validationdashboard",
-      "target": "apps_web_src_components_validation_validationdashboard_approvaldecision",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/src/components/validation/ValidationDashboard.tsx",
-      "source_location": "L32",
-      "weight": 1.0,
-      "source": "apps_web_src_components_validation_validationdashboard",
-      "target": "apps_web_src_components_validation_validationdashboard_validationdashboard",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/src/components/validation/ValidationDashboard.tsx",
-      "source_location": "L13",
-      "weight": 1.0,
-      "source": "apps_web_src_components_validation_validationdashboard",
-      "target": "apps_web_src_components_validation_validationdashboard_validationrun",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/src/components/validation/ValidationDashboard.tsx",
-      "source_location": "L181",
-      "weight": 1.0,
-      "source": "apps_web_src_components_validation_validationdashboard",
-      "target": "apps_web_src_components_validation_validationdashboard_validationruncard",
       "confidence_score": 1.0
     },
     {
@@ -29001,7 +28284,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/agent-adapter/src/evidence-capture.ts",
-      "source_location": "L177",
+      "source_location": "L189",
       "weight": 1.0,
       "source": "packages_agent_adapter_src_evidence_capture",
       "target": "packages_agent_adapter_src_evidence_capture_defaultevidencecaptureservice",
@@ -29021,7 +28304,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/agent-adapter/src/evidence-capture.ts",
-      "source_location": "L145",
+      "source_location": "L157",
       "weight": 1.0,
       "source": "packages_agent_adapter_src_evidence_capture",
       "target": "packages_agent_adapter_src_evidence_capture_evidencecaptureservice",
@@ -29051,7 +28334,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/agent-adapter/src/evidence-capture.ts",
-      "source_location": "L345",
+      "source_location": "L357",
       "weight": 1.0,
       "source": "packages_agent_adapter_src_evidence_capture",
       "target": "packages_agent_adapter_src_evidence_capture_getevidencecaptureservice",
@@ -29061,7 +28344,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/agent-adapter/src/evidence-capture.ts",
-      "source_location": "L169",
+      "source_location": "L181",
       "weight": 1.0,
       "source": "packages_agent_adapter_src_evidence_capture",
       "target": "packages_agent_adapter_src_evidence_capture_getevidencestorage",
@@ -29081,10 +28364,20 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/agent-adapter/src/evidence-capture.ts",
-      "source_location": "L157",
+      "source_location": "L169",
       "weight": 1.0,
       "source": "packages_agent_adapter_src_evidence_capture",
       "target": "packages_agent_adapter_src_evidence_capture_storedvalidationrun",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/agent-adapter/src/evidence-capture.ts",
+      "source_location": "L143",
+      "weight": 1.0,
+      "source": "packages_agent_adapter_src_evidence_capture",
+      "target": "packages_agent_adapter_src_evidence_capture_validationcheckresult",
       "confidence_score": 1.0
     },
     {
@@ -29155,7 +28448,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "packages/agent-adapter/src/evidence-capture.ts",
-      "source_location": "L201",
+      "source_location": "L213",
       "weight": 1.0,
       "source": "packages_agent_adapter_src_evidence_capture_defaultevidencecaptureservice_capturevalidationrun",
       "target": "packages_agent_adapter_src_evidence_capture_evidencestorage_store"
@@ -29166,7 +28459,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "packages/agent-adapter/src/evidence-capture.ts",
-      "source_location": "L275",
+      "source_location": "L287",
       "weight": 1.0,
       "source": "packages_agent_adapter_src_evidence_capture_defaultevidencecaptureservice_getvalidationrun",
       "target": "packages_agent_adapter_src_evidence_capture_evidencestorage_retrieve"
@@ -29226,7 +28519,7 @@
       "context": "type",
       "confidence": "EXTRACTED",
       "source_file": "packages/agent-adapter/src/evidence-capture.ts",
-      "source_location": "L177",
+      "source_location": "L189",
       "weight": 1.0,
       "source": "packages_agent_adapter_src_evidence_capture_defaultevidencecaptureservice",
       "target": "packages_agent_adapter_src_evidence_capture_evidencecaptureservice",
@@ -29236,7 +28529,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/agent-adapter/src/evidence-capture.ts",
-      "source_location": "L147",
+      "source_location": "L159",
       "weight": 1.0,
       "source": "packages_agent_adapter_src_evidence_capture_evidencecaptureservice",
       "target": "packages_agent_adapter_src_evidence_capture_evidencecaptureservice_capturevalidationrun",
@@ -29246,7 +28539,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/agent-adapter/src/evidence-capture.ts",
-      "source_location": "L150",
+      "source_location": "L162",
       "weight": 1.0,
       "source": "packages_agent_adapter_src_evidence_capture_evidencecaptureservice",
       "target": "packages_agent_adapter_src_evidence_capture_evidencecaptureservice_getvalidationrun",
@@ -29256,7 +28549,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/agent-adapter/src/evidence-capture.ts",
-      "source_location": "L153",
+      "source_location": "L165",
       "weight": 1.0,
       "source": "packages_agent_adapter_src_evidence_capture_evidencecaptureservice",
       "target": "packages_agent_adapter_src_evidence_capture_evidencecaptureservice_listvalidationruns",
@@ -29267,7 +28560,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/agent-adapter/src/evidence-capture.ts",
-      "source_location": "L181",
+      "source_location": "L193",
       "weight": 1.0,
       "source": "packages_agent_adapter_src_evidence_capture_defaultevidencecaptureservice_constructor",
       "target": "packages_agent_adapter_src_evidence_capture_getevidencestorage",
@@ -29277,7 +28570,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/agent-adapter/src/evidence-capture.ts",
-      "source_location": "L184",
+      "source_location": "L196",
       "weight": 1.0,
       "source": "packages_agent_adapter_src_evidence_capture_defaultevidencecaptureservice",
       "target": "packages_agent_adapter_src_evidence_capture_defaultevidencecaptureservice_capturevalidationrun",
@@ -29287,7 +28580,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/agent-adapter/src/evidence-capture.ts",
-      "source_location": "L180",
+      "source_location": "L192",
       "weight": 1.0,
       "source": "packages_agent_adapter_src_evidence_capture_defaultevidencecaptureservice",
       "target": "packages_agent_adapter_src_evidence_capture_defaultevidencecaptureservice_constructor",
@@ -29297,7 +28590,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/agent-adapter/src/evidence-capture.ts",
-      "source_location": "L226",
+      "source_location": "L238",
       "weight": 1.0,
       "source": "packages_agent_adapter_src_evidence_capture_defaultevidencecaptureservice",
       "target": "packages_agent_adapter_src_evidence_capture_defaultevidencecaptureservice_createevidenceartifacts",
@@ -29307,7 +28600,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/agent-adapter/src/evidence-capture.ts",
-      "source_location": "L261",
+      "source_location": "L273",
       "weight": 1.0,
       "source": "packages_agent_adapter_src_evidence_capture_defaultevidencecaptureservice",
       "target": "packages_agent_adapter_src_evidence_capture_defaultevidencecaptureservice_getvalidationrun",
@@ -29317,7 +28610,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/agent-adapter/src/evidence-capture.ts",
-      "source_location": "L286",
+      "source_location": "L298",
       "weight": 1.0,
       "source": "packages_agent_adapter_src_evidence_capture_defaultevidencecaptureservice",
       "target": "packages_agent_adapter_src_evidence_capture_defaultevidencecaptureservice_listvalidationruns",
@@ -29327,7 +28620,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/agent-adapter/src/evidence-capture.ts",
-      "source_location": "L324",
+      "source_location": "L336",
       "weight": 1.0,
       "source": "packages_agent_adapter_src_evidence_capture_defaultevidencecaptureservice",
       "target": "packages_agent_adapter_src_evidence_capture_defaultevidencecaptureservice_persistrunmetadata",
@@ -29338,7 +28631,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/agent-adapter/src/evidence-capture.ts",
-      "source_location": "L194",
+      "source_location": "L206",
       "weight": 1.0,
       "source": "packages_agent_adapter_src_evidence_capture_defaultevidencecaptureservice_capturevalidationrun",
       "target": "packages_agent_adapter_src_evidence_capture_defaultevidencecaptureservice_createevidenceartifacts",
@@ -29349,7 +28642,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/agent-adapter/src/evidence-capture.ts",
-      "source_location": "L221",
+      "source_location": "L233",
       "weight": 1.0,
       "source": "packages_agent_adapter_src_evidence_capture_defaultevidencecaptureservice_capturevalidationrun",
       "target": "packages_agent_adapter_src_evidence_capture_defaultevidencecaptureservice_persistrunmetadata",
@@ -29360,7 +28653,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/agent-adapter/src/evidence-capture.ts",
-      "source_location": "L298",
+      "source_location": "L310",
       "weight": 1.0,
       "source": "packages_agent_adapter_src_evidence_capture_defaultevidencecaptureservice_listvalidationruns",
       "target": "packages_agent_adapter_src_evidence_capture_defaultevidencecaptureservice_getvalidationrun",
@@ -34723,7 +34016,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/agent-adapter/src/stages/validation/validate-build.ts",
-      "source_location": "L239",
+      "source_location": "L238",
       "weight": 1.0,
       "source": "packages_agent_adapter_src_stages_validation_validate_build_validatebuildstage",
       "target": "packages_agent_adapter_src_stages_validation_validate_build_validatebuildstage_calculatedirectorysize",
@@ -34733,7 +34026,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/agent-adapter/src/stages/validation/validate-build.ts",
-      "source_location": "L187",
+      "source_location": "L186",
       "weight": 1.0,
       "source": "packages_agent_adapter_src_stages_validation_validate_build_validatebuildstage",
       "target": "packages_agent_adapter_src_stages_validation_validate_build_validatebuildstage_checkpackagemanager",
@@ -34743,7 +34036,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/agent-adapter/src/stages/validation/validate-build.ts",
-      "source_location": "L301",
+      "source_location": "L300",
       "weight": 1.0,
       "source": "packages_agent_adapter_src_stages_validation_validate_build_validatebuildstage",
       "target": "packages_agent_adapter_src_stages_validation_validate_build_validatebuildstage_computehash",
@@ -34753,7 +34046,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/agent-adapter/src/stages/validation/validate-build.ts",
-      "source_location": "L212",
+      "source_location": "L211",
       "weight": 1.0,
       "source": "packages_agent_adapter_src_stages_validation_validate_build_validatebuildstage",
       "target": "packages_agent_adapter_src_stages_validation_validate_build_validatebuildstage_countfilesindirectory",
@@ -34763,7 +34056,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/agent-adapter/src/stages/validation/validate-build.ts",
-      "source_location": "L267",
+      "source_location": "L266",
       "weight": 1.0,
       "source": "packages_agent_adapter_src_stages_validation_validate_build_validatebuildstage",
       "target": "packages_agent_adapter_src_stages_validation_validate_build_validatebuildstage_createevidenceartifacts",
@@ -34826,7 +34119,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/agent-adapter/src/stages/validation/validate-build.ts",
-      "source_location": "L132",
+      "source_location": "L131",
       "weight": 1.0,
       "source": "packages_agent_adapter_src_stages_validation_validate_build_validatebuildstage_runbuildvalidation",
       "target": "packages_agent_adapter_src_stages_validation_validate_build_validatebuildstage_calculatedirectorysize",
@@ -34848,7 +34141,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/agent-adapter/src/stages/validation/validate-build.ts",
-      "source_location": "L131",
+      "source_location": "L130",
       "weight": 1.0,
       "source": "packages_agent_adapter_src_stages_validation_validate_build_validatebuildstage_runbuildvalidation",
       "target": "packages_agent_adapter_src_stages_validation_validate_build_validatebuildstage_countfilesindirectory",
@@ -34990,7 +34283,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/agent-adapter/src/stages/validation/validate-migrations.ts",
-      "source_location": "L226",
+      "source_location": "L225",
       "weight": 1.0,
       "source": "packages_agent_adapter_src_stages_validation_validate_migrations_validatemigrationsstage",
       "target": "packages_agent_adapter_src_stages_validation_validate_migrations_validatemigrationsstage_checkmigrationtool",
@@ -35000,7 +34293,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/agent-adapter/src/stages/validation/validate-migrations.ts",
-      "source_location": "L292",
+      "source_location": "L291",
       "weight": 1.0,
       "source": "packages_agent_adapter_src_stages_validation_validate_migrations_validatemigrationsstage",
       "target": "packages_agent_adapter_src_stages_validation_validate_migrations_validatemigrationsstage_computehash",
@@ -35010,7 +34303,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/agent-adapter/src/stages/validation/validate-migrations.ts",
-      "source_location": "L258",
+      "source_location": "L257",
       "weight": 1.0,
       "source": "packages_agent_adapter_src_stages_validation_validate_migrations_validatemigrationsstage",
       "target": "packages_agent_adapter_src_stages_validation_validate_migrations_validatemigrationsstage_createevidenceartifacts",
@@ -35123,7 +34416,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/agent-adapter/src/stages/validation/validate-permissions.ts",
-      "source_location": "L501",
+      "source_location": "L500",
       "weight": 1.0,
       "source": "packages_agent_adapter_src_stages_validation_validate_permissions_validatepermissionsstage",
       "target": "packages_agent_adapter_src_stages_validation_validate_permissions_validatepermissionsstage_computehash",
@@ -35133,7 +34426,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/agent-adapter/src/stages/validation/validate-permissions.ts",
-      "source_location": "L478",
+      "source_location": "L477",
       "weight": 1.0,
       "source": "packages_agent_adapter_src_stages_validation_validate_permissions_validatepermissionsstage",
       "target": "packages_agent_adapter_src_stages_validation_validate_permissions_validatepermissionsstage_createevidenceartifacts",
@@ -35143,7 +34436,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/agent-adapter/src/stages/validation/validate-permissions.ts",
-      "source_location": "L242",
+      "source_location": "L241",
       "weight": 1.0,
       "source": "packages_agent_adapter_src_stages_validation_validate_permissions_validatepermissionsstage",
       "target": "packages_agent_adapter_src_stages_validation_validate_permissions_validatepermissionsstage_detectrbacsystem",
@@ -35163,7 +34456,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/agent-adapter/src/stages/validation/validate-permissions.ts",
-      "source_location": "L319",
+      "source_location": "L318",
       "weight": 1.0,
       "source": "packages_agent_adapter_src_stages_validation_validate_permissions_validatepermissionsstage",
       "target": "packages_agent_adapter_src_stages_validation_validate_permissions_validatepermissionsstage_extractrolesfromsource",
@@ -35173,7 +34466,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/agent-adapter/src/stages/validation/validate-permissions.ts",
-      "source_location": "L447",
+      "source_location": "L446",
       "weight": 1.0,
       "source": "packages_agent_adapter_src_stages_validation_validate_permissions_validatepermissionsstage",
       "target": "packages_agent_adapter_src_stages_validation_validate_permissions_validatepermissionsstage_findapifiles",
@@ -35183,7 +34476,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/agent-adapter/src/stages/validation/validate-permissions.ts",
-      "source_location": "L365",
+      "source_location": "L364",
       "weight": 1.0,
       "source": "packages_agent_adapter_src_stages_validation_validate_permissions_validatepermissionsstage",
       "target": "packages_agent_adapter_src_stages_validation_validate_permissions_validatepermissionsstage_findendpointswithrbac",
@@ -35193,7 +34486,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/agent-adapter/src/stages/validation/validate-permissions.ts",
-      "source_location": "L415",
+      "source_location": "L414",
       "weight": 1.0,
       "source": "packages_agent_adapter_src_stages_validation_validate_permissions_validatepermissionsstage",
       "target": "packages_agent_adapter_src_stages_validation_validate_permissions_validatepermissionsstage_findfilesbypattern",
@@ -35203,7 +34496,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/agent-adapter/src/stages/validation/validate-permissions.ts",
-      "source_location": "L282",
+      "source_location": "L281",
       "weight": 1.0,
       "source": "packages_agent_adapter_src_stages_validation_validate_permissions_validatepermissionsstage",
       "target": "packages_agent_adapter_src_stages_validation_validate_permissions_validatepermissionsstage_hasauthmiddleware",
@@ -35289,18 +34582,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/agent-adapter/src/stages/validation/validate-permissions.ts",
-      "source_location": "L263",
-      "weight": 1.0,
-      "source": "packages_agent_adapter_src_stages_validation_validate_permissions_validatepermissionsstage_detectrbacsystem",
-      "target": "packages_agent_adapter_src_stages_validation_validate_permissions_validatepermissionsstage_findapifiles",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "packages/agent-adapter/src/stages/validation/validate-permissions.ts",
-      "source_location": "L267",
+      "source_location": "L266",
       "weight": 1.0,
       "source": "packages_agent_adapter_src_stages_validation_validate_permissions_validatepermissionsstage_detectrbacsystem",
       "target": "packages_agent_adapter_src_stages_validation_validate_permissions_validatepermissionsstage_hasauthmiddleware",
@@ -35311,7 +34593,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/agent-adapter/src/stages/validation/validate-permissions.ts",
-      "source_location": "L297",
+      "source_location": "L296",
       "weight": 1.0,
       "source": "packages_agent_adapter_src_stages_validation_validate_permissions_validatepermissionsstage_hasauthmiddleware",
       "target": "packages_agent_adapter_src_stages_validation_validate_permissions_validatepermissionsstage_findfilesbypattern",
@@ -35322,7 +34604,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/agent-adapter/src/stages/validation/validate-permissions.ts",
-      "source_location": "L337",
+      "source_location": "L336",
       "weight": 1.0,
       "source": "packages_agent_adapter_src_stages_validation_validate_permissions_validatepermissionsstage_extractrolesfromsource",
       "target": "packages_agent_adapter_src_stages_validation_validate_permissions_validatepermissionsstage_findfilesbypattern",
@@ -35333,7 +34615,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/agent-adapter/src/stages/validation/validate-permissions.ts",
-      "source_location": "L383",
+      "source_location": "L382",
       "weight": 1.0,
       "source": "packages_agent_adapter_src_stages_validation_validate_permissions_validatepermissionsstage_findendpointswithrbac",
       "target": "packages_agent_adapter_src_stages_validation_validate_permissions_validatepermissionsstage_findapifiles",
@@ -35631,7 +34913,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/agent-adapter/src/stages/validation/validate-tests.ts",
-      "source_location": "L247",
+      "source_location": "L246",
       "weight": 1.0,
       "source": "packages_agent_adapter_src_stages_validation_validate_tests_validatetestsstage",
       "target": "packages_agent_adapter_src_stages_validation_validate_tests_validatetestsstage_checktoolexists",
@@ -35641,7 +34923,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/agent-adapter/src/stages/validation/validate-tests.ts",
-      "source_location": "L327",
+      "source_location": "L326",
       "weight": 1.0,
       "source": "packages_agent_adapter_src_stages_validation_validate_tests_validatetestsstage",
       "target": "packages_agent_adapter_src_stages_validation_validate_tests_validatetestsstage_computehash",
@@ -35651,7 +34933,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/agent-adapter/src/stages/validation/validate-tests.ts",
-      "source_location": "L282",
+      "source_location": "L281",
       "weight": 1.0,
       "source": "packages_agent_adapter_src_stages_validation_validate_tests_validatetestsstage",
       "target": "packages_agent_adapter_src_stages_validation_validate_tests_validatetestsstage_createevidenceartifacts",
@@ -35661,7 +34943,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/agent-adapter/src/stages/validation/validate-tests.ts",
-      "source_location": "L263",
+      "source_location": "L262",
       "weight": 1.0,
       "source": "packages_agent_adapter_src_stages_validation_validate_tests_validatetestsstage",
       "target": "packages_agent_adapter_src_stages_validation_validate_tests_validatetestsstage_detectdomain",
@@ -41968,7 +41250,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/core-types/src/schemas/rbac.ts",
-      "source_location": "L199",
+      "source_location": "L191",
       "weight": 1.0,
       "source": "packages_core_types_src_schemas_rbac",
       "target": "packages_core_types_src_schemas_rbac_getrolepermissions",
@@ -41978,7 +41260,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/core-types/src/schemas/rbac.ts",
-      "source_location": "L88",
+      "source_location": "L83",
       "weight": 1.0,
       "source": "packages_core_types_src_schemas_rbac",
       "target": "packages_core_types_src_schemas_rbac_permission",
@@ -41988,7 +41270,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/core-types/src/schemas/rbac.ts",
-      "source_location": "L122",
+      "source_location": "L117",
       "weight": 1.0,
       "source": "packages_core_types_src_schemas_rbac",
       "target": "packages_core_types_src_schemas_rbac_role_definitions",
@@ -41998,7 +41280,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/core-types/src/schemas/rbac.ts",
-      "source_location": "L219",
+      "source_location": "L211",
       "weight": 1.0,
       "source": "packages_core_types_src_schemas_rbac",
       "target": "packages_core_types_src_schemas_rbac_roleassignment",
@@ -42008,7 +41290,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/core-types/src/schemas/rbac.ts",
-      "source_location": "L113",
+      "source_location": "L108",
       "weight": 1.0,
       "source": "packages_core_types_src_schemas_rbac",
       "target": "packages_core_types_src_schemas_rbac_roledefinition",
@@ -42018,7 +41300,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/core-types/src/schemas/rbac.ts",
-      "source_location": "L105",
+      "source_location": "L100",
       "weight": 1.0,
       "source": "packages_core_types_src_schemas_rbac",
       "target": "packages_core_types_src_schemas_rbac_rolename",
@@ -44984,187 +44266,6 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "packages/persistence/src/schema/approval-decisions.ts",
-      "source_location": "L57",
-      "weight": 1.0,
-      "source": "packages_persistence_src_schema_approval_decisions",
-      "target": "packages_persistence_src_schema_approval_decisions_approvaldecision",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "packages/persistence/src/schema/approval-decisions.ts",
-      "source_location": "L16",
-      "weight": 1.0,
-      "source": "packages_persistence_src_schema_approval_decisions",
-      "target": "packages_persistence_src_schema_approval_decisions_approvaldecisions",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "packages/persistence/src/schema/approval-decisions.ts",
-      "source_location": "L58",
-      "weight": 1.0,
-      "source": "packages_persistence_src_schema_approval_decisions",
-      "target": "packages_persistence_src_schema_approval_decisions_insertapprovaldecision",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "packages/persistence/src/schema/approval-decisions.ts",
-      "source_location": "L97",
-      "weight": 1.0,
-      "source": "packages_persistence_src_schema_approval_decisions",
-      "target": "packages_persistence_src_schema_approval_decisions_insertrerunrequest",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "packages/persistence/src/schema/approval-decisions.ts",
-      "source_location": "L96",
-      "weight": 1.0,
-      "source": "packages_persistence_src_schema_approval_decisions",
-      "target": "packages_persistence_src_schema_approval_decisions_rerunrequest",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "packages/persistence/src/schema/approval-decisions.ts",
-      "source_location": "L63",
-      "weight": 1.0,
-      "source": "packages_persistence_src_schema_approval_decisions",
-      "target": "packages_persistence_src_schema_approval_decisions_rerunrequests",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "packages/persistence/src/schema/approval-decisions.ts",
-      "source_location": "L11",
-      "weight": 1.0,
-      "source": "packages_persistence_src_schema_approval_decisions",
-      "target": "packages_persistence_src_schema_generation_runs",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "packages/persistence/src/schema/approval-decisions.ts",
-      "source_location": "L11",
-      "weight": 1.0,
-      "source": "packages_persistence_src_schema_approval_decisions",
-      "target": "packages_persistence_src_schema_generation_runs_generationruns",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "packages/persistence/src/schema/approval-decisions.ts",
-      "source_location": "L10",
-      "weight": 1.0,
-      "source": "packages_persistence_src_schema_approval_decisions",
-      "target": "packages_persistence_src_schema_users",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "packages/persistence/src/schema/approval-decisions.ts",
-      "source_location": "L10",
-      "weight": 1.0,
-      "source": "packages_persistence_src_schema_approval_decisions",
-      "target": "packages_persistence_src_schema_users_users",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "re_exports",
-      "context": "export",
-      "confidence": "EXTRACTED",
-      "source_file": "packages/persistence/src/schema/index.ts",
-      "source_location": "L86",
-      "weight": 1.0,
-      "source": "packages_persistence_src_schema_index",
-      "target": "packages_persistence_src_schema_approval_decisions",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "re_exports",
-      "context": "re-export",
-      "confidence": "EXTRACTED",
-      "source_file": "packages/persistence/src/schema/index.ts",
-      "source_location": "L86",
-      "weight": 1.0,
-      "source": "packages_persistence_src_schema_index",
-      "target": "packages_persistence_src_schema_approval_decisions_approvaldecisions",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "re_exports",
-      "context": "re-export",
-      "confidence": "EXTRACTED",
-      "source_file": "packages/persistence/src/schema/index.ts",
-      "source_location": "L86",
-      "weight": 1.0,
-      "source": "packages_persistence_src_schema_index",
-      "target": "packages_persistence_src_schema_approval_decisions_approvaldecision",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "re_exports",
-      "context": "re-export",
-      "confidence": "EXTRACTED",
-      "source_file": "packages/persistence/src/schema/index.ts",
-      "source_location": "L86",
-      "weight": 1.0,
-      "source": "packages_persistence_src_schema_index",
-      "target": "packages_persistence_src_schema_approval_decisions_insertapprovaldecision",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "re_exports",
-      "context": "re-export",
-      "confidence": "EXTRACTED",
-      "source_file": "packages/persistence/src/schema/index.ts",
-      "source_location": "L92",
-      "weight": 1.0,
-      "source": "packages_persistence_src_schema_index",
-      "target": "packages_persistence_src_schema_approval_decisions_rerunrequests",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "re_exports",
-      "context": "re-export",
-      "confidence": "EXTRACTED",
-      "source_file": "packages/persistence/src/schema/index.ts",
-      "source_location": "L92",
-      "weight": 1.0,
-      "source": "packages_persistence_src_schema_index",
-      "target": "packages_persistence_src_schema_approval_decisions_rerunrequest",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "re_exports",
-      "context": "re-export",
-      "confidence": "EXTRACTED",
-      "source_file": "packages/persistence/src/schema/index.ts",
-      "source_location": "L92",
-      "weight": 1.0,
-      "source": "packages_persistence_src_schema_index",
-      "target": "packages_persistence_src_schema_approval_decisions_insertrerunrequest",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
       "source_file": "packages/persistence/src/schema/artifacts.ts",
       "source_location": "L29",
       "weight": 1.0,
@@ -46525,7 +45626,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/persistence/src/schema/validation-run.ts",
-      "source_location": "L62",
+      "source_location": "L56",
       "weight": 1.0,
       "source": "packages_persistence_src_schema_validation_run",
       "target": "packages_persistence_src_schema_validation_run_validationrun",
@@ -50563,7 +49664,47 @@
       "source_location": "L1",
       "weight": 1.0,
       "source": "handover",
-      "target": "handover_handover_phase_7_complete_2026_07_12",
+      "target": "handover_handover_phase_7_mid_implementation_2026_07_12",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "HANDOVER.md",
+      "source_location": "L186",
+      "weight": 1.0,
+      "source": "handover_handover_phase_7_mid_implementation_2026_07_12",
+      "target": "handover_current_issues_technical_debt",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "HANDOVER.md",
+      "source_location": "L61",
+      "weight": 1.0,
+      "source": "handover_handover_phase_7_mid_implementation_2026_07_12",
+      "target": "handover_current_state_phase_6_complete_phase_7_in_progress",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "HANDOVER.md",
+      "source_location": "L277",
+      "weight": 1.0,
+      "source": "handover_handover_phase_7_mid_implementation_2026_07_12",
+      "target": "handover_exit_criteria_progress_phase_7",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "HANDOVER.md",
+      "source_location": "L163",
+      "weight": 1.0,
+      "source": "handover_handover_phase_7_mid_implementation_2026_07_12",
+      "target": "handover_files_changed_in_this_phase_commit_5f13525",
       "confidence_score": 1.0
     },
     {
@@ -50572,78 +49713,48 @@
       "source_file": "HANDOVER.md",
       "source_location": "L8",
       "weight": 1.0,
-      "source": "handover_handover_phase_7_complete_2026_07_12",
-      "target": "handover_current_state_phase_7_complete_ready_for_phase_8_planning",
+      "source": "handover_handover_phase_7_mid_implementation_2026_07_12",
+      "target": "handover_latest_update_session_2026_07_12_post_handover_commit_287d6d6",
       "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HANDOVER.md",
-      "source_location": "L89",
+      "source_location": "L39",
       "weight": 1.0,
-      "source": "handover_handover_phase_7_complete_2026_07_12",
-      "target": "handover_exit_criteria_status_phase_7",
+      "source": "handover_handover_phase_7_mid_implementation_2026_07_12",
+      "target": "handover_latest_update_session_2026_07_12_post_handover_commit_d87196f",
       "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HANDOVER.md",
-      "source_location": "L156",
+      "source_location": "L212",
       "weight": 1.0,
-      "source": "handover_handover_phase_7_complete_2026_07_12",
-      "target": "handover_graphify_update_required",
+      "source": "handover_handover_phase_7_mid_implementation_2026_07_12",
+      "target": "handover_next_session_recommendations_context_limit_reached",
       "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HANDOVER.md",
-      "source_location": "L76",
+      "source_location": "L262",
       "weight": 1.0,
-      "source": "handover_handover_phase_7_complete_2026_07_12",
-      "target": "handover_latest_commits_session_2026_07_12",
+      "source": "handover_handover_phase_7_mid_implementation_2026_07_12",
+      "target": "handover_task_status_summary_updated",
       "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HANDOVER.md",
-      "source_location": "L104",
+      "source_location": "L70",
       "weight": 1.0,
-      "source": "handover_handover_phase_7_complete_2026_07_12",
-      "target": "handover_next_session_recommendations",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "HANDOVER.md",
-      "source_location": "L168",
-      "weight": 1.0,
-      "source": "handover_handover_phase_7_complete_2026_07_12",
-      "target": "handover_summary",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "HANDOVER.md",
-      "source_location": "L141",
-      "weight": 1.0,
-      "source": "handover_handover_phase_7_complete_2026_07_12",
-      "target": "handover_task_status_summary",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "HANDOVER.md",
-      "source_location": "L17",
-      "weight": 1.0,
-      "source": "handover_handover_phase_7_complete_2026_07_12",
-      "target": "handover_what_was_just_completed_phase_7_complete_implementation",
+      "source": "handover_handover_phase_7_mid_implementation_2026_07_12",
+      "target": "handover_what_was_completed_session_2026_07_12",
       "confidence_score": 1.0
     },
     {
@@ -50652,7 +49763,27 @@
       "source_file": "HANDOVER.md",
       "source_location": "L10",
       "weight": 1.0,
-      "source": "handover_current_state_phase_7_complete_ready_for_phase_8_planning",
+      "source": "handover_latest_update_session_2026_07_12_post_handover_commit_287d6d6",
+      "target": "handover_phase_7_validation_stages_implementation_complete_just_committed",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "HANDOVER.md",
+      "source_location": "L41",
+      "weight": 1.0,
+      "source": "handover_latest_update_session_2026_07_12_post_handover_commit_d87196f",
+      "target": "handover_phase_7_3_evidence_capture_system_complete",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "HANDOVER.md",
+      "source_location": "L63",
+      "weight": 1.0,
+      "source": "handover_current_state_phase_6_complete_phase_7_in_progress",
       "target": "handover_completed_phases",
       "confidence_score": 1.0
     },
@@ -50660,110 +49791,80 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HANDOVER.md",
-      "source_location": "L35",
+      "source_location": "L101",
       "weight": 1.0,
-      "source": "handover_what_was_just_completed_phase_7_complete_implementation",
-      "target": "handover_files_created_phase_7",
+      "source": "handover_what_was_completed_session_2026_07_12",
+      "target": "handover_phase_7_1_define_validation_stage_schemas_complete",
       "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HANDOVER.md",
-      "source_location": "L19",
+      "source_location": "L123",
       "weight": 1.0,
-      "source": "handover_what_was_just_completed_phase_7_complete_implementation",
-      "target": "handover_full_implementation_summary",
+      "source": "handover_what_was_completed_session_2026_07_12",
+      "target": "handover_phase_7_1a_fix_schema_naming_conflicts_complete_2026_07_12_commit_5f13525",
       "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HANDOVER.md",
-      "source_location": "L64",
+      "source_location": "L135",
       "weight": 1.0,
-      "source": "handover_files_created_phase_7",
-      "target": "handover_api_routes_apps_web_src_app_api_validation_runs",
+      "source": "handover_what_was_completed_session_2026_07_12",
+      "target": "handover_phase_7_2_implement_validation_stages_complete_8_files_commit_5f13525",
       "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HANDOVER.md",
-      "source_location": "L37",
+      "source_location": "L72",
       "weight": 1.0,
-      "source": "handover_files_created_phase_7",
-      "target": "handover_core_schemas_packages_core_types",
+      "source": "handover_what_was_completed_session_2026_07_12",
+      "target": "handover_phase_7_3_evidence_capture_system_complete_72",
       "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HANDOVER.md",
-      "source_location": "L53",
+      "source_location": "L198",
       "weight": 1.0,
-      "source": "handover_files_created_phase_7",
-      "target": "handover_github_integration_packages_agent_adapter_src_stages_validation",
+      "source": "handover_current_issues_technical_debt",
+      "target": "handover_done_evidence_storage_backend_phase_7_3",
       "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HANDOVER.md",
-      "source_location": "L59",
+      "source_location": "L188",
       "weight": 1.0,
-      "source": "handover_files_created_phase_7",
-      "target": "handover_persistence_schemas_packages_persistence_src_schema",
+      "source": "handover_current_issues_technical_debt",
+      "target": "handover_todo_actual_integration_implementation_for_validation_stages",
       "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HANDOVER.md",
-      "source_location": "L71",
+      "source_location": "L204",
       "weight": 1.0,
-      "source": "handover_files_created_phase_7",
-      "target": "handover_ui_components_apps_web_src_components_validation",
+      "source": "handover_current_issues_technical_debt",
+      "target": "handover_todo_evidence_storage_backend_implementation_details",
       "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HANDOVER.md",
-      "source_location": "L40",
+      "source_location": "L214",
       "weight": 1.0,
-      "source": "handover_files_created_phase_7",
-      "target": "handover_validation_stages_packages_agent_adapter_src_stages_validation",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "HANDOVER.md",
-      "source_location": "L106",
-      "weight": 1.0,
-      "source": "handover_next_session_recommendations",
-      "target": "handover_immediate_priority_complete_phase_7_verification",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "HANDOVER.md",
-      "source_location": "L112",
-      "weight": 1.0,
-      "source": "handover_next_session_recommendations",
-      "target": "handover_next_phases_after_phase_7_verification",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "HANDOVER.md",
-      "source_location": "L130",
-      "weight": 1.0,
-      "source": "handover_next_session_recommendations",
-      "target": "handover_technical_debt_open_questions",
+      "source": "handover_next_session_recommendations_context_limit_reached",
+      "target": "handover_priority_tasks",
       "confidence_score": 1.0
     },
     {
@@ -55448,5 +54549,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "bbcfbceb72f5a10af610b8b903d0a17213dce0c8"
+  "built_at_commit": "7a56f2abfa29494bab7f65b8a1f7739ed6e9e6d1"
 }
