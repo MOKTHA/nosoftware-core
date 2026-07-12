@@ -36,10 +36,11 @@ export type ValidationCheckType = z.infer<typeof ValidationCheckType>;
 /** ------------------------------------------------------------------ */
 
 /**
- * Result of a single validation check.
+ * Result of a single validation check (Phase 7).
+ * Distinct from Phase 4's prompt ValidationResult.
  * Phase 7 Exit Criteria: Failed checks block promotion without override flag + reason.
  */
-export const ValidationResult = z.object({
+export const ValidationRunResult = z.object({
   /** Unique ID for this validation result. */
   id: z.string().uuid(),
 
@@ -71,8 +72,6 @@ export const ValidationResult = z.object({
   completedAt: z.coerce.date(),
 });
 
-export type ValidationResult = z.infer<typeof ValidationResult>;
-
 /** ------------------------------------------------------------------ */
 /*  Validation Run                                                    */
 /** ------------------------------------------------------------------ */
@@ -81,7 +80,7 @@ export type ValidationResult = z.infer<typeof ValidationResult>;
  * Complete validation run for a generated app slice.
  * Contains all validation checks and their results.
  */
-export const ValidationRun = z.object({
+export const ValidationRunRecord = z.object({
   /** Unique ID for this validation run. */
   id: z.string().uuid(),
 
@@ -95,7 +94,7 @@ export const ValidationRun = z.object({
   blueprintPlanVersion: z.string(),
 
   /** All validation checks performed in this run. */
-  results: z.array(ValidationResult),
+  results: z.array(ValidationRunResult),
 
   /** Overall status of the validation run. */
   status: z.enum([
@@ -119,7 +118,7 @@ export const ValidationRun = z.object({
   completedAt: z.coerce.date().optional(),
 });
 
-export type ValidationRun = z.infer<typeof ValidationRun>;
+export type ValidationRunRecord = z.infer<typeof ValidationRunRecord>;
 
 /** ------------------------------------------------------------------ */
 /*  Evidence Capture                                                */
@@ -283,11 +282,13 @@ export const PRMetadata = z.object({
   prDescription: z.string(),
 
   /** All validation results attached as PR comments/links. */
-  validationResultsSummary: z.array(z.object({
-    checkType: ValidationCheckType,
-    status: 'passed' | 'failed',
-    evidenceUrl: z.string().url(),
-  })),
+  validationResultsSummary: z.array(
+    z.object({
+      checkType: ValidationCheckType,
+      status: z.enum(['passed', 'failed']),
+      evidenceUrl: z.string().url(),
+    })
+  ),
 
   /** Whether this PR has all checks passing (ready to merge). */
   readyToMerge: z.boolean().default(false),
@@ -301,17 +302,9 @@ export const PRMetadata = z.object({
 export type PRMetadata = z.infer<typeof PRMetadata>;
 
 /** ------------------------------------------------------------------ */
-/*  Export Type Aliases                                               */
+/*  Type Aliases                                                      */
 /** ------------------------------------------------------------------ */
 
-// Validation check types
-export { ValidationCheckType };
-export type { ValidationCheckType };
-
-// Results and evidence
-export { ValidationResult, ValidationRun, ValidationEvidence };
-export type { ValidationResult, ValidationRun, ValidationEvidence };
-
-// Workflow
-export { ApprovalDecision, RerunRequest, PRMetadata };
-export type { ApprovalDecision, RerunRequest, PRMetadata };
+// Additional type aliases for convenience (renamed to avoid Phase 4 conflict)
+export type ValidationCheckResult = z.infer<typeof ValidationRunResult>;
+export type ValidationRunRecordType = z.infer<typeof ValidationRunRecord>;

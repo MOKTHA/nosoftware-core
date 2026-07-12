@@ -45,7 +45,8 @@
  * Prompt-to-spec engine (Phase 4):
  *   PromptSpec, SpecTemplate, ParsedIntent, PromptContext
  *   AppType, ScreenDefinition, ApiEndpointDefinition
- *   ParseResult, ValidationResult
+ *   ParseResult, ValidationErrors (Phase 4 prompt validation)
+ *   Note: Phase 7 uses ValidationCheckResult and ValidationRunRecord to avoid conflicts
  */
 
 // Control plane — identity and tenancy

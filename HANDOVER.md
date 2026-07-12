@@ -16,26 +16,46 @@
 
 ## What Was Done (current session, before context limit)
 
-### Phase 7.1 - Define validation stage schemas in core-types ✅ PARTIAL
+### Phase 7.1 - Define validation stage schemas in core-types ✅ COMPLETE
 
 **File Created:**
 - `packages/core-types/src/schemas/validation-stage.ts` (~320 lines)
 
-**Schemas Defined:**
-| Schema | Purpose |
-|--------|---------|
-| `ValidationCheckType` | All 8 validation check types (lint, typecheck, tests, migrations, build, routes, api, permissions) |
-| `ValidationResult` | Result of a single validation check with evidence URL and pass/fail status |
-| `ValidationRun` | Complete validation run containing all checks for a generation |
-| `ValidationEvidence` | Immutable evidence artifacts (logs, reports, screenshots) |
-| `ApprovalDecision` | Approver workflow decisions (approve/reject) |
-| `RerunRequest` | Rerun capability with feedback loop |
-| `PRMetadata` | PR creation metadata with validation results attached |
+**Schemas Defined (with resolved naming):**
+| Schema | Purpose | Notes |
+|--------|---------|-------|
+| `ValidationCheckType` | All 8 validation check types (lint, typecheck, tests, migrations, build, routes, api, permissions) | No conflict - unique name |
+| `ValidationRunResult` | Result of a single validation check with evidence URL and pass/fail status | Renamed from ValidationResult to avoid Phase 4 conflict |
+| `ValidationRunRecord` | Complete validation run containing all checks for a generation | Renamed from ValidationRun for clarity |
+| `ValidationEvidence` | Immutable evidence artifacts (logs, reports, screenshots) | No conflict |
+| `ApprovalDecision` | Approver workflow decisions (approve/reject) | No conflict |
+| `RerunRequest` | Rerun capability with feedback loop | No conflict |
+| `PRMetadata` | PR creation metadata with validation results attached | No conflict |
+
+**Type Exports:**
+- Added type aliases: `ValidationCheckResult`, `ValidationRunRecordType` (renamed to avoid naming collision)
 
 **Files Modified:**
-- `packages/core-types/src/index.ts` — Added export for validation-stage schemas
+- `packages/core-types/src/index.ts` — Added export for validation-stage schemas + comment update
 
-**Status**: ⚠️ **NEEDS FIXING** - Schema conflicts due to duplicate exports (`ValidationResult`, `ValidationRun`, etc. conflict with existing names in prompt-spec). Need to rename or resolve ambiguity.
+**Status**: ✅ **RESOLVED** - Schema conflicts resolved by renaming Phase 7 types. All TypeScript checks pass, build successful.
+
+### Phase 7.1a - Fix schema naming conflicts ✅ COMPLETE (2026-07-12)
+
+**Changes Made:**
+| Change | Description |
+|--------|-------------|
+| `ValidationResult` → `ValidationRunResult` | Avoids conflict with Phase 4's prompt ValidationResult |
+| `ValidationRun` → `ValidationRecord` | Clarifies naming, avoids collision |
+| Type aliases added for convenience exports | `ValidationCheckResult`, `ValidationRunRecordType` |
+
+**Verification:**
+- `pnpm typecheck` — PASS (all packages)
+- `pnpm build @heynxt/core-types` — PASS (tsc compiles successfully)
+
+**Files Changed:**
+- `packages/core-types/src/schemas/validation-stage.ts` — Complete rewrite with resolved naming
+- `packages/core-types/src/index.ts` — Comment update for clarity
 
 ---
 
@@ -114,26 +134,35 @@ All 8 validation stages currently have **simulated results**. Phase 7 requires a
 
 ### Priority Tasks:
 
-1. **Fix schema conflicts** in `validation-stage.ts`:
-   - Rename conflicting types or use type aliases
-   - Ensure clean TypeScript compilation
+1. ✅ **Schema conflicts resolved** in `validation-stage.ts` — DONE (2026-07-12)
+   - Renamed `ValidationResult` → `ValidationRunResult` to avoid Phase 4 conflict
+   - Verified with `pnpm typecheck` and `pnpm build`
 
-2. **Run verification**:
-   ```bash
-   pnpm typecheck
-   pnpm build @heynxt/core-types
-   ```
-
-3. **Phase 7.3 - Evidence capture system** (next task in backlog):
+2. **Phase 7.3 - Evidence capture system** (next task in backlog):
+   - Create evidence storage backend (S3 or local filesystem)
+   - Implement immutable evidence attachment logic
+   - API routes for validation results persistence (`apps/web/src/app/api/validation-runs/`)
    - `packages/agent-adapter/src/evidence-capture.ts`
-   - API routes for validation results persistence
-   - Immutable evidence attachment logic
 
-4. **Phase 7.4 - PR creation**:
-   - GitHub API integration for PR creation
-   - Evidence as PR comments/attachments
+3. **Phase 7.4 - PR creation**:
+   - GitHub API integration for automated PR creation
+   - Evidence as PR comments/attachments with check status summaries
+   - Branch naming conventions per task spec
 
-5. **Phase 7.5-7.6** (UI and rerun workflow)
+4. **Phase 7.5 - Approver workflow UI** (`apps/web`):
+   - Validation results dashboard
+   - Approval/rejection buttons with reason capture
+   - Second-approval flow for production promotions
+
+5. **Phase 7.6 - Rerun capability**:
+   - Rerun request form with feedback field
+   - Trigger generation pipeline from failed validation
+   - Fresh evidence on reruns (isFreshEvidence flag enforcement)
+
+6. **Phase 7.7 - Tests and verification**:
+   - Unit tests for all validation stages
+   - Integration tests for full validation → approval flow
+   - E2E test: prompt → generate → validate → approve → deploy
 
 ---
 
@@ -156,29 +185,12 @@ All 8 validation stages currently have **simulated results**. Phase 7 requires a
 
 | Criterion | Status | Notes |
 |-----------|--------|-------|
-| Generated changes have evidence | 🟡 In progress | Schema defined, implementation needed |
-| Failed checks block promotion | 🔴 Not started | ApprovalDecision schema created but not enforced |
-| Reruns possible with feedback | 🔴 Not started | RerunRequest schema created but not implemented |
-| Fresh evidence on reruns | 🔴 Not started | isFreshEvidence field defined but logic needed |
-| PR creation automated | 🔴 Not started | PRMetadata schema created, implementation pending |
-| ≥95% pass rate tracked | 🔴 Not started | Metrics collection not started |
+| Generated changes have evidence | 🟡 In progress | Schema defined, storage implementation needed |
+| Failed checks block promotion | 🔴 Not started | ApprovalDecision schema created but enforcement logic needed |
+| Reruns possible with feedback | 🔴 Not started | RerunRequest schema created but UI/API integration pending |
+| Fresh evidence on reruns | 🔴 Not started | isFreshEvidence field defined but logic in agent-adapter needed |
+| PR creation automated | 🔴 Not started | PRMetadata schema created, GitHub API integration pending |
+| ≥95% pass rate tracked | 🔴 Not started | Metrics collection not started - need aggregation service |
 
----
-
-## Technical Debt / Notes for Continuation
-
-1. **Schema naming conflicts** must be resolved before any further work
-2. All validation stages are currently **scaffolding with simulated results** — actual tool integrations needed
-3. Consider using `@heynxt/core-types` exports consistently (rename to avoid conflicts)
-4. Evidence storage backend not yet chosen (S3, local filesystem, etc.)
-
----
-
-## Commit Summary for This Session
-
-Files ready to commit:
-- All 8 validation stage implementations ✅
-- Validation stages index exports ✅
-- Modified core-types and agent-adapter index files ✅
-
-**Pending:** Schema conflict resolution before committing.
+**Phase 7.1 Complete**: Schema definitions ✅  
+**Next Focus**: Phase 7.3 - Evidence capture system (storage + persistence)
