@@ -31,6 +31,8 @@ export const artifactContentTypeEnum = text('contentType', {
     'video/mp4',
     'application/zip',
     'multipart/form-data',
+    'application/x-typescript',
+    'text/x-diff',
   ],
 });
 

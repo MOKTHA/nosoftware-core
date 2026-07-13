@@ -110,11 +110,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       rollbacks: enrichedRows,
       pagination: {
-        total: parseInt(countResult[0]?.count ?? '0'),
+        total: Number(countResult[0]?.count ?? '0'),
         limit: params.limit as number,
         offset: params.offset as number,
       },
-    }, { status: 200 });
+    });
   } catch (err) {
     if (err instanceof z.ZodError) {
       return errorResponse(badRequest(err.errors[0]?.message ?? 'Invalid request'));
@@ -146,7 +146,7 @@ export async function POST(req: NextRequest) {
 
     // Verify both runs belong to the same workspace (and thus organization)
     if (sourceRun.workspaceId !== targetRun.workspaceId) {
-      throw badRequest('Source and target generation runs must belong to the same workspace');
+      throw new Error('Source and target generation runs must belong to the same workspace');
     }
 
     const now = new Date();

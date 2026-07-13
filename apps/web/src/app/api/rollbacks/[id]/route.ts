@@ -60,7 +60,7 @@ export async function GET(
     }).from(rollbackRequests).where(eq(rollbackRequests.id, rollbackId)).limit(1);
 
     if (!rollback) {
-      return errorResponse(new Error('Rollback request not found'), 404);
+      return errorResponse(new Error('Rollback request not found'));
     }
 
     // Fetch generation run details in parallel (generation_runs doesn't have a 'name' column)

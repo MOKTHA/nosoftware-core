@@ -56,7 +56,8 @@
 
 | Commit | Description | Files Changed |
 |--------|-------------|---------------|
-| `6d688c6` | fix(Phase 8-9): Apply tenant isolation and API route fixes | 6 files, +116/-90 lines (this session) |
+| `70a863a` | fix(Phase 8-9): Apply tenant isolation and API route fixes (this session) | 12 files, +94/-83 lines |
+| `6d688c6` | fix(Phase 8-9): Apply tenant isolation and API route fixes | 6 files, +116/-90 lines (previous commit) |
 | `e7ef8f0` | feat(Phase 8-9): Complete industrial runtime services API routes and governance schemas | 15 files, +2.5k lines (previous commit) |
 | `ca95646` | feat(Phase 8): Apply runtime services API route fixes | artifacts/phase8/route.ts cleanup |
 | `dc7355c` | feat(Phase 8): Add industrial runtime services API routes | rollbacks, secrets APIs created |

@@ -13,7 +13,7 @@ import { createHash } from 'node:crypto';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { db, artifacts as fileEvidenceArtifactsTable } from '@heynxt/persistence';
+import { db, fileEvidenceArtifacts, artifactContentTypeEnum } from '@heynxt/persistence';
 
 import { badRequest, errorResponse, parseJsonBody } from '@/lib/api';
 
@@ -24,15 +24,24 @@ export const revalidate = 0;
 const ArtifactKindEnum = z.enum(['code', 'log', 'diff', 'report', 'evidence', 'attachment']);
 type ArtifactKind = z.infer<typeof ArtifactKindEnum>;
 
+/** Map artifact kind to content type (MIME) */
+function getContentType(kind: ArtifactKind): string {
+  switch (kind) {
+    case 'code': return 'application/x-typescript';
+    case 'log': return 'text/plain';
+    case 'diff': return 'text/x-diff';
+    case 'report': return 'application/json';
+    case 'evidence': return 'application/octet-stream';
+    default: return 'application/octet-stream';
+  }
+}
+
 /** Zod schema for uploading an artifact. */
 const UploadArtifactInput = z.object({
   kind: ArtifactKindEnum,
   name: z.string().min(1).max(256),
   data: z.string(), // Base64 encoded content
   generationRunId: z.string().uuid().optional(),
-  workspaceId: z.string().uuid(), // Required for this table schema
-  projectId: z.string().uuid(), // Required for this table schema
-  taskId: z.string().uuid().optional(), // Optional FK to tasks
   metadata: z.record(z.unknown()).optional(),
 });
 
@@ -63,14 +72,14 @@ export async function POST(req: NextRequest) {
     const contentHash = createHash('sha256').update(decodedData).digest('hex');
 
     // Check for duplicate artifact (same hash = same content)
-    const [existing] = await db.select({ id: fileEvidenceArtifactsTable.id, byteSize: fileEvidenceArtifactsTable.byteSize }).from(fileEvidenceArtifactsTable).where(eq(fileEvidenceArtifactsTable.contentHash, contentHash)).limit(1);
+    const [existing] = await db.select({ id: fileEvidenceArtifacts.id, sizeBytes: fileEvidenceArtifacts.sizeBytes }).from(fileEvidenceArtifacts).where(eq(fileEvidenceArtifacts.contentHash, contentHash)).limit(1);
 
     if (existing) {
       return NextResponse.json({
         artifact: {
           kind: input.kind,
           name: input.name,
-          sizeBytes: existing.byteSize ?? 0,
+          sizeBytes: existing.sizeBytes,
           contentHash,
           generationRunId: input.generationRunId,
           isDuplicate: true,
@@ -82,40 +91,26 @@ export async function POST(req: NextRequest) {
     // Generate unique storage key for content-addressable storage
     const storageLocation = `artifacts/${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}/${contentHash}`;
 
-    // Determine MIME type based on artifact kind and file extension
-    function getMimeType(kind: ArtifactKind): string {
-      switch (kind) {
-        case 'code': return 'application/x-typescript';
-        case 'log': return 'text/plain';
-        case 'diff': return 'text/x-diff';
-        case 'report': return 'application/json';
-        default: return 'application/octet-stream';
-      }
-    }
-
-    const mimeType = getMimeType(input.kind);
-
     // Insert the artifact record with minimal metadata (immutability)
-    const result = await db.insert(fileEvidenceArtifactsTable).values({
-      workspaceId: input.workspaceId,
-      projectId: input.projectId,
-      taskId: input.taskId ?? null,
-      generationRunId: input.generationRunId || '',
-      kind: input.kind,
-      storageKind: 'inline', // Default to inline for now
+    const result = await db.insert(fileEvidenceArtifacts).values({
       name: input.name,
-      mimeType,
-      textContent: input.data, // Store base64 content inline
-      byteSize: decodedData.length,
+      description: null,
+      contentType: getContentType(input.kind) as any,
+      sizeBytes: decodedData.length,
       contentHash,
-      createdBy: 'system', // TODO: Get from auth context
+      storageType: 'local', // Default to local for now
+      storageLocation, // In production, this would be S3/GCS blob path
+      evidenceType: input.kind === 'evidence' ? 'custom' : undefined,
+      relatedGenerationRunId: input.generationRunId || null,
+      metadata: input.metadata ?? {},
       createdAt: now,
     }).returning({
-      id: fileEvidenceArtifactsTable.id,
-      name: fileEvidenceArtifactsTable.name,
-      mimeType: fileEvidenceArtifactsTable.mimeType,
-      byteSize: fileEvidenceArtifactsTable.byteSize,
-      contentHash: fileEvidenceArtifactsTable.contentHash,
+      id: fileEvidenceArtifacts.id,
+      name: fileEvidenceArtifacts.name,
+      contentType: fileEvidenceArtifacts.contentType,
+      sizeBytes: fileEvidenceArtifacts.sizeBytes,
+      contentHash: fileEvidenceArtifacts.contentHash,
+      storageLocation: fileEvidenceArtifacts.storageLocation,
     }).then(r => r[0]);
 
     if (!result) {
@@ -127,10 +122,10 @@ export async function POST(req: NextRequest) {
         id: result.id,
         kind: input.kind,
         name: result.name,
-        mimeType: result.mimeType,
-        sizeBytes: result.byteSize ?? 0,
+        contentType: result.contentType,
+        sizeBytes: result.sizeBytes,
         contentHash: result.contentHash,
-        storageLocation,
+        storageLocation: result.storageLocation,
         generationRunId: input.generationRunId,
       },
     });
@@ -139,23 +134,5 @@ export async function POST(req: NextRequest) {
       return errorResponse(badRequest(err.errors[0]?.message ?? 'Invalid request'));
     }
     return errorResponse(err);
-  }
-}
-
-/** Helper to determine content type based on artifact kind. */
-function getContentType(kind: ArtifactKind): string {
-  switch (kind) {
-    case 'code':
-      return 'application/x-typescript';
-    case 'log':
-      return 'text/plain';
-    case 'diff':
-      return 'text/x-diff';
-    case 'report':
-      return 'application/json';
-    case 'evidence':
-      return 'application/octet-stream';
-    default:
-      return 'application/octet-stream';
   }
 }
