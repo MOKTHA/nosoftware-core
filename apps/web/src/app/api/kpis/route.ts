@@ -3,10 +3,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, and, sql, desc } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { db, kpiSnapshots as ksTable } from '@heynxt/persistence';
+import { db, kpiSnapshots as ksTable, kpiDefinitions as kdTable } from '@heynxt/persistence';
 
 import { badRequest, errorResponse } from '@/lib/api';
 
@@ -14,7 +14,8 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 const KPIsQueryParams = z.object({
-  definitionId: z.string().uuid().optional(),
+  kpiType: z.enum(['oee', 'throughput', 'quality', 'downtime']).optional(),
+  lineId: z.string().optional(),
   from: z.string().datetime().optional(),
   to: z.string().datetime().optional(),
 });
@@ -22,20 +23,28 @@ const KPIsQueryParams = z.object({
 export async function GET(req: NextRequest) {
   try {
     const params = KPIsQueryParams.parse({
-      definitionId: req.nextUrl.searchParams.get('definitionId') ?? undefined,
+      kpiType: req.nextUrl.searchParams.get('kpiType') ?? undefined,
+      lineId: req.nextUrl.searchParams.get('lineId') ?? undefined,
       from: req.nextUrl.searchParams.get('from') ?? undefined,
       to: req.nextUrl.searchParams.get('to') ?? undefined,
     });
 
     const conditions: any[] = [];
-    if (params.definitionId) {
-      conditions.push(eq(ksTable.definitionId, params.definitionId));
+
+    if (params.kpiType) {
+      conditions.push(eq(ksTable.kpiType, params.kpiType));
     }
+
+    if (params.lineId) {
+      conditions.push(eq(ksTable.lineId, params.lineId));
+    }
+
     if (params.from) {
-      conditions.push(sql`${ksTable.timestamp} >= ${new Date(params.from).toISOString()}`);
+      conditions.push(sql`${ksTable.periodStart} >= ${new Date(params.from).toISOString()}`);
     }
+
     if (params.to) {
-      conditions.push(sql`${ksTable.timestamp} <= ${new Date(params.to).toISOString()}`);
+      conditions.push(sql`${ksTable.periodEnd} <= ${new Date(params.to).toISOString()}`);
     }
 
     const where = conditions.length > 0 ? and(...conditions) : undefined;
@@ -43,10 +52,20 @@ export async function GET(req: NextRequest) {
     const offset = parseInt(req.nextUrl.searchParams.get('offset') ?? '0');
 
     const rows = await db.select({
-      id: ksTable.id, definitionId: ksTable.definitionId, timestamp: ksTable.timestamp, value: ksTable.value, metadata: ksTable.metadata, createdAt: ksTable.createdAt,
-    }).from(ksTable).where(where).orderBy(desc(ksTable.timestamp)).limit(limit).offset(offset);
+      id: ksTable.id,
+      kpiType: ksTable.kpiType,
+      lineId: ksTable.lineId,
+      periodStart: ksTable.periodStart,
+      periodEnd: ksTable.periodEnd,
+      availability: ksTable.availability,
+      performance: ksTable.performance,
+      quality: ksTable.quality,
+      oeeScore: ksTable.oeeScore,
+      metrics: ksTable.metrics,
+      createdAt: ksTable.createdAt,
+    }).from(ksTable).where(where).orderBy(desc(ksTable.periodStart)).limit(limit).offset(offset);
 
-    const countResult = await db.select({ count: sql`count(*) }).from(ksTable).where(where);
+    const countResult = await db.select({ count: sql`count(*) as count` }).from(ksTable).where(where);
 
     return NextResponse.json({ kpis: rows, pagination: { total: parseInt(countResult[0]?.count ?? '0'), limit, offset } }, { status: 200 });
   } catch (err) {
@@ -56,5 +75,3 @@ export async function GET(req: NextRequest) {
     return errorResponse(err);
   }
 }
-
-import { desc } from 'drizzle-orm';

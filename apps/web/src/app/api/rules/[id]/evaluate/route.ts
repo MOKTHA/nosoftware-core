@@ -11,7 +11,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { db, ruleDefinitions as rdTable } from '@heynxt/persistence';
+import { db, rules as rdTable } from '@heynxt/persistence';
 
 import { badRequest, errorResponse, parseJsonBody } from '@/lib/api';
 
@@ -20,10 +20,22 @@ export const revalidate = 0;
 
 /** Zod schema for rule evaluation. */
 const EvaluateRuleInput = z.object({
-  contextData: z.record(z.unknown()).min(1, 'Context data is required'),
+  contextData: z.record(z.unknown()),
 });
 
 type EvaluateRuleInput = z.infer<typeof EvaluateRuleInput>;
+
+/** Helper to safely parse JSON fields from database. */
+function parseJsonField(field: unknown): any {
+  if (typeof field === 'string') {
+    try {
+      return JSON.parse(field);
+    } catch {
+      return null;
+    }
+  }
+  return field ?? null;
+}
 
 // ---------------------------------------------------------------------------
 // POST /api/rules/[id]/evaluate
@@ -50,31 +62,31 @@ export async function POST(
         id: rdTable.id,
         name: rdTable.name,
         domain: rdTable.domain,
-        condition: rdTable.condition,
+        status: rdTable.status,
+        conditions: rdTable.conditions,
         actions: rdTable.actions,
-        priority: rdTable.priority,
-        isActive: rdTable.isActive,
       })
       .from(rdTable)
       .where(eq(rdTable.id, ruleId))
       .limit(1);
 
     if (!rule) {
-      return errorResponse(new Error('Rule not found'), 404);
+      return errorResponse(new Error('Rule not found'));
     }
 
     // Check if rule is active (deactivated rules cannot be evaluated)
-    if (!rule.isActive) {
+    const status = parseJsonField(rule.status) as 'draft' | 'active' | 'disabled';
+    if (status !== 'active') {
       return NextResponse.json({
         evaluated: false,
-        reason: 'Rule is deactivated',
+        reason: `Rule is ${status}`,
         rule: { id: rule.id, name: rule.name },
       });
     }
 
     // Parse JSON fields
-    const condition = JSON.parse(rule.condition);
-    const actions = JSON.parse(rule.actions);
+    const conditions = parseJsonField(rule.conditions);
+    const actions = parseJsonField(rule.actions);
 
     // Simple evaluation logic - in production this would use a proper rules engine
     // For now, we implement basic comparison operators
@@ -82,29 +94,9 @@ export async function POST(
     let errorMessage: string | undefined;
 
     try {
-      evaluated = evaluateCondition(condition, input.contextData);
+      evaluated = evaluateCondition(conditions as Record<string, unknown>, input.contextData as Record<string, unknown>);
     } catch (evalErr) {
       errorMessage = evalErr instanceof Error ? evalErr.message : 'Evaluation error';
-    }
-
-    // Record evaluation result in audit log (best-effort)
-    const db = await import('@heynxt/persistence').then(m => m.db);
-    if (db && evaluated) {
-      try {
-        const ruleViolationsTable = await import('@heynxt/persistence')
-          .then(m => m.ruleViolations);
-        if (ruleViolationsTable) {
-          // Note: This requires the violations table to exist from Phase 8 migration
-          await db.insert(ruleViolationsTable).values({
-            ruleId,
-            evaluatedAt: new Date(),
-            contextSnapshot: JSON.stringify(input.contextData),
-            result: 'triggered',
-          });
-        }
-      } catch (logErr) {
-        console.warn('Failed to record rule evaluation:', logErr);
-      }
     }
 
     return NextResponse.json({
@@ -115,7 +107,6 @@ export async function POST(
         id: rule.id,
         name: rule.name,
         domain: rule.domain,
-        priority: rule.priority,
       },
       contextData: input.contextData,
     });
@@ -142,7 +133,7 @@ function evaluateCondition(condition: Record<string, unknown>, contextData: Reco
 
   // Handle logical operators
   if (cond.AND && Array.isArray(cond.AND)) {
-    return cond.ARED.every((c: any) => evaluateCondition(c, contextData));
+    return cond.AND.every((c: any) => evaluateCondition(c, contextData));
   }
 
   if (cond.OR && Array.isArray(cond.OR)) {

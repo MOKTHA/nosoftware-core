@@ -15,17 +15,19 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 const RuntimeEventSchema = z.object({
+  eventId: z.string().min(1),
+  source: z.enum(['plc', 'barcode_scanner', 'manual_entry', 'external_api', 'sensor', 'system']).optional(),
+  priority: z.enum(['low', 'normal', 'high', 'critical']).default('normal'),
   eventType: z.string().min(1),
-  payload: z.record(z.unknown()),
+  data: z.record(z.unknown()),
   timestamp: z.date().optional(),
-  sourceId: z.string().optional(),
 });
 
 const BulkEventsInput = z.object({ events: z.array(RuntimeEventSchema).max(1000) });
 
 const EventsQueryParams = z.object({
   eventType: z.string().optional(),
-  sourceId: z.string().optional(),
+  source: z.enum(['plc', 'barcode_scanner', 'manual_entry', 'external_api', 'sensor', 'system']).optional(),
   from: z.string().datetime().optional(),
   to: z.string().datetime().optional(),
 });
@@ -35,7 +37,7 @@ export async function GET(req: NextRequest) {
     await requireAuth();
     const params = EventsQueryParams.parse({
       eventType: req.nextUrl.searchParams.get('eventType') ?? undefined,
-      sourceId: req.nextUrl.searchParams.get('sourceId') ?? undefined,
+      source: (req.nextUrl.searchParams.get('source') as 'plc' | 'barcode_scanner' | 'manual_entry' | 'external_api' | 'sensor' | 'system') ?? undefined,
       from: req.nextUrl.searchParams.get('from') ?? undefined,
       to: req.nextUrl.searchParams.get('to') ?? undefined,
     });
@@ -44,8 +46,8 @@ export async function GET(req: NextRequest) {
     if (params.eventType) {
       conditions.push(eq(reTable.eventType, params.eventType));
     }
-    if (params.sourceId) {
-      conditions.push(eq(reTable.sourceId, params.sourceId));
+    if (params.source) {
+      conditions.push(eq(reTable.source, params.source));
     }
     if (params.from) {
       conditions.push(sql`${reTable.timestamp} >= ${new Date(params.from).toISOString()}`);
@@ -59,10 +61,17 @@ export async function GET(req: NextRequest) {
     const offset = parseInt(req.nextUrl.searchParams.get('offset') ?? '0');
 
     const rows = await db.select({
-      id: reTable.id, eventType: reTable.eventType, payload: reTable.payload, timestamp: reTable.timestamp, sourceId: reTable.sourceId, processedAt: reTable.processedAt,
+      id: reTable.id,
+      eventId: reTable.eventId,
+      source: reTable.source,
+      priority: reTable.priority,
+      eventType: reTable.eventType,
+      timestamp: reTable.timestamp,
+      receivedAt: reTable.receivedAt,
+      data: reTable.data,
     }).from(reTable).where(where).orderBy(desc(reTable.timestamp)).limit(limit).offset(offset);
 
-    const countResult = await db.select({ count: sql`count(*) as count } }).from(reTable).where(where);
+    const countResult = await db.select({ count: sql`count(*) as count` }).from(reTable).where(where);
 
     return NextResponse.json({ events: rows, pagination: { total: parseInt(countResult[0]?.count ?? '0'), limit, offset } }, { status: 200 });
   } catch (err) {
@@ -90,7 +99,12 @@ export async function POST(req: NextRequest) {
         try {
           const validatedEvent = RuntimeEventSchema.parse(eventInput);
           const [inserted] = await tx.insert(reTable).values({
-            eventType: validatedEvent.eventType, payload: validatedEvent.payload, timestamp: validatedEvent.timestamp ?? now.toISOString(), sourceId: validatedEvent.sourceId, processedAt: now,
+            eventId: validatedEvent.eventId,
+            source: validatedEvent.source ?? 'system',
+            priority: validatedEvent.priority,
+            eventType: validatedEvent.eventType,
+            data: validatedEvent.data,
+            timestamp: validatedEvent.timestamp ?? now.toISOString(),
           }).returning();
 
           if (inserted) {

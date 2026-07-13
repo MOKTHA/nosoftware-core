@@ -10,7 +10,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'node:crypto';
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, and, desc } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { db, workflowDefinitions, workflowInstances as wiTable } from '@heynxt/persistence';
@@ -62,7 +62,7 @@ export async function GET(
       .limit(1);
 
     if (!definition) {
-      return errorResponse(new Error('Workflow definition not found'), 404);
+      return errorResponse(new Error('Workflow definition not found'));
     }
 
     const conditions: any[] = [eq(wiTable.definitionId, definitionId)];
@@ -85,7 +85,8 @@ export async function GET(
         completedAt: wiTable.completedAt,
       })
       .from(wiTable)
-      .where(where);
+      .where(where)
+      .orderBy(desc(wiTable.createdAt));
 
     return NextResponse.json({ instances: rows }, { status: 200 });
   } catch (err) {
@@ -117,13 +118,13 @@ export async function POST(
 
     // Verify the workflow definition exists and is not deprecated
     const [definition] = await db
-      .select({ id: workflowDefinitions.id, status: workflowDefinitions.status })
+      .select({ id: workflowDefinitions.id, status: workflowDefinitions.status, version: workflowDefinitions.version })
       .from(workflowDefinitions)
       .where(eq(workflowDefinitions.id, definitionId))
       .limit(1);
 
     if (!definition) {
-      return errorResponse(new Error('Workflow definition not found'), 404);
+      return errorResponse(new Error('Workflow definition not found'));
     }
 
     if (definition.status === 'deprecated') {
@@ -138,6 +139,7 @@ export async function POST(
       .values({
         id: instanceId,
         definitionId,
+        definitionVersion: definition.version, // Required field - snapshot version at start
         status: 'pending',
         currentState: input.initialState || '',
         contextData: input.contextData ?? {},
@@ -161,6 +163,3 @@ export async function POST(
     return errorResponse(err);
   }
 }
-
-// Helper function - should be imported from drizzle-orm
-import { desc } from 'drizzle-orm';

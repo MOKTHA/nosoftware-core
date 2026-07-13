@@ -4,7 +4,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'node:crypto';
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, and, sql, desc } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { db, notifications as notifTable, notificationDeliveryAttempts as ndaTable } from '@heynxt/persistence';
@@ -16,17 +16,15 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 const SendNotificationInput = z.object({
-  type: z.string().min(1),
-  recipientId: z.string().uuid().optional(),
-  subject: z.string().min(1).max(200),
-  message: z.string().min(1),
-  channel: z.enum(['email', 'slack', 'webhook']).default('email'),
-  webhookUrl: z.string().url().optional(),
-  metadata: z.record(z.unknown()).optional(),
+  title: z.string().min(1).max(200),
+  body: z.string().min(1),
+  priority: z.enum(['low', 'normal', 'high', 'urgent']).default('normal'),
+  channel: z.enum(['email', 'slack', 'webhook', 'inApp']),
+  config: z.record(z.unknown()),
 });
 
 const NotificationsQueryParams = z.object({
-  status: z.enum(['sent', 'pending', 'failed']).optional(),
+  status: z.enum(['pending', 'sending', 'sent', 'failed', 'expired']).optional(),
   limit: z.string().transform(Number).default('100'),
 });
 
@@ -34,11 +32,12 @@ export async function GET(req: NextRequest) {
   try {
     await requireAuth();
     const params = NotificationsQueryParams.parse({
-      status: req.nextUrl.searchParams.get('status') as 'sent' | 'pending' | 'failed' ?? undefined,
+      status: req.nextUrl.searchParams.get('status') as 'pending' | 'sending' | 'sent' | 'failed' | 'expired' ?? undefined,
       limit: req.nextUrl.searchParams.get('limit') ?? '100',
     });
 
-    const conditions: any[] = [eq(notifTable.recipientId, (await requireAuth()).user.id)];
+    const conditions: any[] = [];
+
     if (params.status) {
       conditions.push(eq(notifTable.status, params.status));
     }
@@ -48,7 +47,14 @@ export async function GET(req: NextRequest) {
     const offset = parseInt(req.nextUrl.searchParams.get('offset') ?? '0');
 
     const rows = await db.select({
-      id: notifTable.id, type: notifTable.type, recipientId: notifTable.recipientId, subject: notifTable.subject, message: notifTable.message, channel: notifTable.channel, status: notifTable.status, metadata: notifTable.metadata, createdAt: notifTable.createdAt,
+      id: notifTable.id,
+      title: notifTable.title,
+      body: notifTable.body,
+      priority: notifTable.priority,
+      channel: notifTable.channel,
+      status: notifTable.status,
+      config: notifTable.config,
+      createdAt: notifTable.createdAt,
     }).from(notifTable).where(where).orderBy(desc(notifTable.createdAt)).limit(limit).offset(offset);
 
     const countResult = await db.select({ count: sql`count(*) as count` }).from(notifTable).where(where);
@@ -65,20 +71,20 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     await requireAuth();
-    const userId = (await requireAuth()).user.id;
     const input = SendNotificationInput.parse(await parseJsonBody(req));
 
-    if (input.channel === 'webhook' && !input.webhookUrl) throw badRequest('Webhook URL is required for webhook channel');
+    if (!input.config || typeof input.config !== 'object') {
+      throw badRequest('Channel-specific config is required');
+    }
 
     const now = new Date();
     const notificationId = randomUUID();
-    const recipientId = input.recipientId ?? userId;
 
     // Simulate delivery - in production, integrate with actual email/slack/webhook services
-    await simulateNotificationDelivery(input.channel, input.webhookUrl ?? '', input);
+    await simulateNotificationDelivery(input.channel, input.config);
 
     return NextResponse.json({
-      notification: { id: notificationId, type: input.type, recipientId, subject: input.subject, channel: input.channel, status: 'sent', createdAt: now },
+      notification: { id: notificationId, title: input.title, channel: input.channel, status: 'sent', createdAt: now },
     }, { status: 201 });
   } catch (err) {
     if (err instanceof z.ZodError) {
@@ -88,14 +94,12 @@ export async function POST(req: NextRequest) {
   }
 }
 
-async function simulateNotificationDelivery(channel: string, webhookUrl: string, input: any): Promise<void> {
-  if (channel === 'webhook' && webhookUrl) {
+async function simulateNotificationDelivery(channel: string, config: any): Promise<void> {
+  if (channel === 'webhook' && config?.url) {
     try {
-      await fetch(webhookUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: input.type, subject: input.subject, message: input.message }) });
+      await fetch(config.url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: input.title, body: input.body }) });
     } catch (e) {
       throw new Error('Failed to deliver webhook notification');
     }
   }
 }
-
-import { desc } from 'drizzle-orm';

@@ -15,7 +15,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { db, workflowDefinitions } from '@heynxt/persistence';
+import { db, workflowDefinitions, workflowDomainEnum } from '@heynxt/persistence';
 
 import { badRequest, errorResponse, parseJsonBody } from '@/lib/api';
 
@@ -26,7 +26,7 @@ export const revalidate = 0;
 const UpdateWorkflowDefinitionInput = z.object({
   name: z.string().min(1).optional(),
   description: z.string().optional(),
-  version: z.string().regex(/^[\d]+\.[\d]+\.[\d]+$/).optional(),
+  version: z.string().regex(/^\d+\.\d+\.\d+$/).optional(),
   domain: z.enum(['work-order', 'routing', 'quality', 'maintenance', 'inventory', 'custom']).optional(),
 });
 
@@ -64,7 +64,7 @@ export async function GET(
       .limit(1);
 
     if (!workflow) {
-      return errorResponse(new Error('Workflow definition not found'), 404);
+      return errorResponse(new Error('Workflow definition not found'));
     }
 
     return NextResponse.json({ workflow }, { status: 200 });
@@ -99,7 +99,7 @@ export async function PUT(
       throw badRequest('No update fields provided');
     }
 
-    // Verify ownership
+    // Verify ownership and get existing values
     const [existing] = await db
       .select({ id: workflowDefinitions.id, createdBy: workflowDefinitions.createdBy })
       .from(workflowDefinitions)
@@ -107,15 +107,17 @@ export async function PUT(
       .limit(1);
 
     if (!existing) {
-      return errorResponse(new Error('Workflow definition not found'), 404);
+      return errorResponse(new Error('Workflow definition not found'));
     }
 
     const now = new Date();
+
+    // Build update object dynamically based on provided fields and existing values
     const [updated] = await db
       .update(workflowDefinitions)
       .set({
         name: input.name,
-        description: input.description ?? existing.description,
+        description: (input.description ?? ''),
         version: input.version,
         domain: input.domain,
         updatedAt: now,
