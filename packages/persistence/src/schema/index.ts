@@ -188,3 +188,73 @@ export {
   type KpiCalculationJob,
   type InsertKpiCalculationJob,
 } from './kpi-aggregation.js';
+
+// ============================================================================
+// Phase 9 — Governance and Hardening (NEW)
+// ============================================================================
+
+// Tenant isolation and access control
+export {
+  tenantIsolationRules,
+  accessControlLogs,
+  isolationScopeEnum,
+  isolationRuleTypeEnum,
+  type TenantIsolationRule,
+  type InsertTenantIsolationRule,
+  type AccessControlLog,
+  type InsertAccessControlLog,
+} from './tenant-isolation.js';
+
+// Secrets management (encrypted credential storage)
+export {
+  secrets,
+  secretRotationHistory,
+  secretAccessLogs,
+  secretScopeEnum,
+  secretTypeEnum,
+  rotationPolicyEnum,
+  type Secret,
+  type InsertSecret,
+  type SecretRotationHistory,
+  type InsertSecretRotationHistory,
+  type SecretAccessLog,
+  type InsertSecretAccessLog,
+} from './secrets.js';
+
+// Quotas and usage tracking
+export {
+  tenantQuotas,
+  usageCounters,
+  quotaViolations,
+  usageHistorySnapshots,
+  quotaTypeEnum,
+  quotaStatusEnum,
+  usageStatusEnum,
+  type TenantQuota,
+  type InsertTenantQuota,
+  type UsageCounter,
+  type InsertUsageCounter,
+  type QuotaViolation,
+  type InsertQuotaViolation,
+  type UsageHistorySnapshot,
+  type InsertUsageHistorySnapshot,
+} from './quotas.js';
+
+// Rollback and snapshot management
+export {
+  snapshots,
+  rollbackRequests,
+  rollbackArtifactMappings,
+  snapshotMetadataStorage,
+  snapshotTypeEnum,
+  rollbackStatusEnum,
+  snapshotStatusEnum,
+  type Snapshot,
+  type InsertSnapshot,
+  type RollbackRequest,
+  type InsertRollbackRequest,
+  type RollbackArtifactMapping,
+  type InsertRollbackArtifactMapping,
+  type SnapshotMetadataStorage,
+  type InsertSnapshotMetadataStorage,
+} from './rollbacks.js';
