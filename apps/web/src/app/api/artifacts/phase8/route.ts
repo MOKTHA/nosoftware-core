@@ -81,7 +81,6 @@ export async function POST(req: NextRequest) {
 
     // Insert the artifact record with minimal metadata (immutability)
     const [created] = await db.insert(fileEvidenceArtifactsTable).values({
-      id: crypto.randomUUID(),
       name: input.name,
       description: null,
       contentType: getContentType(input.kind),
@@ -91,21 +90,30 @@ export async function POST(req: NextRequest) {
       storageLocation, // In production, this would be S3/GCS blob path
       evidenceType: input.kind === 'evidence' ? 'custom' : undefined,
       relatedGenerationRunId: input.generationRunId || null,
-    }).returning();
+    }).returning({
+      id: fileEvidenceArtifactsTable.id,
+      name: fileEvidenceArtifactsTable.name,
+      contentType: fileEvidenceArtifactsTable.contentType,
+      sizeBytes: fileEvidenceArtifactsTable.sizeBytes,
+      contentHash: fileEvidenceArtifactsTable.contentHash,
+      storageLocation: fileEvidenceArtifactsTable.storageLocation,
+    });
 
-    if (!created) {
+    if (!created || created.length === 0) {
       throw new Error('INSERT returned zero rows');
     }
 
+    const result = created[0];
+
     return NextResponse.json({
       artifact: {
-        id: created.id,
+        id: result.id,
         kind: input.kind,
-        name: created.name,
-        contentType: created.contentType,
-        sizeBytes: created.sizeBytes,
-        contentHash: created.contentHash,
-        storageLocation: created.storageLocation,
+        name: result.name,
+        contentType: result.contentType,
+        sizeBytes: result.sizeBytes,
+        contentHash: result.contentHash,
+        storageLocation: result.storageLocation,
         generationRunId: input.generationRunId,
       },
     });

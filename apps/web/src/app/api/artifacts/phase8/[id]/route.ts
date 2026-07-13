@@ -38,13 +38,12 @@ export async function POST(
       return errorResponse(badRequest('Invalid artifact ID format'));
     }
 
-    // Fetch the existing artifact
+    // Fetch the existing artifact using Drizzle ORM
     const [artifact] = await db.select({
       id: fileEvidenceArtifactsTable.id,
       contentHash: fileEvidenceArtifactsTable.contentHash,
       sizeBytes: fileEvidenceArtifactsTable.sizeBytes,
       storageLocation: fileEvidenceArtifactsTable.storageLocation,
-      createdAt: fileEvidenceArtifactsTable.createdAt,
     }).from(fileEvidenceArtifactsTable).where(eq(fileEvidenceArtifactsTable.id, artifactId)).limit(1);
 
     if (!artifact) {

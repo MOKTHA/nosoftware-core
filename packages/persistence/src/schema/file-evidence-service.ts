@@ -64,7 +64,7 @@ export const artifacts = pgTable(
   'artifacts',
   {
     /** UUID string (server-generated if not provided). */
-    id: text('id').primaryKey(),
+    id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
 
     /** Artifact name. */
     name: text('name').notNull(),

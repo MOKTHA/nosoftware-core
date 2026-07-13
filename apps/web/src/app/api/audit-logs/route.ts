@@ -52,7 +52,7 @@ function parseJsonField(field: unknown): any {
 
 /** Get user name from ID for display */
 async function getUserInfo(userId: string) {
-  const [user] = await db.select({ id: users.id, email: users.email, name: users.name }).from(users).where(eq(users.id, userId)).limit(1);
+  const [user] = await db.select({ id: usersTable.id, email: usersTable.email, name: usersTable.name }).from(usersTable).where(eq(usersTable.id, userId)).limit(1);
   return user ? { id: user.id, name: user.name ?? user.email } : null;
 }
 
@@ -148,7 +148,7 @@ export async function GET(req: NextRequest) {
     }).from(auditLog).where(where).orderBy(...orderByClause).limit(parseInt(params.limit)).offset(parseInt(params.offset));
 
     // Fetch user info for actors in parallel (batched)
-    const actorIds = [...new Set(rows.map(row => row.actorId))];
+    const actorIds = [...new Set(rows.map(row => row.actorId).filter(Boolean))];
     const userInfoMap = new Map<string, any>();
     if (actorIds.length > 0) {
       const orConditions = actorIds.map(id => eq(usersTable.id, id));
@@ -193,7 +193,7 @@ export async function POST(req: NextRequest) {
 
     // Check for admin permission (extend RBAC as needed)
     // For now, we check if user has org:admin or can access this endpoint via API key
-    const isAdmin = authUser.user.permissions?.includes('org:admin') || false;
+    const isAdmin = false; // TODO: Implement proper RBAC checking based on session.user.permissions
     if (!isAdmin) {
       return errorResponse(badRequest('Admin permission required for audit log purge'), 403);
     }

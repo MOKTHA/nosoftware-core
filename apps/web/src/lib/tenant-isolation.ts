@@ -8,7 +8,7 @@ import { eq, and, sql } from 'drizzle-orm';
 import { NextRequest } from 'next/server';
 
 import { db, workspaces, organizations } from '@heynxt/persistence';
-import { requireAuth } from './api';
+import { requireAuth } from '@/lib/session';
 
 /**
  * Check if a workspace belongs to the authenticated user's organization.

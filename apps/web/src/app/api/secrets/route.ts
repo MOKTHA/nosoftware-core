@@ -10,11 +10,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { eq, and, gte, sql } from 'drizzle-orm';
+import { eq, and, or, gte, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { db, secrets, secretTypeEnum, rotationPolicyEnum, secretScopeEnum, type Secret as SecretDbRecord } from '@heynxt/persistence';
-import { users } from '@heynxt/persistence/src/schema/users.js';
+import { db, secrets, secretTypeEnum, rotationPolicyEnum, secretScopeEnum, users } from '@heynxt/persistence';
 
 import { badRequest, errorResponse, parseJsonBody } from '@/lib/api';
 import { requireAuth } from '@/lib/session';
@@ -25,12 +24,12 @@ export const revalidate = 0;
 /** Zod schema for creating a secret */
 const CreateSecretInput = z.object({
   name: z.string().min(1).max(256),
-  type: secretTypeEnum.optional(),
-  scope: secretScopeEnum.default('workspace'),
+  type: z.enum(['api-key', 'database-credential', 'webhook-secret', 'oauth-credential', 'encryption-key', 'custom']).optional(),
+  scope: z.enum(['workspace', 'organization']).default('workspace'),
   workspaceId: z.string().uuid().optional(),
   encryptedValue: z.string().min(1), // Base64 encoded, already encrypted client-side or by KMS
   encryptionMetadata: z.record(z.unknown()).optional(),
-  rotationPolicy: rotationPolicyEnum.optional(),
+  rotationPolicy: z.enum(['never', '30-days', '60-days', '90-days', '180-days', 'custom']).optional(),
   notes: z.string().max(2000).optional(),
 });
 
@@ -39,8 +38,8 @@ type CreateSecretInput = z.infer<typeof CreateSecretInput>;
 /** Zod schema for updating a secret */
 const UpdateSecretInput = z.object({
   name: z.string().min(1).max(256).optional(),
-  type: secretTypeEnum.optional(),
-  rotationPolicy: rotationPolicyEnum.optional(),
+  type: z.enum(['api-key', 'database-credential', 'webhook-secret', 'oauth-credential', 'encryption-key', 'custom']).optional(),
+  rotationPolicy: z.enum(['never', '30-days', '60-days', '90-days', '180-days', 'custom']).optional(),
   notes: z.string().max(2000).optional(),
   encryptedValue: z.string().min(1).optional(), // For rotation
 });
@@ -49,8 +48,8 @@ type UpdateSecretInput = z.infer<typeof UpdateSecretInput>;
 
 /** Query parameters for listing secrets */
 const SecretsQueryParams = z.object({
-  type: secretTypeEnum.optional(),
-  scope: secretScopeEnum.optional(),
+  type: z.enum(['api-key', 'database-credential', 'webhook-secret', 'oauth-credential', 'encryption-key', 'custom']).optional(),
+  scope: z.enum(['workspace', 'organization']).optional(),
   workspaceId: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
   limit: z.string().transform(Number).default('50'),
@@ -89,26 +88,22 @@ export async function GET(req: NextRequest) {
     const conditions: any[] = [];
 
     if (params.type) {
-      conditions.push(eq(secrets.type, params.type));
+      conditions.push(sql`${secrets.type} = ${params.type}`);
     }
 
     if (params.scope) {
-      conditions.push(eq(secrets.scope, params.scope));
+      conditions.push(sql`${secrets.scope} = ${params.scope}`);
     }
 
     if (params.workspaceId) {
       // For workspace-scoped secrets, we need to include org-wide ones too for convenience
-      conditions.push(or(
-        eq(secrets.workspaceId, params.workspaceId),
-        and(
-          eq(secrets.workspaceId, null),
-          sql`${secrets.scope} = 'organization'`
-        )
-      ));
+      conditions.push(
+        sql`(${secrets.workspaceId} = ${params.workspaceId} OR (${secrets.workspaceId} IS NULL AND ${secrets.scope} = 'organization'))`
+      );
     }
 
     if (params.isActive !== undefined) {
-      conditions.push(eq(secrets.isActive, params.isActive));
+      conditions.push(sql`${secrets.isActive} = ${params.isActive}`);
     }
 
     const where = conditions.length > 0 ? and(...conditions) : undefined;
@@ -133,10 +128,11 @@ export async function GET(req: NextRequest) {
       .offset(parseInt(params.offset));
 
     // Fetch user info for creators in parallel (batched)
-    const creatorIds = [...new Set(rows.map(row => row.createdBy))];
+    const creatorIds = [...new Set(rows.map(row => row.createdBy).filter(Boolean))];
     const userInfoMap = new Map<string, any>();
     if (creatorIds.length > 0) {
-      const usersResult = await db.select({ id: users.id, email: users.email, name: users.name }).from(users).where(sql`${sql.raw('id')} IN (${creatorIds.map(id => `'${id}'`).join(', ')})`);
+      const orConditions = creatorIds.map(id => eq(users.id, id));
+      const usersResult = await db.select({ id: users.id, email: users.email, name: users.name }).from(users).where(or(...orConditions));
       for (const user of usersResult) {
         userInfoMap.set(user.id, { id: user.id, name: user.name ?? user.email });
       }
@@ -202,12 +198,12 @@ export async function POST(req: NextRequest) {
 
     const [created] = await db.insert(secrets).values({
       name: input.name,
-      type: input.type ?? 'custom',
-      scope: input.scope,
+      type: (input.type as any) ?? 'custom',
+      scope: (input.scope as any) ?? 'workspace',
       workspaceId: input.workspaceId || null,
       encryptedValue: input.encryptedValue,
       encryptionMetadata: JSON.stringify(input.encryptionMetadata ?? {}),
-      rotationPolicy: input.rotationPolicy ?? '90-days',
+      rotationPolicy: (input.rotationPolicy as any) ?? '90-days',
       nextRotationDue,
       isActive: true,
       createdBy: userId,
