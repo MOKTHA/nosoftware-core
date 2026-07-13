@@ -5,6 +5,72 @@
 
 ---
 
+## Code Readiness Gap Analysis (2026-07-13)
+
+> Comprehensive gap analysis performed against the full repo structure across all layers.
+
+### Readiness Scorecard
+
+| Dimension | Score | Notes |
+|---|---|---|
+| Architecture & Design | 9/10 | Clean monorepo, DDD patterns, excellent docs |
+| Backend API Coverage | 6/10 | Routes exist, ~40% have incomplete implementations |
+| Worker/Async Infrastructure | 7/10 | Queue system solid; Redis prod config pending |
+| Persistence / DB | 5/10 | Schemas done; no migrations, no seed scripts |
+| Frontend / UI | 3/10 | Auth + layout present; domain UI screens missing |
+| Testing | 1/10 | Zero tests across entire repo |
+| Security | 5/10 | Tenant isolation pattern good; KMS not wired |
+| DevOps / CI-CD | 4/10 | CI exists; no CD, no linting gates, no test gates |
+| **Overall** | **5/10** | **Solid foundation, significant implementation gaps** |
+
+---
+
+### P0 — Critical Blockers (Production Deployment Blockers)
+
+| # | Gap | Area | Action Required |
+|---|-----|------|-----------------|
+| 1 | **No database migrations** | Persistence | Drizzle schemas exist but no `drizzle/migrations` directory and no `db:migrate` script in any `package.json`. Schema cannot be applied to a real Postgres instance. |
+| 2 | **Zero test suite** | Quality | No `*.test.ts` or `*.spec.ts` files anywhere in the repo. CI pipeline has no test gate — only typecheck/build. Add vitest; start with `WorkflowEngine` and `RuleEvaluator` (highest business logic density). |
+| 3 | **Redis not production-ready** | Infrastructure | `HANDOVER.md` explicitly flags "Configure Redis connection — Production-ready Redis/BullMQ setup with proper connection pooling" as an immediate task. Without this the entire `apps/services` worker process cannot run reliably in production. |
+| 4 | **No real linting** | Quality | ESLint config described as stub commands only across all packages. Code quality enforcement is absent; CI has no lint gate. |
+| 5 | **`KpiComputationJob.ts` schema type mismatches** | Backend | Pre-existing issue acknowledged in `HANDOVER.md` as non-blocking for Phase 10 typecheck — but will throw at runtime when the KPI job fires. Must be fixed before any KPI computation is live. |
+
+---
+
+### P1 — High Priority (Core Feature Gaps)
+
+| # | Gap | Area | Action Required |
+|---|-----|------|-----------------|
+| 6 | **Event ingestion bulk API missing** | Backend / Phase 8 | `/api/events` directory exists but the bulk ingest endpoint for PLC/sensor events is `TODO` in Phase 8 exit criteria. This is a core MES capability blocking real IoT integration. |
+| 7 | **Rules API has no evaluation endpoint** | Backend / Phase 8 | `RuleEvaluator.ts` processor is built, but `/api/rules` CRUD and evaluation trigger endpoints are still pending per Phase 8 exit criteria. |
+| 8 | **Notification & KPI APIs are stubs** | Backend / Phase 8 | `/api/notifications` and `/api/kpis` directories exist but send/query APIs and the KPI aggregation scheduled job are not implemented. |
+| 9 | **No external KMS for secrets** | Security / Phase 9 | Secrets schema stores credentials but the implementation "assumes client-side encryption". AWS Secrets Manager or Vault integration is not wired. This is a security blocker for any production tenant. |
+| 10 | **Artifact storage is local-only** | Infrastructure | `/api/artifacts/phase8` uses local disk with SHA-256 hashing. S3/GCS backend is not implemented — will not scale or survive container restarts. |
+
+---
+
+### P2 — Medium Priority (Hardening & UX)
+
+| # | Gap | Area | Action Required |
+|---|-----|------|-----------------|
+| 11 | **No UI for Phase 9 governance features** | Frontend | Secrets management UI, quota dashboard, rollback interface, and audit log viewer are all Phase 11 work. All APIs are ready; zero frontend screens connect to them. |
+| 12 | **`.loop.pid` and `LOOP_STATE.json` committed to repo** | Hygiene | These are Claude Code agentic loop runtime files that should be in `.gitignore`. They add noise and expose session state in version history. |
+| 13 | **Graphify knowledge graph is stale** | Docs | `HANDOVER.md` notes "Re-run graphify for Phase 10 service workers (24 new files)" as a TODO. `graphify-out/` is behind current code state. |
+| 14 | **No rate limiting or API gateway layer** | Security | With 20+ API routes serving multi-tenant workspaces, there is no rate limiting middleware visible beyond tenant quota tracking in the DB. |
+| 15 | **No CD pipeline** | DevOps | Only one `ci.yml` exists. No deployment pipeline, no environment-specific configs (staging/prod), no Dockerfile build step in CI. |
+
+---
+
+### Recommended Sprint Plan
+
+| Sprint | Focus | Key Deliverables |
+|--------|-------|-----------------|
+| **Sprint 1 — Stabilization** | Infrastructure & Quality | Drizzle migration scripts + seed data; fix `KpiComputationJob` type errors; Redis connection pooling; ESLint enabled across all packages; add `.loop.pid`/`LOOP_STATE.json` to `.gitignore` |
+| **Sprint 2 — Complete Phase 8** | Backend API Completion | Bulk event ingest endpoint; rules evaluation API; notification send/query APIs; KPI computation scheduled job |
+| **Sprint 3 — Testing & UI** | Coverage & Frontend | vitest unit tests for `WorkflowEngine` + `RuleEvaluator`; Phase 9 governance UI screens (secrets, quotas, audit logs) |
+
+---
+
 ## Handover Summary (2026-07-13 Session 4)
 
 | Task | Status | Notes |
@@ -192,7 +258,7 @@ The FSM logic and expression parsers have been implemented for all Phase 10 work
 
 ### Medium Term (UI Components & Dashboards — Phase 11?)
 | Component | Purpose | Priority | Dependencies |
-|-----------|---------|----------|--------------|
+|-----------|---------|----------|--------------| 
 | Secrets management UI | List/create/rotate secrets with encryption status | High | Phase 9 secrets API complete |
 | Quota dashboard | Usage tracking visualizations, threshold alerts | High | Phase 9 quotas API complete |
 | Rollback interface | Snapshot browser, one-click rollback execution | Medium | Phase 9 rollbacks API complete |
