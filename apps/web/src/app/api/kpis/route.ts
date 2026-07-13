@@ -67,7 +67,7 @@ export async function GET(req: NextRequest) {
 
     const countResult = await db.select({ count: sql`count(*) as count` }).from(ksTable).where(where);
 
-    return NextResponse.json({ kpis: rows, pagination: { total: parseInt(countResult[0]?.count ?? '0'), limit, offset } }, { status: 200 });
+    return NextResponse.json({ kpis: rows, pagination: { total: Number(countResult[0]?.count ?? '0'), limit, offset } });
   } catch (err) {
     if (err instanceof z.ZodError) {
       return errorResponse(badRequest(err.errors[0]?.message ?? 'Invalid request'));

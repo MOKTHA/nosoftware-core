@@ -42,25 +42,25 @@ export async function POST(
     const [artifact] = await db.select({
       id: fileEvidenceArtifactsTable.id,
       contentHash: fileEvidenceArtifactsTable.contentHash,
-      sizeBytes: fileEvidenceArtifactsTable.sizeBytes,
-      storageLocation: fileEvidenceArtifactsTable.storageLocation,
+      byteSize: fileEvidenceArtifactsTable.byteSize,
+      storageUrl: fileEvidenceArtifactsTable.storageUrl,
     }).from(fileEvidenceArtifactsTable).where(eq(fileEvidenceArtifactsTable.id, artifactId)).limit(1);
 
     if (!artifact) {
-      return errorResponse(new Error('Artifact not found'), 404);
+      return errorResponse(new Error('Artifact not found'));
     }
 
     // In production, this would:
-    // 1. Fetch the actual content from storage (S3/GCS/etc.) using storageLocation
+    // 1. Fetch the actual content from storage (S3/GCS/etc.) using storageUrl or textContent
     // 2. Compute SHA-256 hash of the retrieved content
     // 3. Compare against stored contentHash
     // 4. Record verification result in artifact_verification_log table
 
     const simulatedVerification = {
       verified: true, // Simulated - would be false if hashes don't match
-      computedHash: artifact.contentHash, // Would differ from storageLocation hash in real scenario
-      expectedHash: artifact.contentHash,
-      sizeBytesMatched: artifact.sizeBytes === artifact.sizeBytes,
+      computedHash: artifact.contentHash ?? '', // Would differ from storage URL hash in real scenario
+      expectedHash: artifact.contentHash ?? '',
+      sizeBytesMatched: (artifact.byteSize ?? 0) > 0,
     };
 
     return NextResponse.json({
@@ -68,6 +68,7 @@ export async function POST(
       artifactId: artifact.id,
       computedHash: simulatedVerification.computedHash,
       expectedHash: simulatedVerification.expectedHash,
+      sizeBytesVerified: simulatedVerification.sizeBytesMatched,
       verificationTimestamp: new Date().toISOString(),
     });
   } catch (err) {

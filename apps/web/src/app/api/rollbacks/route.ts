@@ -134,14 +134,14 @@ export async function POST(req: NextRequest) {
     const [sourceRun] = await db.select({ id: generationRuns.id, workspaceId: generationRuns.workspaceId, status: generationRuns.status }).from(generationRuns).where(eq(generationRuns.id, input.sourceGenerationRunId)).limit(1);
 
     if (!sourceRun) {
-      return errorResponse(new Error('Source generation run not found'), 404);
+      return errorResponse(new Error('Source generation run not found'));
     }
 
     // Verify target generation run exists and is accessible
     const [targetRun] = await db.select({ id: generationRuns.id, workspaceId: generationRuns.workspaceId }).from(generationRuns).where(eq(generationRuns.id, input.targetGenerationRunId)).limit(1);
 
     if (!targetRun) {
-      return errorResponse(new Error('Target generation run not found'), 404);
+      return errorResponse(new Error('Target generation run not found'));
     }
 
     // Verify both runs belong to the same workspace (and thus organization)

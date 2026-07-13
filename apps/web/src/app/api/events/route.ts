@@ -73,7 +73,7 @@ export async function GET(req: NextRequest) {
 
     const countResult = await db.select({ count: sql`count(*) as count` }).from(reTable).where(where);
 
-    return NextResponse.json({ events: rows, pagination: { total: parseInt(countResult[0]?.count ?? '0'), limit, offset } }, { status: 200 });
+    return NextResponse.json({ events: rows, pagination: { total: Number(countResult[0]?.count ?? '0'), limit, offset } });
   } catch (err) {
     if (err instanceof z.ZodError) {
       return errorResponse(badRequest(err.errors[0]?.message ?? 'Invalid request'));
@@ -99,12 +99,13 @@ export async function POST(req: NextRequest) {
         try {
           const validatedEvent = RuntimeEventSchema.parse(eventInput);
           const [inserted] = await tx.insert(reTable).values({
-            eventId: validatedEvent.eventId,
+            id: crypto.randomUUID(),
+            eventId: String(validatedEvent.eventId),
             source: validatedEvent.source ?? 'system',
             priority: validatedEvent.priority,
             eventType: validatedEvent.eventType,
             data: validatedEvent.data,
-            timestamp: validatedEvent.timestamp ?? now.toISOString(),
+            timestamp: validatedEvent.timestamp ?? now,
           }).returning();
 
           if (inserted) {

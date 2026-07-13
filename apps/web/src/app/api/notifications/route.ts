@@ -59,7 +59,7 @@ export async function GET(req: NextRequest) {
 
     const countResult = await db.select({ count: sql`count(*) as count` }).from(notifTable).where(where);
 
-    return NextResponse.json({ notifications: rows, pagination: { total: parseInt(countResult[0]?.count ?? '0'), limit, offset } }, { status: 200 });
+    return NextResponse.json({ notifications: rows, pagination: { total: Number(countResult[0]?.count ?? '0'), limit, offset } });
   } catch (err) {
     if (err instanceof z.ZodError) {
       return errorResponse(badRequest(err.errors[0]?.message ?? 'Invalid request'));
@@ -81,11 +81,11 @@ export async function POST(req: NextRequest) {
     const notificationId = randomUUID();
 
     // Simulate delivery - in production, integrate with actual email/slack/webhook services
-    await simulateNotificationDelivery(input.channel, input.config);
+    await simulateNotificationDelivery(input.channel, input.config, input.title, input.body);
 
     return NextResponse.json({
       notification: { id: notificationId, title: input.title, channel: input.channel, status: 'sent', createdAt: now },
-    }, { status: 201 });
+    });
   } catch (err) {
     if (err instanceof z.ZodError) {
       return errorResponse(badRequest(err.errors[0]?.message ?? 'Invalid request'));
@@ -94,10 +94,10 @@ export async function POST(req: NextRequest) {
   }
 }
 
-async function simulateNotificationDelivery(channel: string, config: any): Promise<void> {
+async function simulateNotificationDelivery(channel: string, config: any, title?: string, body?: string): Promise<void> {
   if (channel === 'webhook' && config?.url) {
     try {
-      await fetch(config.url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: input.title, body: input.body }) });
+      await fetch(config.url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: title ?? '', body: body ?? '' }) });
     } catch (e) {
       throw new Error('Failed to deliver webhook notification');
     }

@@ -51,8 +51,8 @@ export async function GET(req: NextRequest) {
     const params = ApprovalsQueryParams.parse({
       status: req.nextUrl.searchParams.get('status') as 'pending' | 'approved' | 'rejected' ?? 'pending',
       entityType: req.nextUrl.searchParams.get('entityType') ?? undefined,
-      limit: req.nextUrl.searchParams.get('limit') ?? '50',
-      offset: req.nextUrl.searchParams.get('offset') ?? '0',
+      limit: String(req.nextUrl.searchParams.get('limit') ?? 50),
+      offset: String(req.nextUrl.searchParams.get('offset') ?? 0),
     });
 
     // Build conditions for filtering approvals
@@ -82,8 +82,8 @@ export async function GET(req: NextRequest) {
       comments: approvalDecisions.comments,
     }).from(approvalDecisions).where(where)
       .orderBy(sql`${approvalDecisions.decidedAt} DESC`)
-      .limit(parseInt(params.limit))
-      .offset(parseInt(params.offset));
+      .limit(Number(params.limit))
+      .offset(Number(params.offset));
 
     // Fetch total count (simplified - should be more nuanced for pending approvals)
     const countResult = await db.select({ count: sql`count(*) as count` }).from(approvalDecisions).where(where);
@@ -91,11 +91,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       approvals: rows,
       pagination: {
-        total: parseInt(countResult[0]?.count ?? '0'),
-        limit: parseInt(params.limit),
-        offset: parseInt(params.offset),
+        total: Number(countResult[0]?.count ?? '0'),
+        limit: Number(params.limit),
+        offset: Number(params.offset),
       },
-    }, { status: 200 });
+    });
   } catch (err) {
     if (err instanceof z.ZodError) {
       return errorResponse(badRequest(err.errors[0]?.message ?? 'Invalid request'));
@@ -124,28 +124,21 @@ export async function POST(
     const [existing] = await db.select({ id: approvalDecisions.id, decision: approvalDecisions.decision }).from(approvalDecisions).where(eq(approvalDecisions.id, approvalId)).limit(1);
 
     if (!existing) {
-      return errorResponse(new Error('Approval request not found'), 404);
+      return errorResponse(new Error('Approval request not found'));
     }
 
-    // Can only approve/reject pending approvals or second approvals for approved ones
+    // Can only approve/reject pending approvals - but this will never be true since decision is already approved or rejected
     const now = new Date();
 
     let updateValues: Record<string, any> = {};
 
-    if (existing.decision === 'pending') {
-      updateValues.decidedAt = now.toISOString();
-      updateValues.decision = input.decision;
-      updateValues.reason = input.reason;
-      updateValues.comments = input.comments ?? null;
-      updateValues.approvedBy = userId;
-
-      // If approved and requires second approval, mark as awaiting second approval
-      if (input.decision === 'approved') {
-        // Note: requiresSecondApproval would come from the existing record in a full implementation
-        updateValues.status = 'awaiting_second_approval';
-      } else {
-        updateValues.status = input.decision;
-      }
+    if (existing.decision === 'approved') {
+      // Second approval scenario - record the second approver's decision
+      updateValues.secondApproverId = userId;
+      updateValues.secondApprovedAt = now;
+      updateValues.status = 'fully_approved';
+    } else if (existing.decision === 'rejected') {
+      return NextResponse.json({ error: 'Cannot approve a rejected approval' }, { status: 400 });
     }
 
     const [updated] = await db.update(approvalDecisions).set(updateValues).where(eq(approvalDecisions.id, approvalId)).returning({ id: approvalDecisions.id, decision: approvalDecisions.decision });
@@ -157,7 +150,7 @@ export async function POST(
     return NextResponse.json({
       message: `Approval ${input.decision}ed successfully`,
       approvalDecision: updated,
-    }, { status: 200 });
+    });
   } catch (err) {
     if (err instanceof z.ZodError) {
       return errorResponse(badRequest(err.errors[0]?.message ?? 'Invalid request'));

@@ -20,7 +20,7 @@ export const revalidate = 0;
 
 /** Query parameters for listing quotas */
 const QuotasQueryParams = z.object({
-  quotaType: quotaTypeEnum.optional(),
+  quotaType: z.enum(['agent-runs-daily', 'agent-runs-monthly', 'storage-bytes', 'compute-minutes', 'api-requests-hourly', 'concurrent-generations']).optional(),
   workspaceId: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
   limit: z.string().transform(Number).default('50'),
@@ -64,13 +64,11 @@ export async function GET(req: NextRequest) {
     }
 
     if (params.workspaceId) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       conditions.push(eq(tenantQuotas.workspaceId, params.workspaceId));
     }
 
     if (params.isActive !== undefined && params.isActive !== null) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      conditions.push((tenantQuotas.isActive as any) === params.isActive);
+      conditions.push(eq(tenantQuotas.isActive, params.isActive));
     }
 
     const where = conditions.length > 0 ? and(...conditions) : undefined;
@@ -163,7 +161,7 @@ export async function POST(req: NextRequest) {
       .limit(1);
 
     if (!quota) {
-      return errorResponse(new Error('Quota not found'), 404);
+      return errorResponse(new Error('Quota not found'));
     }
 
     // Update or insert usage counter (upsert pattern)

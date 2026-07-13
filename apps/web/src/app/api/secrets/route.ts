@@ -126,8 +126,8 @@ export async function GET(req: NextRequest) {
       updatedAt: secrets.updatedAt,
     }).from(secrets).where(where)
       .orderBy(sql`${secrets.createdAt} DESC`)
-      .limit(params.limit)
-      .offset(params.offset);
+      .limit(Number(params.limit))
+      .offset(Number(params.offset));
 
     // Fetch user info for creators in parallel (batched)
     const creatorIds = [...new Set(rows.map(row => row.createdBy).filter(Boolean))];
@@ -152,11 +152,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       secrets: enrichedRows,
       pagination: {
-        total: parseInt(countResult[0]?.count ?? '0'),
+        total: Number(countResult[0]?.count ?? '0'),
         limit: params.limit,
         offset: params.offset,
       },
-    }, { status: 200 });
+    });
   } catch (err) {
     if (err instanceof z.ZodError) {
       return errorResponse(badRequest(err.errors[0]?.message ?? 'Invalid request'));

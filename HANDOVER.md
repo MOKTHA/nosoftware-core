@@ -56,7 +56,8 @@
 
 | Commit | Description | Files Changed |
 |--------|-------------|---------------|
-| `e7ef8f0` | feat(Phase 8-9): Complete industrial runtime services API routes and governance schemas | 15 files, +2.5k lines (current session) |
+| `6d688c6` | fix(Phase 8-9): Apply tenant isolation and API route fixes | 6 files, +116/-90 lines (this session) |
+| `e7ef8f0` | feat(Phase 8-9): Complete industrial runtime services API routes and governance schemas | 15 files, +2.5k lines (previous commit) |
 | `ca95646` | feat(Phase 8): Apply runtime services API route fixes | artifacts/phase8/route.ts cleanup |
 | `dc7355c` | feat(Phase 8): Add industrial runtime services API routes | rollbacks, secrets APIs created |
 | `1f2bbeb` | docs(graphify): Update knowledge graphs after Phase 8 schema fix and add updated HANDOVER.md | graph update only |

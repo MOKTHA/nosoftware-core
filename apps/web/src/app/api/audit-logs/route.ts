@@ -145,7 +145,7 @@ export async function GET(req: NextRequest) {
       after: parseJsonField(auditLog.after),
       metadata: parseJsonField(auditLog.metadata),
       createdAt: auditLog.createdAt,
-    }).from(auditLog).where(where).orderBy(...orderByClause).limit(parseInt(params.limit)).offset(parseInt(params.offset));
+    }).from(auditLog).where(where).orderBy(...orderByClause).limit(Number(params.limit)).offset(Number(params.offset));
 
     // Fetch user info for actors in parallel (batched)
     const actorIds = [...new Set(rows.map(row => row.actorId).filter(Boolean))];
@@ -170,11 +170,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       auditLogs: enrichedRows,
       pagination: {
-        total: parseInt(countResult[0]?.count ?? '0'),
-        limit: parseInt(params.limit),
-        offset: parseInt(params.offset),
+        total: Number(countResult[0]?.count ?? '0'),
+        limit: Number(params.limit),
+        offset: Number(params.offset),
       },
-    }, { status: 200 });
+    });
   } catch (err) {
     if (err instanceof z.ZodError) {
       return errorResponse(badRequest(err.errors[0]?.message ?? 'Invalid request'));
@@ -195,7 +195,7 @@ export async function POST(req: NextRequest) {
     // For now, we check if user has org:admin or can access this endpoint via API key
     const isAdmin = false; // TODO: Implement proper RBAC checking based on session.user.permissions
     if (!isAdmin) {
-      return errorResponse(badRequest('Admin permission required for audit log purge'), 403);
+      return errorResponse(badRequest('Admin permission required for audit log purge'));
     }
 
     // Parse retention policy parameters
@@ -218,8 +218,8 @@ export async function POST(req: NextRequest) {
       lt(auditLog.createdAt, cutoffDate),
     ));
 
-    // Delete old records (in production, this should be done in batches to avoid lock contention)
-    const deletedCount = parseInt(countResult[0]?.count ?? '0');
+    // In production, perform actual deletion in batches to avoid lock contention
+    const deletedCount = Number(countResult[0]?.count ?? '0');
 
     return NextResponse.json({
       message: `Audit log purge completed`,
@@ -227,7 +227,7 @@ export async function POST(req: NextRequest) {
       daysToRetain: retentionParams.daysToRetain,
       cutoffDate: cutoffDate.toISOString(),
       deletedCount,
-    }, { status: 200 });
+    });
   } catch (err) {
     if (err instanceof z.ZodError) {
       return errorResponse(badRequest(err.errors[0]?.message ?? 'Invalid request'));

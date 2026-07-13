@@ -100,7 +100,7 @@ export async function PUT(
     const [existing] = await db.select({ id: rollbackRequests.id, status: rollbackRequests.status }).from(rollbackRequests).where(eq(rollbackRequests.id, rollbackId)).limit(1);
 
     if (!existing) {
-      return errorResponse(new Error('Rollback request not found'), 404);
+      return errorResponse(new Error('Rollback request not found'));
     }
 
     // Only pending rollbacks can be approved or cancelled

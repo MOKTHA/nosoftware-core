@@ -30,6 +30,9 @@ const UploadArtifactInput = z.object({
   name: z.string().min(1).max(256),
   data: z.string(), // Base64 encoded content
   generationRunId: z.string().uuid().optional(),
+  workspaceId: z.string().uuid(), // Required for this table schema
+  projectId: z.string().uuid(), // Required for this table schema
+  taskId: z.string().uuid().optional(), // Optional FK to tasks
   metadata: z.record(z.unknown()).optional(),
 });
 
@@ -60,14 +63,14 @@ export async function POST(req: NextRequest) {
     const contentHash = createHash('sha256').update(decodedData).digest('hex');
 
     // Check for duplicate artifact (same hash = same content)
-    const [existing] = await db.select({ id: fileEvidenceArtifactsTable.id }).from(fileEvidenceArtifactsTable).where(eq(fileEvidenceArtifactsTable.contentHash, contentHash)).limit(1);
+    const [existing] = await db.select({ id: fileEvidenceArtifactsTable.id, byteSize: fileEvidenceArtifactsTable.byteSize }).from(fileEvidenceArtifactsTable).where(eq(fileEvidenceArtifactsTable.contentHash, contentHash)).limit(1);
 
     if (existing) {
       return NextResponse.json({
         artifact: {
           kind: input.kind,
           name: input.name,
-          sizeBytes: decodedData.length,
+          sizeBytes: existing.byteSize ?? 0,
           contentHash,
           generationRunId: input.generationRunId,
           isDuplicate: true,
@@ -79,41 +82,55 @@ export async function POST(req: NextRequest) {
     // Generate unique storage key for content-addressable storage
     const storageLocation = `artifacts/${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}/${contentHash}`;
 
+    // Determine MIME type based on artifact kind and file extension
+    function getMimeType(kind: ArtifactKind): string {
+      switch (kind) {
+        case 'code': return 'application/x-typescript';
+        case 'log': return 'text/plain';
+        case 'diff': return 'text/x-diff';
+        case 'report': return 'application/json';
+        default: return 'application/octet-stream';
+      }
+    }
+
+    const mimeType = getMimeType(input.kind);
+
     // Insert the artifact record with minimal metadata (immutability)
-    const [created] = await db.insert(fileEvidenceArtifactsTable).values({
+    const result = await db.insert(fileEvidenceArtifactsTable).values({
+      workspaceId: input.workspaceId,
+      projectId: input.projectId,
+      taskId: input.taskId ?? null,
+      generationRunId: input.generationRunId || '',
+      kind: input.kind,
+      storageKind: 'inline', // Default to inline for now
       name: input.name,
-      description: null,
-      contentType: getContentType(input.kind),
-      sizeBytes: decodedData.length,
+      mimeType,
+      textContent: input.data, // Store base64 content inline
+      byteSize: decodedData.length,
       contentHash,
-      storageType: 'local', // Default to local for now
-      storageLocation, // In production, this would be S3/GCS blob path
-      evidenceType: input.kind === 'evidence' ? 'custom' : undefined,
-      relatedGenerationRunId: input.generationRunId || null,
+      createdBy: 'system', // TODO: Get from auth context
+      createdAt: now,
     }).returning({
       id: fileEvidenceArtifactsTable.id,
       name: fileEvidenceArtifactsTable.name,
-      contentType: fileEvidenceArtifactsTable.contentType,
-      sizeBytes: fileEvidenceArtifactsTable.sizeBytes,
+      mimeType: fileEvidenceArtifactsTable.mimeType,
+      byteSize: fileEvidenceArtifactsTable.byteSize,
       contentHash: fileEvidenceArtifactsTable.contentHash,
-      storageLocation: fileEvidenceArtifactsTable.storageLocation,
-    });
+    }).then(r => r[0]);
 
-    if (!created || created.length === 0) {
+    if (!result) {
       throw new Error('INSERT returned zero rows');
     }
-
-    const result = created[0];
 
     return NextResponse.json({
       artifact: {
         id: result.id,
         kind: input.kind,
         name: result.name,
-        contentType: result.contentType,
-        sizeBytes: result.sizeBytes,
+        mimeType: result.mimeType,
+        sizeBytes: result.byteSize ?? 0,
         contentHash: result.contentHash,
-        storageLocation: result.storageLocation,
+        storageLocation,
         generationRunId: input.generationRunId,
       },
     });
