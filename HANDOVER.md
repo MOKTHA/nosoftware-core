@@ -78,9 +78,9 @@
 | Previous session commits reviewed | ✅ PASS | Phase 8-9 all committed, verified clean working tree |
 | Commit uncommitted files | ✅ DONE | All changes from this session committed to bae8cf7 |
 | `git status` verification | ✅ CLEAN | Working tree clean after commit |
-| Graphify knowledge graphs update | ⚠ TODO | Re-run graphify for Phase 10 service workers (24 new files) |
+| Graphify knowledge graphs update | ✅ DONE | Re-run graphify for Phase 10 service workers (24 new files) — rebuilt: 2,945 nodes · 4,481 edges · 212 communities |
 
-**Next**: Implement FSM logic for WorkflowExecutorWorker, PLC/sensor ingestion handlers, business rule evaluation conditions. Update graphify knowledge graphs.
+**Next**: Configure Redis connection for production use. Implement FSM state transitions for WorkflowExecutorWorker. Add PLC/sensor ingestion handlers with batch processing. Integrate business rule evaluation conditions using RuleEvaluator expression parser. Run integration tests on service workers.
 
 ---
 
@@ -412,3 +412,4 @@ POST   /api/audit-logs/purge     # Purge old logs based on retention policy (adm
 POST   /api/artifacts/phase8/upload      # Upload artifact with content-addressable storage
 POST   /api/artifacts/phase8/verify/:id  # Verify artifact integrity by recomputing hash
 ```
+

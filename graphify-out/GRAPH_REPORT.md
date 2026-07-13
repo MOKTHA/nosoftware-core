@@ -1,16 +1,16 @@
 # Graph Report - heynxt-core  (2026-07-13)
 
 ## Corpus Check
-- 283 files · ~195,086 words
+- 283 files · ~195,946 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 2939 nodes · 4475 edges · 203 communities (173 shown, 30 thin omitted)
+- 2945 nodes · 4481 edges · 212 communities (183 shown, 29 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 5 edges (avg confidence: 0.74)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `f69bcb8b`
+- Built from commit: `27a082d3`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -212,6 +212,15 @@
 - EventProcessor
 - Decision
 - NotificationService
+- route.ts
+- Phase 9 — Governance and Hardening (Complete)
+- Code Readiness Gap Analysis (2026-07-13)
+- What's Next: Recommended Actions (Phase 10 — Service Workers & Integration)
+- workspace.ts
+- route.ts
+- Exit Criteria Status
+- Task Status Summary (Session 2026-07-13)
+- Latest Commits (Session 2026-07-13)
 
 ## God Nodes (most connected - your core abstractions)
 1. `errorResponse()` - 81 edges
@@ -230,21 +239,21 @@
   apps/web/src/app/api/invitations/route.ts → packages/core-types/src/schemas/invitation.ts
 - `POST()` --references--> `InviteUserInput`  [EXTRACTED]
   apps/web/src/app/api/invitations/route.ts → packages/core-types/src/schemas/invitation.ts
-- `POST()` --references--> `CreateTaskPayloadInput`  [EXTRACTED]
-  apps/web/src/app/api/tasks/[id]/execute/route.ts → packages/core-types/src/schemas/task-payload.ts
 - `POST()` --references--> `CreateWorkspaceInput`  [EXTRACTED]
   apps/web/src/app/api/workspaces/route.ts → packages/core-types/src/schemas/workspace.ts
 - `ProjectsPage()` --references--> `WorkspaceId`  [EXTRACTED]
   apps/web/src/app/projects/page.tsx → packages/core-types/src/schemas/workspace.ts
+- `GET()` --references--> `GenerationRunId`  [EXTRACTED]
+  apps/web/src/app/api/artifacts/route.ts → packages/core-types/src/schemas/generation-run.ts
 
 ## Import Cycles
 - None detected.
 
-## Communities (203 total, 30 thin omitted)
+## Communities (212 total, 29 thin omitted)
 
 ### Community 0 - "index.ts"
-Cohesion: 0.20
-Nodes (14): POST(), GET(), PATCH(), ADR-0006, GET(), POST(), ADR-0006, notFound() (+6 more)
+Cohesion: 0.14
+Nodes (29): POST(), POST(), GET(), buildAcceptUrl(), findPendingInvitation(), findUserByEmail(), generateToken(), POST() (+21 more)
 
 ### Community 1 - "errorResponse"
 Cohesion: 0.05
@@ -331,8 +340,8 @@ Cohesion: 0.08
 Nodes (24): compilerOptions, allowJs, incremental, jsx, lib, module, moduleResolution, noEmit (+16 more)
 
 ### Community 22 - "package.json"
-Cohesion: 0.24
-Nodes (7): GenerationStage, GenerationStageInput, GenerationStageOutput, PendingStage, StageResult, GenerateSchemaStage, ValidationStages
+Cohesion: 0.18
+Nodes (8): GenerationStage, GenerationStageInput, GenerationStageOutput, PendingStage, StageResult, GeneratePermissionsStage, GenerateSchemaStage, ValidationStages
 
 ### Community 23 - "HeyNXT Core — Claude Instructions"
 Cohesion: 0.09
@@ -359,8 +368,8 @@ Cohesion: 0.10
 Nodes (20): Artifact, ArtifactBase, ArtifactContentType, ArtifactId, ArtifactStorageType, ContentHash, DownloadArtifactRequest, DownloadArtifactResponse (+12 more)
 
 ### Community 30 - "ADR-0004: ORM and Database Choice for Control Plane"
-Cohesion: 0.14
-Nodes (15): Invitation, InvitationId, InvitationStatus, InvitationSummary, InviteUserInput, getRolePermissions(), Permission, ROLE_DEFINITIONS (+7 more)
+Cohesion: 0.12
+Nodes (17): WorkspacesPage(), Invitation, InvitationId, InvitationStatus, InvitationSummary, InviteUserInput, Organization, OrganizationId (+9 more)
 
 ### Community 31 - "Architecture Overview"
 Cohesion: 0.12
@@ -391,8 +400,8 @@ Cohesion: 0.14
 Nodes (12): BlueprintDomain, BlueprintFamily, BlueprintFilter, BlueprintPagination, BlueprintSort, BlueprintTag, CatalogQueryResult, createEmptyCatalog() (+4 more)
 
 ### Community 38 - "agent-spec.ts"
-Cohesion: 0.17
-Nodes (21): POST(), VerifyArtifactInput, GET(), KPIsQueryParams, ApproveRollbackInput, CancelRollbackInput, DELETE(), GET() (+13 more)
+Cohesion: 0.14
+Nodes (28): POST(), VerifyArtifactInput, GET(), GET(), GET(), KPIsQueryParams, GET(), ApproveRollbackInput (+20 more)
 
 ### Community 39 - "page.tsx"
 Cohesion: 0.27
@@ -423,8 +432,8 @@ Cohesion: 0.12
 Nodes (22): Artifact, ArtifactId, ArtifactKind, ArtifactStorageKind, ArtifactSummary, CreateArtifactInput, hasInlineContent(), CreateGenerationRunInput (+14 more)
 
 ### Community 51 - "task.ts"
-Cohesion: 0.17
-Nodes (10): CreateTaskPayloadInput, CreateTaskPayloadInputSchema, TaskPayload, TaskPayloadId, TaskPayloadIdSchema, TaskPayloadSchema, TaskPayloadSummary, TaskPayloadSummarySchema (+2 more)
+Cohesion: 0.18
+Nodes (9): CreateTaskPayloadInputSchema, TaskPayload, TaskPayloadId, TaskPayloadIdSchema, TaskPayloadSchema, TaskPayloadSummary, TaskPayloadSummarySchema, TaskPriority (+1 more)
 
 ### Community 52 - "auth.ts"
 Cohesion: 0.14
@@ -494,6 +503,10 @@ Nodes (5): createDb(), db, DbClient, getDb(), HeyNxtDb
 Cohesion: 0.04
 Nodes (48): dependencies, bullmq, drizzle-orm, @heynxt/persistence, ioredis, node-cron, nodemailer, pg (+40 more)
 
+### Community 79 - "Rationale"
+Cohesion: 0.29
+Nodes (7): Approvals (`/api/approvals`), Artifacts Phase8 (`/api/artifacts/phase8`), Audit Logs (`/api/audit-logs`), Quick Reference: New API Endpoints, Quotas & Usage (`/api/quotas`), Rollbacks (`/api/rollbacks`), Secrets Management (`/api/secrets`)
+
 ### Community 83 - "First-Time Setup"
 Cohesion: 0.40
 Nodes (4): ValidationResultDbRecord, validationResults, ValidationRun, validationRuns
@@ -515,8 +528,8 @@ Cohesion: 0.08
 Nodes (24): 1. Current State (from `graphify/heynxt-core/`), 2. Reference Repo Synthesis (from graphify reports), 3. Reuse Matrix (summary; full version in `buildplan.md` Phase 0), 4. Gap Analysis — What's Missing Between Current State and Target, 5. Summary: Three Blockers, One Slice, 6. Proposed Task 1, 7. Decision Required, Commands Run (+16 more)
 
 ### Community 100 - "apps/web/README.md"
-Cohesion: 0.04
-Nodes (44): API Routes Implemented (`apps/web/src/app/api/`), Approvals (`/api/approvals`), Artifacts Phase8 (`/api/artifacts/phase8`), Audit Logs (`/api/audit-logs`), Build Status:, Completed Phases, Core Processors — FULLY IMPLEMENTED ✅, Current State: Phase 8 COMPLETE, Phase 9 COMPLETE, Phase 10 — Workers Implementation IN PROGRESS (+36 more)
+Cohesion: 0.25
+Nodes (7): Completed Phases, Current State: Phase 8 COMPLETE, Phase 9 COMPLETE, Phase 10 — Workers Implementation IN PROGRESS, Handover — Phase 10 Service Workers Infrastructure COMPLETE (2026-07-13 Session 4), Handover Summary (2026-07-13 Session 3), Handover Summary (2026-07-13 Session 4), Summary, Verification Results (2026-07-13 Session 4)
 
 ### Community 101 - "apps/web/package.json"
 Cohesion: 0.09
@@ -531,8 +544,8 @@ Cohesion: 0.09
 Nodes (22): 1) Coding agent execution reference, 2) Industrial blueprint reference — aluminum extrusion, 3) Industrial blueprint reference — PCB/electronics MES, Architecture Principles, CLI Behavior, Context Management, Core Rules, Current Phase (+14 more)
 
 ### Community 104 - "{ GET, POST }"
-Cohesion: 0.15
-Nodes (9): GET(), POST(), ApiErrorBody, ForbiddenError, NextApiError, AuthenticatedSession, getSession(), NotAuthenticatedError (+1 more)
+Cohesion: 0.12
+Nodes (14): executeAgentInBackground(), POST(), TODO: Stream events to client via SSE or store in DB, uuidValidate(), POST(), ApiErrorBody, ForbiddenError, NextApiError (+6 more)
 
 ### Community 105 - "buildplan.md"
 Cohesion: 0.12
@@ -599,12 +612,12 @@ Cohesion: 0.31
 Nodes (9): DELETE(), evaluateCondition(), EvaluateRuleInput, GET(), getFieldFromContext(), parseJsonField(), POST(), PUT() (+1 more)
 
 ### Community 122 - "packages/core-types/src/index.ts"
-Cohesion: 0.16
-Nodes (19): GET(), POST(), buildAcceptUrl(), findPendingInvitation(), findUserByEmail(), generateToken(), POST(), ApprovalQueryParams (+11 more)
+Cohesion: 0.60
+Nodes (4): ApprovalQueryParams, CreateApprovalDecisionInput, GET(), POST()
 
 ### Community 123 - "packages/core-types/src/schemas/artifact.ts"
-Cohesion: 0.53
-Nodes (5): executeAgentInBackground(), POST(), TODO: Stream events to client via SSE or store in DB, uuidValidate(), TaskStatus
+Cohesion: 0.29
+Nodes (7): Build Status:, Core Processors — FULLY IMPLEMENTED ✅, Infrastructure — COMPLETE ✅, Known Issues (Pre-existing):, New Files Created This Session:, Phase 10 Worker Implementation Status — COMPLETE ✅, Workers — FULLY INTEGRATED ✅
 
 ### Community 124 - "packages/core-types/src/schemas/audit-log.ts"
 Cohesion: 0.33
@@ -839,8 +852,8 @@ Cohesion: 0.50
 Nodes (4): A. Control Plane, Architecture Intent, B. Agent Execution Adapter, C. Industrial Blueprint Engine
 
 ### Community 182 - "rbac.ts"
-Cohesion: 0.27
-Nodes (9): GET(), TasksPage(), ProjectId, CreateTaskInput, isTaskTerminal(), TaskId, TaskSummary, TaskType (+1 more)
+Cohesion: 0.22
+Nodes (8): CreateTaskInput, isTaskTerminal(), TaskSummary, TaskType, User, UserId, UserStatus, UserSummary
 
 ### Community 183 - "tenant-isolation.ts"
 Cohesion: 0.22
@@ -863,8 +876,8 @@ Cohesion: 0.53
 Nodes (5): GET(), NotificationsQueryParams, POST(), SendNotificationInput, simulateNotificationDelivery()
 
 ### Community 188 - "route.ts"
-Cohesion: 0.18
-Nodes (15): ArtifactKind, ArtifactKindEnum, getContentType(), POST(), UploadArtifactInput, evaluateCondition(), EvaluateRuleInput, getFieldFromContext() (+7 more)
+Cohesion: 0.47
+Nodes (5): ArtifactKind, ArtifactKindEnum, getContentType(), POST(), UploadArtifactInput
 
 ### Community 189 - "route.ts"
 Cohesion: 0.53
@@ -875,8 +888,8 @@ Cohesion: 0.14
 Nodes (32): getQueueName(), enqueueBulkEvents(), enqueueEvent(), enqueueEventBatch(), EventJobData, getEventQueue(), getPendingEventsBySource(), isDuplicateEvent() (+24 more)
 
 ### Community 191 - "audit-log.ts"
-Cohesion: 0.12
-Nodes (16): WorkspacesPage(), AuditAction, AuditEntityType, AuditLogEntry, AuditLogId, createStatusChangeEntry(), Organization, OrganizationId (+8 more)
+Cohesion: 0.33
+Nodes (5): AuditAction, AuditEntityType, AuditLogEntry, AuditLogId, createStatusChangeEntry()
 
 ### Community 192 - "workspace.ts"
 Cohesion: 0.16
@@ -910,25 +923,61 @@ Nodes (11): auditActionEnum, auditEntityTypeEnum, auditLog, invitations, invitat
 Cohesion: 0.18
 Nodes (11): 1. Adapter Pattern with Uniform Contract, 2. Sandboxed Execution, 3. Streaming Output, 4. Credential Management, 5. Resumable Sessions, Adaptation for HeyNXT, Agent Spec Schema, Agent Substrate Architecture (+3 more)
 
+### Community 203 - "route.ts"
+Cohesion: 0.53
+Nodes (5): evaluateCondition(), EvaluateRuleInput, getFieldFromContext(), parseJsonField(), POST()
+
+### Community 204 - "Phase 9 — Governance and Hardening (Complete)"
+Cohesion: 0.33
+Nodes (6): API Routes Implemented (`apps/web/src/app/api/`), Library Files (`apps/web/src/lib/`), Phase 8 — Industrial Runtime Services (Complete), Phase 9 — Governance and Hardening (Complete), Schemas Created (`packages/persistence/src/schema/`), What Was Just Completed: Phase 8-9 Full Implementation
+
+### Community 205 - "Code Readiness Gap Analysis (2026-07-13)"
+Cohesion: 0.33
+Nodes (6): Code Readiness Gap Analysis (2026-07-13), P0 — Critical Blockers (Production Deployment Blockers), P1 — High Priority (Core Feature Gaps), P2 — Medium Priority (Hardening & UX), Readiness Scorecard, Recommended Sprint Plan
+
+### Community 206 - "What's Next: Recommended Actions (Phase 10 — Service Workers & Integration)"
+Cohesion: 0.33
+Nodes (6): External Integrations to Configure:, Medium Term (UI Components & Dashboards — Phase 11?), Next Steps: Implement Worker Logic, Phase 10 Status: Worker Logic Implementation Complete ✅, Technical Debt / Open Questions, What's Next: Recommended Actions (Phase 10 — Service Workers & Integration)
+
+### Community 207 - "workspace.ts"
+Cohesion: 0.33
+Nodes (5): CreateWorkspaceInput, WorkspaceLookupKey, WorkspaceSlug, WorkspaceStatus, WorkspaceSummary
+
+### Community 208 - "route.ts"
+Cohesion: 0.60
+Nodes (4): CreateWorkflowDefinitionInput, GET(), POST(), WorkflowDefinitionsQueryParams
+
+### Community 209 - "Exit Criteria Status"
+Cohesion: 0.50
+Nodes (4): Exit Criteria Status, Phase 10 — Service Workers & Integration (In Progress), Phase 8 — Industrial Runtime Services, Phase 9 — Governance and Hardening
+
+### Community 210 - "Task Status Summary (Session 2026-07-13)"
+Cohesion: 0.50
+Nodes (4): Phase 10 Tasks — WORKER IMPLEMENTATION COMPLETE ✅, Phase 8 Tasks — COMPLETED, Phase 9 Tasks — COMPLETED, Task Status Summary (Session 2026-07-13)
+
+### Community 211 - "Latest Commits (Session 2026-07-13)"
+Cohesion: 0.67
+Nodes (3): Latest Commits (Session 2026-07-13), Session 3 — Service Workers Infrastructure Scaffolded, Session 4 — Phase 10 Service Workers Infrastructure Complete
+
 ## Knowledge Gaps
-- **1331 isolated node(s):** `name`, `version`, `private`, `description`, `type` (+1326 more)
+- **1336 isolated node(s):** `name`, `version`, `private`, `description`, `type` (+1331 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **30 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **29 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `POST()` connect `packages/core-types/src/schemas/artifact.ts` to `index.ts`, `agent-spec.ts`, `task.ts`, `auth.ts`, `route.ts`?**
+- **Why does `POST()` connect `{ GET, POST }` to `index.ts`, `index.ts`, `auth.ts`, `agent-spec.ts`?**
   _High betweenness centrality (0.047) - this node is a cross-community bridge._
-- **Why does `TaskStatus` connect `packages/core-types/src/schemas/artifact.ts` to `BlueprintCatalog`, `rbac.ts`?**
+- **Why does `TaskStatus` connect `{ GET, POST }` to `BlueprintCatalog`, `rbac.ts`?**
   _High betweenness centrality (0.030) - this node is a cross-community bridge._
 - **What connects `name`, `version`, `private` to the rest of the system?**
-  _1337 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _1342 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Should `index.ts` be split into smaller, more focused modules?**
+  _Cohesion score 0.13630229419703105 - nodes in this community are weakly interconnected._
 - **Should `errorResponse` be split into smaller, more focused modules?**
   _Cohesion score 0.05359937402190924 - nodes in this community are weakly interconnected._
 - **Should `index.ts` be split into smaller, more focused modules?**
   _Cohesion score 0.07380520266182698 - nodes in this community are weakly interconnected._
 - **Should `index.ts` be split into smaller, more focused modules?**
   _Cohesion score 0.03773584905660377 - nodes in this community are weakly interconnected._
-- **Should `dependencies` be split into smaller, more focused modules?**
-  _Cohesion score 0.04081632653061224 - nodes in this community are weakly interconnected._

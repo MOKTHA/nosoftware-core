@@ -201,5 +201,14 @@
   "199": "RuleEvaluator",
   "200": "EventProcessor",
   "201": "Decision",
-  "202": "NotificationService"
+  "202": "NotificationService",
+  "203": "route.ts",
+  "204": "Phase 9 — Governance and Hardening (Complete)",
+  "205": "Code Readiness Gap Analysis (2026-07-13)",
+  "206": "What's Next: Recommended Actions (Phase 10 — Service Workers & Integration)",
+  "207": "workspace.ts",
+  "208": "route.ts",
+  "209": "Exit Criteria Status",
+  "210": "Task Status Summary (Session 2026-07-13)",
+  "211": "Latest Commits (Session 2026-07-13)"
 }

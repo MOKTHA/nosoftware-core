@@ -3080,7 +3080,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "apps_web_src_app_api_artifacts_route",
-      "community": 122,
+      "community": 0,
       "norm_label": "route.ts"
     },
     {
@@ -3090,7 +3090,7 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "apps_web_src_app_api_artifacts_route_get",
-      "community": 122,
+      "community": 38,
       "norm_label": "get()"
     },
     {
@@ -3100,7 +3100,7 @@
       "source_location": "L86",
       "_origin": "ast",
       "id": "apps_web_src_app_api_artifacts_route_post",
-      "community": 122,
+      "community": 0,
       "norm_label": "post()"
     },
     {
@@ -3250,7 +3250,7 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "apps_web_src_app_api_generation_runs_route_get",
-      "community": 182,
+      "community": 38,
       "norm_label": "get()"
     },
     {
@@ -3310,7 +3310,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "apps_web_src_app_api_invitations_route",
-      "community": 122,
+      "community": 0,
       "norm_label": "route.ts"
     },
     {
@@ -3320,7 +3320,7 @@
       "source_location": "L57",
       "_origin": "ast",
       "id": "apps_web_src_app_api_invitations_route_buildaccepturl",
-      "community": 122,
+      "community": 0,
       "norm_label": "buildaccepturl()"
     },
     {
@@ -3330,7 +3330,7 @@
       "source_location": "L63",
       "_origin": "ast",
       "id": "apps_web_src_app_api_invitations_route_generatetoken",
-      "community": 122,
+      "community": 0,
       "norm_label": "generatetoken()"
     },
     {
@@ -3340,7 +3340,7 @@
       "source_location": "L71",
       "_origin": "ast",
       "id": "apps_web_src_app_api_invitations_route_post",
-      "community": 122,
+      "community": 0,
       "norm_label": "post()"
     },
     {
@@ -3350,7 +3350,7 @@
       "source_location": "L211",
       "_origin": "ast",
       "id": "apps_web_src_app_api_invitations_route_finduserbyemail",
-      "community": 122,
+      "community": 0,
       "norm_label": "finduserbyemail()"
     },
     {
@@ -3360,7 +3360,7 @@
       "source_location": "L222",
       "_origin": "ast",
       "id": "apps_web_src_app_api_invitations_route_findpendinginvitation",
-      "community": 122,
+      "community": 0,
       "norm_label": "findpendinginvitation()"
     },
     {
@@ -3500,7 +3500,7 @@
       "source_location": "L49",
       "_origin": "ast",
       "id": "apps_web_src_app_api_projects_route_get",
-      "community": 0,
+      "community": 38,
       "norm_label": "get()"
     },
     {
@@ -3690,7 +3690,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "apps_web_src_app_api_rules_id_evaluate_route",
-      "community": 188,
+      "community": 203,
       "norm_label": "route.ts"
     },
     {
@@ -3700,7 +3700,7 @@
       "source_location": "L22",
       "_origin": "ast",
       "id": "apps_web_src_app_api_rules_id_evaluate_route_evaluateruleinput",
-      "community": 188,
+      "community": 203,
       "norm_label": "evaluateruleinput"
     },
     {
@@ -3710,7 +3710,7 @@
       "source_location": "L29",
       "_origin": "ast",
       "id": "apps_web_src_app_api_rules_id_evaluate_route_parsejsonfield",
-      "community": 188,
+      "community": 203,
       "norm_label": "parsejsonfield()"
     },
     {
@@ -3720,7 +3720,7 @@
       "source_location": "L44",
       "_origin": "ast",
       "id": "apps_web_src_app_api_rules_id_evaluate_route_post",
-      "community": 188,
+      "community": 203,
       "norm_label": "post()"
     },
     {
@@ -3730,7 +3730,7 @@
       "source_location": "L125",
       "_origin": "ast",
       "id": "apps_web_src_app_api_rules_id_evaluate_route_evaluatecondition",
-      "community": 188,
+      "community": 203,
       "norm_label": "evaluatecondition()"
     },
     {
@@ -3740,7 +3740,7 @@
       "source_location": "L191",
       "_origin": "ast",
       "id": "apps_web_src_app_api_rules_id_evaluate_route_getfieldfromcontext",
-      "community": 188,
+      "community": 203,
       "norm_label": "getfieldfromcontext()"
     },
     {
@@ -3910,7 +3910,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "apps_web_src_app_api_tasks_id_execute_route",
-      "community": 123,
+      "community": 104,
       "norm_label": "route.ts"
     },
     {
@@ -3920,7 +3920,7 @@
       "source_location": "L39",
       "_origin": "ast",
       "id": "apps_web_src_app_api_tasks_id_execute_route_post",
-      "community": 123,
+      "community": 104,
       "norm_label": "post()"
     },
     {
@@ -3930,7 +3930,7 @@
       "source_location": "L171",
       "_origin": "ast",
       "id": "apps_web_src_app_api_tasks_id_execute_route_executeagentinbackground",
-      "community": 123,
+      "community": 104,
       "norm_label": "executeagentinbackground()"
     },
     {
@@ -3940,7 +3940,7 @@
       "source_location": "L261",
       "_origin": "ast",
       "id": "apps_web_src_app_api_tasks_id_execute_route_uuidvalidate",
-      "community": 123,
+      "community": 104,
       "norm_label": "uuidvalidate()"
     },
     {
@@ -3950,7 +3950,7 @@
       "source_location": "L204",
       "_origin": "ast",
       "id": "apps_web_src_app_api_tasks_id_execute_route_rationale_204",
-      "community": 123,
+      "community": 104,
       "norm_label": "todo: stream events to client via sse or store in db"
     },
     {
@@ -3960,7 +3960,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "apps_web_src_app_api_tasks_route",
-      "community": 38,
+      "community": 0,
       "norm_label": "route.ts"
     },
     {
@@ -3980,7 +3980,7 @@
       "source_location": "L78",
       "_origin": "ast",
       "id": "apps_web_src_app_api_tasks_route_post",
-      "community": 38,
+      "community": 0,
       "norm_label": "post()"
     },
     {
@@ -4040,7 +4040,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "apps_web_src_app_api_validation_runs_id_rerun_route",
-      "community": 122,
+      "community": 0,
       "norm_label": "route.ts"
     },
     {
@@ -4050,7 +4050,7 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "apps_web_src_app_api_validation_runs_id_rerun_route_creatererunrequestinput",
-      "community": 122,
+      "community": 0,
       "norm_label": "creatererunrequestinput"
     },
     {
@@ -4060,7 +4060,7 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "apps_web_src_app_api_validation_runs_id_rerun_route_post",
-      "community": 122,
+      "community": 0,
       "norm_label": "post()"
     },
     {
@@ -4070,7 +4070,7 @@
       "source_location": "L136",
       "_origin": "ast",
       "id": "apps_web_src_app_api_validation_runs_id_rerun_route_get",
-      "community": 122,
+      "community": 0,
       "norm_label": "get()"
     },
     {
@@ -4130,7 +4130,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "apps_web_src_app_api_workflows_id_instances_route",
-      "community": 188,
+      "community": 38,
       "norm_label": "route.ts"
     },
     {
@@ -4140,7 +4140,7 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "apps_web_src_app_api_workflows_id_instances_route_startworkflowinstanceinput",
-      "community": 188,
+      "community": 38,
       "norm_label": "startworkflowinstanceinput"
     },
     {
@@ -4150,7 +4150,7 @@
       "source_location": "L34",
       "_origin": "ast",
       "id": "apps_web_src_app_api_workflows_id_instances_route_workflowinstancesqueryparams",
-      "community": 188,
+      "community": 38,
       "norm_label": "workflowinstancesqueryparams"
     },
     {
@@ -4160,7 +4160,7 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "apps_web_src_app_api_workflows_id_instances_route_get",
-      "community": 188,
+      "community": 38,
       "norm_label": "get()"
     },
     {
@@ -4170,7 +4170,7 @@
       "source_location": "L104",
       "_origin": "ast",
       "id": "apps_web_src_app_api_workflows_id_instances_route_post",
-      "community": 188,
+      "community": 38,
       "norm_label": "post()"
     },
     {
@@ -4230,7 +4230,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "apps_web_src_app_api_workflows_route",
-      "community": 38,
+      "community": 208,
       "norm_label": "route.ts"
     },
     {
@@ -4240,7 +4240,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "apps_web_src_app_api_workflows_route_createworkflowdefinitioninput",
-      "community": 38,
+      "community": 208,
       "norm_label": "createworkflowdefinitioninput"
     },
     {
@@ -4250,7 +4250,7 @@
       "source_location": "L37",
       "_origin": "ast",
       "id": "apps_web_src_app_api_workflows_route_workflowdefinitionsqueryparams",
-      "community": 38,
+      "community": 208,
       "norm_label": "workflowdefinitionsqueryparams"
     },
     {
@@ -4260,7 +4260,7 @@
       "source_location": "L46",
       "_origin": "ast",
       "id": "apps_web_src_app_api_workflows_route_get",
-      "community": 38,
+      "community": 208,
       "norm_label": "get()"
     },
     {
@@ -4270,7 +4270,7 @@
       "source_location": "L102",
       "_origin": "ast",
       "id": "apps_web_src_app_api_workflows_route_post",
-      "community": 38,
+      "community": 208,
       "norm_label": "post()"
     },
     {
@@ -4290,7 +4290,7 @@
       "source_location": "L51",
       "_origin": "ast",
       "id": "apps_web_src_app_api_workspaces_route_get",
-      "community": 104,
+      "community": 38,
       "norm_label": "get()"
     },
     {
@@ -4620,7 +4620,7 @@
       "source_location": "L40",
       "_origin": "ast",
       "id": "apps_web_src_app_tasks_page_taskspage",
-      "community": 182,
+      "community": 38,
       "norm_label": "taskspage()"
     },
     {
@@ -4710,7 +4710,7 @@
       "source_location": "L35",
       "_origin": "ast",
       "id": "apps_web_src_app_workspaces_page_workspacespage",
-      "community": 191,
+      "community": 30,
       "norm_label": "workspacespage()"
     },
     {
@@ -5030,7 +5030,7 @@
       "source_location": "L132",
       "_origin": "ast",
       "id": "apps_web_src_lib_api_parsejsonbody",
-      "community": 188,
+      "community": 0,
       "norm_label": "parsejsonbody()"
     },
     {
@@ -5100,7 +5100,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "apps_web_src_lib_rbac",
-      "community": 122,
+      "community": 0,
       "norm_label": "rbac.ts"
     },
     {
@@ -5110,7 +5110,7 @@
       "source_location": "L61",
       "_origin": "ast",
       "id": "apps_web_src_lib_rbac_permissionscope",
-      "community": 122,
+      "community": 0,
       "norm_label": "permissionscope"
     },
     {
@@ -5120,7 +5120,7 @@
       "source_location": "L78",
       "_origin": "ast",
       "id": "apps_web_src_lib_rbac_getuserpermissions",
-      "community": 122,
+      "community": 0,
       "norm_label": "getuserpermissions()"
     },
     {
@@ -5130,7 +5130,7 @@
       "source_location": "L131",
       "_origin": "ast",
       "id": "apps_web_src_lib_rbac_resolveorganizationidforrbac",
-      "community": 122,
+      "community": 0,
       "norm_label": "resolveorganizationidforrbac()"
     },
     {
@@ -5140,7 +5140,7 @@
       "source_location": "L156",
       "_origin": "ast",
       "id": "apps_web_src_lib_rbac_haspermission",
-      "community": 122,
+      "community": 0,
       "norm_label": "haspermission()"
     },
     {
@@ -5150,7 +5150,7 @@
       "source_location": "L177",
       "_origin": "ast",
       "id": "apps_web_src_lib_rbac_requirepermission",
-      "community": 122,
+      "community": 0,
       "norm_label": "requirepermission()"
     },
     {
@@ -8082,7 +8082,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "packages_agent_adapter_src_stages_generate_permissions_generatepermissionsstage",
-      "community": 79,
+      "community": 22,
       "norm_label": "generatepermissionsstage"
     },
     {
@@ -8092,7 +8092,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "packages_agent_adapter_src_stages_generate_permissions_generatepermissionsstage_validateinput",
-      "community": 79,
+      "community": 22,
       "norm_label": ".validateinput()"
     },
     {
@@ -8102,7 +8102,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "packages_agent_adapter_src_stages_generate_permissions_generatepermissionsstage_execute",
-      "community": 79,
+      "community": 22,
       "norm_label": ".execute()"
     },
     {
@@ -8112,7 +8112,7 @@
       "source_location": "L39",
       "_origin": "ast",
       "id": "packages_agent_adapter_src_stages_generate_permissions_generatepermissionsstage_generatepermissionsartifacts",
-      "community": 79,
+      "community": 22,
       "norm_label": ".generatepermissionsartifacts()"
     },
     {
@@ -8122,7 +8122,7 @@
       "source_location": "L83",
       "_origin": "ast",
       "id": "packages_agent_adapter_src_stages_generate_permissions_generatepermissionsstage_defineroles",
-      "community": 79,
+      "community": 22,
       "norm_label": ".defineroles()"
     },
     {
@@ -8132,7 +8132,7 @@
       "source_location": "L139",
       "_origin": "ast",
       "id": "packages_agent_adapter_src_stages_generate_permissions_generatepermissionsstage_computehash",
-      "community": 79,
+      "community": 22,
       "norm_label": ".computehash()"
     },
     {
@@ -8302,7 +8302,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "packages_agent_adapter_src_stages_normalize_spec",
-      "community": 22,
+      "community": 80,
       "norm_label": "normalize-spec.ts"
     },
     {
@@ -14142,7 +14142,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "packages_core_types_src_schemas_organization",
-      "community": 191,
+      "community": 30,
       "norm_label": "organization.ts"
     },
     {
@@ -14152,7 +14152,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "packages_core_types_src_schemas_organization_organizationid",
-      "community": 191,
+      "community": 30,
       "norm_label": "organizationid"
     },
     {
@@ -14162,7 +14162,7 @@
       "source_location": "L22",
       "_origin": "ast",
       "id": "packages_core_types_src_schemas_organization_organizationslug",
-      "community": 191,
+      "community": 30,
       "norm_label": "organizationslug"
     },
     {
@@ -14172,7 +14172,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "packages_core_types_src_schemas_organization_organizationstatus",
-      "community": 191,
+      "community": 30,
       "norm_label": "organizationstatus"
     },
     {
@@ -14182,7 +14182,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "packages_core_types_src_schemas_organization_organization",
-      "community": 191,
+      "community": 30,
       "norm_label": "organization"
     },
     {
@@ -14192,7 +14192,7 @@
       "source_location": "L56",
       "_origin": "ast",
       "id": "packages_core_types_src_schemas_organization_organizationsummary",
-      "community": 191,
+      "community": 30,
       "norm_label": "organizationsummary"
     },
     {
@@ -14212,7 +14212,7 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "packages_core_types_src_schemas_project_projectid",
-      "community": 182,
+      "community": 38,
       "norm_label": "projectid"
     },
     {
@@ -15482,7 +15482,7 @@
       "source_location": "L138",
       "_origin": "ast",
       "id": "packages_core_types_src_schemas_task_payload_createtaskpayloadinput",
-      "community": 51,
+      "community": 104,
       "norm_label": "createtaskpayloadinput"
     },
     {
@@ -15512,7 +15512,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "packages_core_types_src_schemas_task_taskid",
-      "community": 182,
+      "community": 38,
       "norm_label": "taskid"
     },
     {
@@ -15532,7 +15532,7 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "packages_core_types_src_schemas_task_taskstatus",
-      "community": 123,
+      "community": 104,
       "norm_label": "taskstatus"
     },
     {
@@ -15582,7 +15582,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "packages_core_types_src_schemas_user",
-      "community": 30,
+      "community": 182,
       "norm_label": "user.ts"
     },
     {
@@ -15592,7 +15592,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "packages_core_types_src_schemas_user_userid",
-      "community": 30,
+      "community": 182,
       "norm_label": "userid"
     },
     {
@@ -15602,7 +15602,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "packages_core_types_src_schemas_user_userstatus",
-      "community": 30,
+      "community": 182,
       "norm_label": "userstatus"
     },
     {
@@ -15612,7 +15612,7 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "packages_core_types_src_schemas_user_user",
-      "community": 30,
+      "community": 182,
       "norm_label": "user"
     },
     {
@@ -15622,7 +15622,7 @@
       "source_location": "L46",
       "_origin": "ast",
       "id": "packages_core_types_src_schemas_user_usersummary",
-      "community": 30,
+      "community": 182,
       "norm_label": "usersummary"
     },
     {
@@ -16262,7 +16262,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "packages_core_types_src_schemas_workspace",
-      "community": 191,
+      "community": 207,
       "norm_label": "workspace.ts"
     },
     {
@@ -16272,7 +16272,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "packages_core_types_src_schemas_workspace_workspaceid",
-      "community": 182,
+      "community": 38,
       "norm_label": "workspaceid"
     },
     {
@@ -16282,7 +16282,7 @@
       "source_location": "L22",
       "_origin": "ast",
       "id": "packages_core_types_src_schemas_workspace_workspaceslug",
-      "community": 191,
+      "community": 207,
       "norm_label": "workspaceslug"
     },
     {
@@ -16292,7 +16292,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "packages_core_types_src_schemas_workspace_workspacestatus",
-      "community": 191,
+      "community": 207,
       "norm_label": "workspacestatus"
     },
     {
@@ -16312,7 +16312,7 @@
       "source_location": "L54",
       "_origin": "ast",
       "id": "packages_core_types_src_schemas_workspace_workspacelookupkey",
-      "community": 191,
+      "community": 207,
       "norm_label": "workspacelookupkey"
     },
     {
@@ -16322,7 +16322,7 @@
       "source_location": "L61",
       "_origin": "ast",
       "id": "packages_core_types_src_schemas_workspace_workspacesummary",
-      "community": 191,
+      "community": 207,
       "norm_label": "workspacesummary"
     },
     {
@@ -16332,7 +16332,7 @@
       "source_location": "L81",
       "_origin": "ast",
       "id": "packages_core_types_src_schemas_workspace_createworkspaceinput",
-      "community": 191,
+      "community": 207,
       "norm_label": "createworkspaceinput"
     },
     {
@@ -24146,10 +24146,70 @@
       "norm_label": "handover \u2014 phase 10 service workers infrastructure complete (2026-07-13 session 4)"
     },
     {
-      "label": "Handover Summary (2026-07-13 Session 4)",
+      "label": "Code Readiness Gap Analysis (2026-07-13)",
       "file_type": "document",
       "source_file": "HANDOVER.md",
       "source_location": "L8",
+      "_origin": "ast",
+      "id": "handover_code_readiness_gap_analysis_2026_07_13",
+      "community": 205,
+      "norm_label": "code readiness gap analysis (2026-07-13)"
+    },
+    {
+      "label": "Readiness Scorecard",
+      "file_type": "document",
+      "source_file": "HANDOVER.md",
+      "source_location": "L12",
+      "_origin": "ast",
+      "id": "handover_readiness_scorecard",
+      "community": 205,
+      "norm_label": "readiness scorecard"
+    },
+    {
+      "label": "P0 \u2014 Critical Blockers (Production Deployment Blockers)",
+      "file_type": "document",
+      "source_file": "HANDOVER.md",
+      "source_location": "L28",
+      "_origin": "ast",
+      "id": "handover_p0_critical_blockers_production_deployment_blockers",
+      "community": 205,
+      "norm_label": "p0 \u2014 critical blockers (production deployment blockers)"
+    },
+    {
+      "label": "P1 \u2014 High Priority (Core Feature Gaps)",
+      "file_type": "document",
+      "source_file": "HANDOVER.md",
+      "source_location": "L40",
+      "_origin": "ast",
+      "id": "handover_p1_high_priority_core_feature_gaps",
+      "community": 205,
+      "norm_label": "p1 \u2014 high priority (core feature gaps)"
+    },
+    {
+      "label": "P2 \u2014 Medium Priority (Hardening & UX)",
+      "file_type": "document",
+      "source_file": "HANDOVER.md",
+      "source_location": "L52",
+      "_origin": "ast",
+      "id": "handover_p2_medium_priority_hardening_ux",
+      "community": 205,
+      "norm_label": "p2 \u2014 medium priority (hardening & ux)"
+    },
+    {
+      "label": "Recommended Sprint Plan",
+      "file_type": "document",
+      "source_file": "HANDOVER.md",
+      "source_location": "L64",
+      "_origin": "ast",
+      "id": "handover_recommended_sprint_plan",
+      "community": 205,
+      "norm_label": "recommended sprint plan"
+    },
+    {
+      "label": "Handover Summary (2026-07-13 Session 4)",
+      "file_type": "document",
+      "source_file": "HANDOVER.md",
+      "source_location": "L74",
       "_origin": "ast",
       "id": "handover_handover_summary_2026_07_13_session_4",
       "community": 100,
@@ -24159,7 +24219,7 @@
       "label": "Handover Summary (2026-07-13 Session 3)",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L21",
+      "source_location": "L87",
       "_origin": "ast",
       "id": "handover_handover_summary_2026_07_13_session_3",
       "community": 100,
@@ -24169,7 +24229,7 @@
       "label": "Current State: Phase 8 COMPLETE, Phase 9 COMPLETE, Phase 10 \u2014 Workers Implementation IN PROGRESS",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L35",
+      "source_location": "L101",
       "_origin": "ast",
       "id": "handover_current_state_phase_8_complete_phase_9_complete_phase_10_workers_implementation_in_progress",
       "community": 100,
@@ -24179,7 +24239,7 @@
       "label": "Completed Phases",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L37",
+      "source_location": "L103",
       "_origin": "ast",
       "id": "handover_completed_phases",
       "community": 100,
@@ -24189,97 +24249,97 @@
       "label": "What Was Just Completed: Phase 8-9 Full Implementation",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L46",
+      "source_location": "L112",
       "_origin": "ast",
       "id": "handover_what_was_just_completed_phase_8_9_full_implementation",
-      "community": 100,
+      "community": 204,
       "norm_label": "what was just completed: phase 8-9 full implementation"
     },
     {
       "label": "Phase 8 \u2014 Industrial Runtime Services (Complete)",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L48",
+      "source_location": "L114",
       "_origin": "ast",
       "id": "handover_phase_8_industrial_runtime_services_complete",
-      "community": 100,
+      "community": 204,
       "norm_label": "phase 8 \u2014 industrial runtime services (complete)"
     },
     {
       "label": "Phase 9 \u2014 Governance and Hardening (Complete)",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L54",
+      "source_location": "L120",
       "_origin": "ast",
       "id": "handover_phase_9_governance_and_hardening_complete",
-      "community": 100,
+      "community": 204,
       "norm_label": "phase 9 \u2014 governance and hardening (complete)"
     },
     {
       "label": "Schemas Created (`packages/persistence/src/schema/`)",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L56",
+      "source_location": "L122",
       "_origin": "ast",
       "id": "handover_schemas_created_packages_persistence_src_schema",
-      "community": 100,
+      "community": 204,
       "norm_label": "schemas created (`packages/persistence/src/schema/`)"
     },
     {
       "label": "API Routes Implemented (`apps/web/src/app/api/`)",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L64",
+      "source_location": "L130",
       "_origin": "ast",
       "id": "handover_api_routes_implemented_apps_web_src_app_api",
-      "community": 100,
+      "community": 204,
       "norm_label": "api routes implemented (`apps/web/src/app/api/`)"
     },
     {
       "label": "Library Files (`apps/web/src/lib/`)",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L75",
+      "source_location": "L141",
       "_origin": "ast",
       "id": "handover_library_files_apps_web_src_lib",
-      "community": 100,
+      "community": 204,
       "norm_label": "library files (`apps/web/src/lib/`)"
     },
     {
       "label": "Latest Commits (Session 2026-07-13)",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L82",
+      "source_location": "L148",
       "_origin": "ast",
       "id": "handover_latest_commits_session_2026_07_13",
-      "community": 100,
+      "community": 211,
       "norm_label": "latest commits (session 2026-07-13)"
     },
     {
       "label": "Session 4 \u2014 Phase 10 Service Workers Infrastructure Complete",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L84",
+      "source_location": "L150",
       "_origin": "ast",
       "id": "handover_session_4_phase_10_service_workers_infrastructure_complete",
-      "community": 100,
+      "community": 211,
       "norm_label": "session 4 \u2014 phase 10 service workers infrastructure complete"
     },
     {
       "label": "Session 3 \u2014 Service Workers Infrastructure Scaffolded",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L94",
+      "source_location": "L160",
       "_origin": "ast",
       "id": "handover_session_3_service_workers_infrastructure_scaffolded",
-      "community": 100,
+      "community": 211,
       "norm_label": "session 3 \u2014 service workers infrastructure scaffolded"
     },
     {
       "label": "Verification Results (2026-07-13 Session 4)",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L104",
+      "source_location": "L170",
       "_origin": "ast",
       "id": "handover_verification_results_2026_07_13_session_4",
       "community": 100,
@@ -24289,217 +24349,217 @@
       "label": "Exit Criteria Status",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L115",
+      "source_location": "L181",
       "_origin": "ast",
       "id": "handover_exit_criteria_status",
-      "community": 100,
+      "community": 209,
       "norm_label": "exit criteria status"
     },
     {
       "label": "Phase 8 \u2014 Industrial Runtime Services",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L117",
+      "source_location": "L183",
       "_origin": "ast",
       "id": "handover_phase_8_industrial_runtime_services",
-      "community": 100,
+      "community": 209,
       "norm_label": "phase 8 \u2014 industrial runtime services"
     },
     {
       "label": "Phase 9 \u2014 Governance and Hardening",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L127",
+      "source_location": "L193",
       "_origin": "ast",
       "id": "handover_phase_9_governance_and_hardening",
-      "community": 100,
+      "community": 209,
       "norm_label": "phase 9 \u2014 governance and hardening"
     },
     {
       "label": "Phase 10 \u2014 Service Workers & Integration (In Progress)",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L136",
+      "source_location": "L202",
       "_origin": "ast",
       "id": "handover_phase_10_service_workers_integration_in_progress",
-      "community": 100,
+      "community": 209,
       "norm_label": "phase 10 \u2014 service workers & integration (in progress)"
     },
     {
       "label": "What's Next: Recommended Actions (Phase 10 \u2014 Service Workers & Integration)",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L154",
+      "source_location": "L220",
       "_origin": "ast",
       "id": "handover_what_s_next_recommended_actions_phase_10_service_workers_integration",
-      "community": 100,
+      "community": 206,
       "norm_label": "what's next: recommended actions (phase 10 \u2014 service workers & integration)"
     },
     {
       "label": "Phase 10 Status: Worker Logic Implementation Complete \u2705",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L156",
+      "source_location": "L222",
       "_origin": "ast",
       "id": "handover_phase_10_status_worker_logic_implementation_complete",
-      "community": 100,
+      "community": 206,
       "norm_label": "phase 10 status: worker logic implementation complete \u2705"
     },
     {
       "label": "Next Steps: Implement Worker Logic",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L178",
+      "source_location": "L244",
       "_origin": "ast",
       "id": "handover_next_steps_implement_worker_logic",
-      "community": 100,
+      "community": 206,
       "norm_label": "next steps: implement worker logic"
     },
     {
       "label": "External Integrations to Configure:",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L187",
+      "source_location": "L253",
       "_origin": "ast",
       "id": "handover_external_integrations_to_configure",
-      "community": 100,
+      "community": 206,
       "norm_label": "external integrations to configure:"
     },
     {
       "label": "Medium Term (UI Components & Dashboards \u2014 Phase 11?)",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L193",
+      "source_location": "L259",
       "_origin": "ast",
       "id": "handover_medium_term_ui_components_dashboards_phase_11",
-      "community": 100,
+      "community": 206,
       "norm_label": "medium term (ui components & dashboards \u2014 phase 11?)"
     },
     {
       "label": "Technical Debt / Open Questions",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L201",
+      "source_location": "L267",
       "_origin": "ast",
       "id": "handover_technical_debt_open_questions",
-      "community": 100,
+      "community": 206,
       "norm_label": "technical debt / open questions"
     },
     {
       "label": "Task Status Summary (Session 2026-07-13)",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L212",
+      "source_location": "L278",
       "_origin": "ast",
       "id": "handover_task_status_summary_session_2026_07_13",
-      "community": 100,
+      "community": 210,
       "norm_label": "task status summary (session 2026-07-13)"
     },
     {
       "label": "Phase 8 Tasks \u2014 COMPLETED",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L214",
+      "source_location": "L280",
       "_origin": "ast",
       "id": "handover_phase_8_tasks_completed",
-      "community": 100,
+      "community": 210,
       "norm_label": "phase 8 tasks \u2014 completed"
     },
     {
       "label": "Phase 9 Tasks \u2014 COMPLETED",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L219",
+      "source_location": "L285",
       "_origin": "ast",
       "id": "handover_phase_9_tasks_completed",
-      "community": 100,
+      "community": 210,
       "norm_label": "phase 9 tasks \u2014 completed"
     },
     {
       "label": "Phase 10 Tasks \u2014 WORKER IMPLEMENTATION COMPLETE \u2705",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L233",
+      "source_location": "L299",
       "_origin": "ast",
       "id": "handover_phase_10_tasks_worker_implementation_complete",
-      "community": 100,
+      "community": 210,
       "norm_label": "phase 10 tasks \u2014 worker implementation complete \u2705"
     },
     {
       "label": "Phase 10 Worker Implementation Status \u2014 COMPLETE \u2705",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L248",
+      "source_location": "L314",
       "_origin": "ast",
       "id": "handover_phase_10_worker_implementation_status_complete",
-      "community": 100,
+      "community": 123,
       "norm_label": "phase 10 worker implementation status \u2014 complete \u2705"
     },
     {
       "label": "Infrastructure \u2014 COMPLETE \u2705",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L250",
+      "source_location": "L316",
       "_origin": "ast",
       "id": "handover_infrastructure_complete",
-      "community": 100,
+      "community": 123,
       "norm_label": "infrastructure \u2014 complete \u2705"
     },
     {
       "label": "Core Processors \u2014 FULLY IMPLEMENTED \u2705",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L257",
+      "source_location": "L323",
       "_origin": "ast",
       "id": "handover_core_processors_fully_implemented",
-      "community": 100,
+      "community": 123,
       "norm_label": "core processors \u2014 fully implemented \u2705"
     },
     {
       "label": "Workers \u2014 FULLY INTEGRATED \u2705",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L264",
+      "source_location": "L330",
       "_origin": "ast",
       "id": "handover_workers_fully_integrated",
-      "community": 100,
+      "community": 123,
       "norm_label": "workers \u2014 fully integrated \u2705"
     },
     {
       "label": "New Files Created This Session:",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L272",
+      "source_location": "L338",
       "_origin": "ast",
       "id": "handover_new_files_created_this_session",
-      "community": 100,
+      "community": 123,
       "norm_label": "new files created this session:"
     },
     {
       "label": "Build Status:",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L279",
+      "source_location": "L345",
       "_origin": "ast",
       "id": "handover_build_status",
-      "community": 100,
+      "community": 123,
       "norm_label": "build status:"
     },
     {
       "label": "Known Issues (Pre-existing):",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L285",
+      "source_location": "L351",
       "_origin": "ast",
       "id": "handover_known_issues_pre_existing",
-      "community": 100,
+      "community": 123,
       "norm_label": "known issues (pre-existing):"
     },
     {
       "label": "Summary",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L290",
+      "source_location": "L356",
       "_origin": "ast",
       "id": "handover_summary",
       "community": 100,
@@ -24509,70 +24569,70 @@
       "label": "Quick Reference: New API Endpoints",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L307",
+      "source_location": "L373",
       "_origin": "ast",
       "id": "handover_quick_reference_new_api_endpoints",
-      "community": 100,
+      "community": 79,
       "norm_label": "quick reference: new api endpoints"
     },
     {
       "label": "Secrets Management (`/api/secrets`)",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L309",
+      "source_location": "L375",
       "_origin": "ast",
       "id": "handover_secrets_management_api_secrets",
-      "community": 100,
+      "community": 79,
       "norm_label": "secrets management (`/api/secrets`)"
     },
     {
       "label": "Quotas & Usage (`/api/quotas`)",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L318",
+      "source_location": "L384",
       "_origin": "ast",
       "id": "handover_quotas_usage_api_quotas",
-      "community": 100,
+      "community": 79,
       "norm_label": "quotas & usage (`/api/quotas`)"
     },
     {
       "label": "Rollbacks (`/api/rollbacks`)",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L324",
+      "source_location": "L390",
       "_origin": "ast",
       "id": "handover_rollbacks_api_rollbacks",
-      "community": 100,
+      "community": 79,
       "norm_label": "rollbacks (`/api/rollbacks`)"
     },
     {
       "label": "Approvals (`/api/approvals`)",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L332",
+      "source_location": "L398",
       "_origin": "ast",
       "id": "handover_approvals_api_approvals",
-      "community": 100,
+      "community": 79,
       "norm_label": "approvals (`/api/approvals`)"
     },
     {
       "label": "Audit Logs (`/api/audit-logs`)",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L338",
+      "source_location": "L404",
       "_origin": "ast",
       "id": "handover_audit_logs_api_audit_logs",
-      "community": 100,
+      "community": 79,
       "norm_label": "audit logs (`/api/audit-logs`)"
     },
     {
       "label": "Artifacts Phase8 (`/api/artifacts/phase8`)",
       "file_type": "document",
       "source_file": "HANDOVER.md",
-      "source_location": "L344",
+      "source_location": "L410",
       "_origin": "ast",
       "id": "handover_artifacts_phase8_api_artifacts_phase8",
-      "community": 100,
+      "community": 79,
       "norm_label": "artifacts phase8 (`/api/artifacts/phase8`)"
     },
     {
@@ -71023,7 +71083,17 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HANDOVER.md",
-      "source_location": "L35",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "handover_handover_phase_10_service_workers_infrastructure_complete_2026_07_13_session_4",
+      "target": "handover_code_readiness_gap_analysis_2026_07_13",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "HANDOVER.md",
+      "source_location": "L101",
       "weight": 1.0,
       "source": "handover_handover_phase_10_service_workers_infrastructure_complete_2026_07_13_session_4",
       "target": "handover_current_state_phase_8_complete_phase_9_complete_phase_10_workers_implementation_in_progress",
@@ -71033,7 +71103,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HANDOVER.md",
-      "source_location": "L115",
+      "source_location": "L181",
       "weight": 1.0,
       "source": "handover_handover_phase_10_service_workers_infrastructure_complete_2026_07_13_session_4",
       "target": "handover_exit_criteria_status",
@@ -71043,7 +71113,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HANDOVER.md",
-      "source_location": "L21",
+      "source_location": "L87",
       "weight": 1.0,
       "source": "handover_handover_phase_10_service_workers_infrastructure_complete_2026_07_13_session_4",
       "target": "handover_handover_summary_2026_07_13_session_3",
@@ -71053,7 +71123,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HANDOVER.md",
-      "source_location": "L8",
+      "source_location": "L74",
       "weight": 1.0,
       "source": "handover_handover_phase_10_service_workers_infrastructure_complete_2026_07_13_session_4",
       "target": "handover_handover_summary_2026_07_13_session_4",
@@ -71063,7 +71133,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HANDOVER.md",
-      "source_location": "L82",
+      "source_location": "L148",
       "weight": 1.0,
       "source": "handover_handover_phase_10_service_workers_infrastructure_complete_2026_07_13_session_4",
       "target": "handover_latest_commits_session_2026_07_13",
@@ -71073,7 +71143,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HANDOVER.md",
-      "source_location": "L248",
+      "source_location": "L314",
       "weight": 1.0,
       "source": "handover_handover_phase_10_service_workers_infrastructure_complete_2026_07_13_session_4",
       "target": "handover_phase_10_worker_implementation_status_complete",
@@ -71083,7 +71153,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HANDOVER.md",
-      "source_location": "L307",
+      "source_location": "L373",
       "weight": 1.0,
       "source": "handover_handover_phase_10_service_workers_infrastructure_complete_2026_07_13_session_4",
       "target": "handover_quick_reference_new_api_endpoints",
@@ -71093,7 +71163,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HANDOVER.md",
-      "source_location": "L290",
+      "source_location": "L356",
       "weight": 1.0,
       "source": "handover_handover_phase_10_service_workers_infrastructure_complete_2026_07_13_session_4",
       "target": "handover_summary",
@@ -71103,7 +71173,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HANDOVER.md",
-      "source_location": "L212",
+      "source_location": "L278",
       "weight": 1.0,
       "source": "handover_handover_phase_10_service_workers_infrastructure_complete_2026_07_13_session_4",
       "target": "handover_task_status_summary_session_2026_07_13",
@@ -71113,7 +71183,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HANDOVER.md",
-      "source_location": "L104",
+      "source_location": "L170",
       "weight": 1.0,
       "source": "handover_handover_phase_10_service_workers_infrastructure_complete_2026_07_13_session_4",
       "target": "handover_verification_results_2026_07_13_session_4",
@@ -71123,7 +71193,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HANDOVER.md",
-      "source_location": "L154",
+      "source_location": "L220",
       "weight": 1.0,
       "source": "handover_handover_phase_10_service_workers_infrastructure_complete_2026_07_13_session_4",
       "target": "handover_what_s_next_recommended_actions_phase_10_service_workers_integration",
@@ -71133,7 +71203,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HANDOVER.md",
-      "source_location": "L46",
+      "source_location": "L112",
       "weight": 1.0,
       "source": "handover_handover_phase_10_service_workers_infrastructure_complete_2026_07_13_session_4",
       "target": "handover_what_was_just_completed_phase_8_9_full_implementation",
@@ -71143,7 +71213,57 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HANDOVER.md",
-      "source_location": "L37",
+      "source_location": "L28",
+      "weight": 1.0,
+      "source": "handover_code_readiness_gap_analysis_2026_07_13",
+      "target": "handover_p0_critical_blockers_production_deployment_blockers",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "HANDOVER.md",
+      "source_location": "L40",
+      "weight": 1.0,
+      "source": "handover_code_readiness_gap_analysis_2026_07_13",
+      "target": "handover_p1_high_priority_core_feature_gaps",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "HANDOVER.md",
+      "source_location": "L52",
+      "weight": 1.0,
+      "source": "handover_code_readiness_gap_analysis_2026_07_13",
+      "target": "handover_p2_medium_priority_hardening_ux",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "HANDOVER.md",
+      "source_location": "L12",
+      "weight": 1.0,
+      "source": "handover_code_readiness_gap_analysis_2026_07_13",
+      "target": "handover_readiness_scorecard",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "HANDOVER.md",
+      "source_location": "L64",
+      "weight": 1.0,
+      "source": "handover_code_readiness_gap_analysis_2026_07_13",
+      "target": "handover_recommended_sprint_plan",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "HANDOVER.md",
+      "source_location": "L103",
       "weight": 1.0,
       "source": "handover_current_state_phase_8_complete_phase_9_complete_phase_10_workers_implementation_in_progress",
       "target": "handover_completed_phases",
@@ -71153,7 +71273,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HANDOVER.md",
-      "source_location": "L48",
+      "source_location": "L114",
       "weight": 1.0,
       "source": "handover_what_was_just_completed_phase_8_9_full_implementation",
       "target": "handover_phase_8_industrial_runtime_services_complete",
@@ -71163,7 +71283,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HANDOVER.md",
-      "source_location": "L54",
+      "source_location": "L120",
       "weight": 1.0,
       "source": "handover_what_was_just_completed_phase_8_9_full_implementation",
       "target": "handover_phase_9_governance_and_hardening_complete",
@@ -71173,7 +71293,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HANDOVER.md",
-      "source_location": "L64",
+      "source_location": "L130",
       "weight": 1.0,
       "source": "handover_phase_9_governance_and_hardening_complete",
       "target": "handover_api_routes_implemented_apps_web_src_app_api",
@@ -71183,7 +71303,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HANDOVER.md",
-      "source_location": "L75",
+      "source_location": "L141",
       "weight": 1.0,
       "source": "handover_phase_9_governance_and_hardening_complete",
       "target": "handover_library_files_apps_web_src_lib",
@@ -71193,7 +71313,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HANDOVER.md",
-      "source_location": "L56",
+      "source_location": "L122",
       "weight": 1.0,
       "source": "handover_phase_9_governance_and_hardening_complete",
       "target": "handover_schemas_created_packages_persistence_src_schema",
@@ -71203,7 +71323,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HANDOVER.md",
-      "source_location": "L94",
+      "source_location": "L160",
       "weight": 1.0,
       "source": "handover_latest_commits_session_2026_07_13",
       "target": "handover_session_3_service_workers_infrastructure_scaffolded",
@@ -71213,7 +71333,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HANDOVER.md",
-      "source_location": "L84",
+      "source_location": "L150",
       "weight": 1.0,
       "source": "handover_latest_commits_session_2026_07_13",
       "target": "handover_session_4_phase_10_service_workers_infrastructure_complete",
@@ -71223,7 +71343,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HANDOVER.md",
-      "source_location": "L136",
+      "source_location": "L202",
       "weight": 1.0,
       "source": "handover_exit_criteria_status",
       "target": "handover_phase_10_service_workers_integration_in_progress",
@@ -71233,7 +71353,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HANDOVER.md",
-      "source_location": "L117",
+      "source_location": "L183",
       "weight": 1.0,
       "source": "handover_exit_criteria_status",
       "target": "handover_phase_8_industrial_runtime_services",
@@ -71243,7 +71363,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HANDOVER.md",
-      "source_location": "L127",
+      "source_location": "L193",
       "weight": 1.0,
       "source": "handover_exit_criteria_status",
       "target": "handover_phase_9_governance_and_hardening",
@@ -71253,7 +71373,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HANDOVER.md",
-      "source_location": "L187",
+      "source_location": "L253",
       "weight": 1.0,
       "source": "handover_what_s_next_recommended_actions_phase_10_service_workers_integration",
       "target": "handover_external_integrations_to_configure",
@@ -71263,7 +71383,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HANDOVER.md",
-      "source_location": "L193",
+      "source_location": "L259",
       "weight": 1.0,
       "source": "handover_what_s_next_recommended_actions_phase_10_service_workers_integration",
       "target": "handover_medium_term_ui_components_dashboards_phase_11",
@@ -71273,7 +71393,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HANDOVER.md",
-      "source_location": "L178",
+      "source_location": "L244",
       "weight": 1.0,
       "source": "handover_what_s_next_recommended_actions_phase_10_service_workers_integration",
       "target": "handover_next_steps_implement_worker_logic",
@@ -71283,7 +71403,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HANDOVER.md",
-      "source_location": "L156",
+      "source_location": "L222",
       "weight": 1.0,
       "source": "handover_what_s_next_recommended_actions_phase_10_service_workers_integration",
       "target": "handover_phase_10_status_worker_logic_implementation_complete",
@@ -71293,7 +71413,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HANDOVER.md",
-      "source_location": "L201",
+      "source_location": "L267",
       "weight": 1.0,
       "source": "handover_what_s_next_recommended_actions_phase_10_service_workers_integration",
       "target": "handover_technical_debt_open_questions",
@@ -71303,7 +71423,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HANDOVER.md",
-      "source_location": "L233",
+      "source_location": "L299",
       "weight": 1.0,
       "source": "handover_task_status_summary_session_2026_07_13",
       "target": "handover_phase_10_tasks_worker_implementation_complete",
@@ -71313,7 +71433,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HANDOVER.md",
-      "source_location": "L214",
+      "source_location": "L280",
       "weight": 1.0,
       "source": "handover_task_status_summary_session_2026_07_13",
       "target": "handover_phase_8_tasks_completed",
@@ -71323,7 +71443,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HANDOVER.md",
-      "source_location": "L219",
+      "source_location": "L285",
       "weight": 1.0,
       "source": "handover_task_status_summary_session_2026_07_13",
       "target": "handover_phase_9_tasks_completed",
@@ -71333,7 +71453,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HANDOVER.md",
-      "source_location": "L279",
+      "source_location": "L345",
       "weight": 1.0,
       "source": "handover_phase_10_worker_implementation_status_complete",
       "target": "handover_build_status",
@@ -71343,7 +71463,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HANDOVER.md",
-      "source_location": "L257",
+      "source_location": "L323",
       "weight": 1.0,
       "source": "handover_phase_10_worker_implementation_status_complete",
       "target": "handover_core_processors_fully_implemented",
@@ -71353,7 +71473,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HANDOVER.md",
-      "source_location": "L250",
+      "source_location": "L316",
       "weight": 1.0,
       "source": "handover_phase_10_worker_implementation_status_complete",
       "target": "handover_infrastructure_complete",
@@ -71363,7 +71483,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HANDOVER.md",
-      "source_location": "L285",
+      "source_location": "L351",
       "weight": 1.0,
       "source": "handover_phase_10_worker_implementation_status_complete",
       "target": "handover_known_issues_pre_existing",
@@ -71373,7 +71493,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HANDOVER.md",
-      "source_location": "L272",
+      "source_location": "L338",
       "weight": 1.0,
       "source": "handover_phase_10_worker_implementation_status_complete",
       "target": "handover_new_files_created_this_session",
@@ -71383,7 +71503,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HANDOVER.md",
-      "source_location": "L264",
+      "source_location": "L330",
       "weight": 1.0,
       "source": "handover_phase_10_worker_implementation_status_complete",
       "target": "handover_workers_fully_integrated",
@@ -71393,7 +71513,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HANDOVER.md",
-      "source_location": "L332",
+      "source_location": "L398",
       "weight": 1.0,
       "source": "handover_quick_reference_new_api_endpoints",
       "target": "handover_approvals_api_approvals",
@@ -71403,7 +71523,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HANDOVER.md",
-      "source_location": "L344",
+      "source_location": "L410",
       "weight": 1.0,
       "source": "handover_quick_reference_new_api_endpoints",
       "target": "handover_artifacts_phase8_api_artifacts_phase8",
@@ -71413,7 +71533,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HANDOVER.md",
-      "source_location": "L338",
+      "source_location": "L404",
       "weight": 1.0,
       "source": "handover_quick_reference_new_api_endpoints",
       "target": "handover_audit_logs_api_audit_logs",
@@ -71423,7 +71543,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HANDOVER.md",
-      "source_location": "L318",
+      "source_location": "L384",
       "weight": 1.0,
       "source": "handover_quick_reference_new_api_endpoints",
       "target": "handover_quotas_usage_api_quotas",
@@ -71433,7 +71553,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HANDOVER.md",
-      "source_location": "L324",
+      "source_location": "L390",
       "weight": 1.0,
       "source": "handover_quick_reference_new_api_endpoints",
       "target": "handover_rollbacks_api_rollbacks",
@@ -71443,7 +71563,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HANDOVER.md",
-      "source_location": "L309",
+      "source_location": "L375",
       "weight": 1.0,
       "source": "handover_quick_reference_new_api_endpoints",
       "target": "handover_secrets_management_api_secrets",
@@ -76131,5 +76251,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "f69bcb8bf24f02aabaa4e0bf4da7a0d0ace95ada"
+  "built_at_commit": "27a082d3ea8af2461492cfe3378002e62c8f48ab"
 }

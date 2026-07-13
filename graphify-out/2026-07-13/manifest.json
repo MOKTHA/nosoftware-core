@@ -5,8 +5,8 @@
     "semantic_hash": ""
   },
   ".claude/settings.local.json": {
-    "mtime": 1783942758.7884986,
-    "ast_hash": "ac3d57aabfec48e53f8d617f1be044f7",
+    "mtime": 1783951783.5073886,
+    "ast_hash": "f7212c97d59745ba2b3080f788732ba0",
     "semantic_hash": ""
   },
   "apps/web/next-env.d.ts": {
@@ -580,8 +580,8 @@
     "semantic_hash": ""
   },
   "HANDOVER.md": {
-    "mtime": 1783940612.1465552,
-    "ast_hash": "20f3a917184059e13daf040375550952",
+    "mtime": 1783957809.135135,
+    "ast_hash": "031260a54c5c8a87b055f466a40a4546",
     "semantic_hash": ""
   },
   "README.md": {
@@ -600,8 +600,8 @@
     "semantic_hash": ""
   },
   "docker-compose.yml": {
-    "mtime": 1783705396.704478,
-    "ast_hash": "1d66ad82de365eb605ac0e95fc88c8ad",
+    "mtime": 1783947967.1399755,
+    "ast_hash": "06911a9da63c405c3b74d389fc000f21",
     "semantic_hash": ""
   },
   "docs/adr/0001-monorepo-and-boundaries.md": {
@@ -1307,6 +1307,146 @@
   "packages/persistence/src/schema/tenant-isolation.ts": {
     "mtime": 1783928125.555045,
     "ast_hash": "41b590b45a13067067dd52d83f6b883e",
+    "semantic_hash": ""
+  },
+  "apps/services/bin/health-check.ts": {
+    "mtime": 1783954767.4809515,
+    "ast_hash": "91f01ca65ddde12ecf549c9a684a12c8",
+    "semantic_hash": ""
+  },
+  "apps/services/bin/start-workers.ts": {
+    "mtime": 1783954642.435524,
+    "ast_hash": "e5797b76a8e219d3935947834c1f27c9",
+    "semantic_hash": ""
+  },
+  "apps/services/package.json": {
+    "mtime": 1783954782.1158845,
+    "ast_hash": "fcc42a54196b919575fcdf737f7cd9da",
+    "semantic_hash": ""
+  },
+  "apps/services/src/config/index.ts": {
+    "mtime": 1783950338.6553218,
+    "ast_hash": "5b5d447a5d21195b4485450919e71681",
+    "semantic_hash": ""
+  },
+  "apps/services/src/database/db.ts": {
+    "mtime": 1783954205.835523,
+    "ast_hash": "be2ad65cf872b4195b866243958ba3bc",
+    "semantic_hash": ""
+  },
+  "apps/services/src/health.ts": {
+    "mtime": 1783954851.2465682,
+    "ast_hash": "3eaadfe51f92a0282a02c9013e023fba",
+    "semantic_hash": ""
+  },
+  "apps/services/src/index.ts": {
+    "mtime": 1783954720.8561652,
+    "ast_hash": "0f433d10d74aefed47aa97f37f85e740",
+    "semantic_hash": ""
+  },
+  "apps/services/src/jobs/KpiComputationJob.ts": {
+    "mtime": 1783947156.1283596,
+    "ast_hash": "0e45779c4827166c593423bdf9009b27",
+    "semantic_hash": ""
+  },
+  "apps/services/src/jobs/QuotaCheckJob.ts": {
+    "mtime": 1783952623.4318545,
+    "ast_hash": "a003ac290322ba07e4171a6118a0fd84",
+    "semantic_hash": ""
+  },
+  "apps/services/src/jobs/index.ts": {
+    "mtime": 1783954134.6278489,
+    "ast_hash": "595438cb31f93504a6db508dcd72f1cd",
+    "semantic_hash": ""
+  },
+  "apps/services/src/queue/QueueManager.ts": {
+    "mtime": 1783952736.7763755,
+    "ast_hash": "2461aa33747015464670be06b27ac095",
+    "semantic_hash": ""
+  },
+  "apps/services/src/queue/eventQueue.ts": {
+    "mtime": 1783951946.4887116,
+    "ast_hash": "e29d5dd9007d82c117c6b6947b1a5d40",
+    "semantic_hash": ""
+  },
+  "apps/services/src/queue/index.ts": {
+    "mtime": 1783947223.8410766,
+    "ast_hash": "b64b6e3e43431d115be277529f6860ed",
+    "semantic_hash": ""
+  },
+  "apps/services/src/queue/notificationQueue.ts": {
+    "mtime": 1783951995.9055064,
+    "ast_hash": "abf2de2af888b2eae3e04b1fb85eedd8",
+    "semantic_hash": ""
+  },
+  "apps/services/src/queue/rulesQueue.ts": {
+    "mtime": 1783951977.0665846,
+    "ast_hash": "eb5843d69ea313ad928858022ba45cff",
+    "semantic_hash": ""
+  },
+  "apps/services/src/queue/workflowQueue.ts": {
+    "mtime": 1783946962.405169,
+    "ast_hash": "77afc41f01a2426f36026734282639b8",
+    "semantic_hash": ""
+  },
+  "apps/services/src/services/EventProcessor.ts": {
+    "mtime": 1783954511.612123,
+    "ast_hash": "cb22b360a411acbf1c81894b9dedde42",
+    "semantic_hash": ""
+  },
+  "apps/services/src/services/NotificationService.ts": {
+    "mtime": 1783952545.6251833,
+    "ast_hash": "f35a77f4eec0a1ed5ba71d6c4885786e",
+    "semantic_hash": ""
+  },
+  "apps/services/src/services/RuleEvaluator.ts": {
+    "mtime": 1783954620.9696224,
+    "ast_hash": "e7ae42686d3bef138ce3d34d9ff36fc2",
+    "semantic_hash": ""
+  },
+  "apps/services/src/services/WorkflowEngine.ts": {
+    "mtime": 1783954414.3855681,
+    "ast_hash": "2de89c7f10582dd088afe595e1e57df5",
+    "semantic_hash": ""
+  },
+  "apps/services/src/services/index.ts": {
+    "mtime": 1783947770.793791,
+    "ast_hash": "f2a37bc26df6fd408b5c1148bbe2ec3c",
+    "semantic_hash": ""
+  },
+  "apps/services/src/workers/EventIngestionWorker.ts": {
+    "mtime": 1783948617.242294,
+    "ast_hash": "85caa41375f096047a5dcb1466cde023",
+    "semantic_hash": ""
+  },
+  "apps/services/src/workers/NotificationDispatcherWorker.ts": {
+    "mtime": 1783948648.8251638,
+    "ast_hash": "0775f647ae63aaf1527243c59fdbcd1c",
+    "semantic_hash": ""
+  },
+  "apps/services/src/workers/RulesEvaluatorWorker.ts": {
+    "mtime": 1783949711.5298562,
+    "ast_hash": "43ccf7ccfe06398ee38fa266fff50c20",
+    "semantic_hash": ""
+  },
+  "apps/services/src/workers/WorkflowExecutorWorker.ts": {
+    "mtime": 1783950558.6674318,
+    "ast_hash": "73b30fc49d8d22902dbf6a3bda1a85f0",
+    "semantic_hash": ""
+  },
+  "apps/services/src/workers/index.ts": {
+    "mtime": 1783947764.1628187,
+    "ast_hash": "447a10208d6c09fb55066e642ded9f61",
+    "semantic_hash": ""
+  },
+  "apps/services/tsconfig.json": {
+    "mtime": 1783946836.0036972,
+    "ast_hash": "3d7aee8a081a78d08323cca4558fe4d5",
+    "semantic_hash": ""
+  },
+  "apps/services/docker-compose.yml": {
+    "mtime": 1783947856.8654313,
+    "ast_hash": "57ea1d95624d2bb29ce2cfa437388fda",
     "semantic_hash": ""
   }
 }
