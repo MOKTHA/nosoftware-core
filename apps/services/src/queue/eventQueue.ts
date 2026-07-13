@@ -87,7 +87,7 @@ export async function getPendingEventsBySource(source: string) {
 }
 
 /**
- * Deduplicate incoming events based on eventType + entityId + timestamp window.
+ * Deduplicate incoming events based on eventType + eventId + timestamp window.
  */
 export function isDuplicateEvent(
   event: EventJobData,
@@ -97,7 +97,7 @@ export function isDuplicateEvent(
   const now = Date.now();
 
   return recentEvents.some((e) => {
-    if (e.eventType !== event.eventType || e.entityId !== event.entityId) {
+    if (e.eventType !== event.eventType || e.eventId !== event.eventId) {
       return false;
     }
 
@@ -119,8 +119,8 @@ export function validateEventJobData(data: EventJobData): void {
     throw new Error('source is required and must be a string');
   }
 
-  if (typeof data.payload !== 'object' || data.payload === null) {
-    throw new Error('payload must be an object or null');
+  if (!data.data || typeof data.data !== 'object') {
+    throw new Error('data must be a valid JSON object');
   }
 
   // Validate timestamp is valid ISO date

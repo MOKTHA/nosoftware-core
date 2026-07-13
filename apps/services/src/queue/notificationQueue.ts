@@ -3,21 +3,17 @@
  */
 
 import { Queue } from 'bullmq';
-import type {
-  Notification,
-  notificationChannelEnum,
-  notificationPriorityEnum,
-} from '@heynxt/persistence';
+import type { Notification } from '@heynxt/persistence';
 import { QueueManager } from './QueueManager';
 import { getQueueName } from '../config';
 
 export interface NotificationJobData {
   notificationId?: string; // If undefined, creates new notification record
   recipient: string;
-  channel: notificationChannelEnum;
+  channel: 'email' | 'slack' | 'webhook';
   subject?: string;
   body: string;
-  priority?: notificationPriorityEnum;
+  priority?: 'low' | 'normal' | 'high' | 'critical';
   metadata?: Record<string, any>;
 }
 
@@ -56,7 +52,7 @@ export async function enqueueEmailNotification(
   recipient: string,
   subject: string,
   body: string,
-  priority?: notificationPriorityEnum
+  priority?: 'low' | 'normal' | 'high' | 'critical'
 ): Promise<string> {
   return enqueueNotification({
     recipient,
@@ -73,7 +69,7 @@ export async function enqueueEmailNotification(
 export async function enqueueSlackNotification(
   webhookUrl: string,
   message: string,
-  priority?: notificationPriorityEnum
+  priority?: 'low' | 'normal' | 'high' | 'critical'
 ): Promise<string> {
   return enqueueNotification({
     recipient: webhookUrl,
@@ -89,7 +85,7 @@ export async function enqueueSlackNotification(
 export async function enqueueWebhookNotification(
   endpoint: string,
   payload: Record<string, any>,
-  priority?: notificationPriorityEnum
+  priority?: 'low' | 'normal' | 'high' | 'critical'
 ): Promise<string> {
   return enqueueNotification({
     recipient: endpoint,
@@ -113,7 +109,7 @@ export async function enqueueBatchNotifications(
       name: 'dispatch',
       data: notif,
       jobId: `batch-notif:${Date.now()}:${notif.channel}:${notif.recipient}`,
-      priority: notif.priority === 'high' ? 1 : notif.priority === 'medium' ? 5 : 10,
+      priority: notif.priority === 'high' || notif.priority === 'critical' ? 1 : notif.priority === 'normal' ? 5 : 10,
     }))
   );
 }
@@ -122,10 +118,10 @@ export async function enqueueBatchNotifications(
  * Get pending notifications by channel.
  */
 export async function getPendingNotificationsByChannel(
-  channel: notificationChannelEnum
+  channel: 'email' | 'slack' | 'webhook'
 ) {
   const queue = getNotificationQueue();
-  return await queue.getWaiting((job) => job.data.channel === channel);
+  return await queue.getWaiting((job: any) => job.data.channel === channel);
 }
 
 /**
@@ -146,7 +142,7 @@ export function validateNotificationData(data: NotificationJobData): void {
   }
 
   // Validate channel type
-  const validChannels: notificationChannelEnum[] = ['email', 'slack', 'webhook'];
+  const validChannels: ('email' | 'slack' | 'webhook')[] = ['email', 'slack', 'webhook'];
   if (!validChannels.includes(data.channel)) {
     throw new Error(`Invalid notification channel: ${data.channel}`);
   }
@@ -157,9 +153,9 @@ export function validateNotificationData(data: NotificationJobData): void {
  */
 export function formatEmailSubject(
   subject: string,
-  priority?: notificationPriorityEnum
+  priority?: 'low' | 'normal' | 'high' | 'critical'
 ): string {
   const prefix =
-    priority === 'high' ? '[HIGH PRIORITY] ' : priority === 'medium' ? '[MEDIUM] ' : '';
+    priority === 'high' || priority === 'critical' ? '[HIGH PRIORITY] ' : priority === 'normal' ? '[NORMAL] ' : '';
   return `${prefix}${subject}`;
 }

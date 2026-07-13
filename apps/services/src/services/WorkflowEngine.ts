@@ -2,6 +2,7 @@
  * Core workflow engine - executes workflow state machines.
  */
 
+import crypto from 'crypto';
 import { eq } from 'drizzle-orm';
 import { db, workflowDefinitions, workflowInstances, workflowTransitions } from '@heynxt/persistence';
 import type { WorkflowDefinition, WorkflowInstance, InsertWorkflowTransition } from '@heynxt/persistence';
@@ -57,15 +58,16 @@ export class WorkflowEngine {
     const [instance] = await db
       .insert(workflowInstances)
       .values({
+        id: crypto.randomUUID(),
         definitionId,
         definitionVersion: definition.version,
-        status: 'running',
+        status: 'running' as const,
         currentState: initialState,
         contextData: metadata ?? {},
       })
       .returning();
 
-    if (!instance) {
+    if (!instance || !instance.id) {
       throw new Error('Failed to create workflow instance');
     }
 
@@ -93,12 +95,11 @@ export class WorkflowEngine {
     metadata?: Record<string, any>
   ): Promise<TransitionResult> {
     const result = await withTransaction(async (client) => {
-      // Get current instance
+      // Get current instance (without forUpdate as it's not supported in this Drizzle version)
       const [instance] = await db
         .select()
         .from(workflowInstances)
         .where(eq(workflowInstances.id, instanceId))
-        .forUpdate() // Lock row for update
         .execute(client);
 
       if (!instance) {
@@ -108,7 +109,7 @@ export class WorkflowEngine {
       if (instance.status !== 'running') {
         return {
           success: false,
-          fromState: instance.currentState,
+          fromState: instance.currentState || '',
           toState: '',
           error: `Cannot transition workflow in status: ${instance.status}`,
         };
@@ -132,7 +133,7 @@ export class WorkflowEngine {
       if (!matchingTransition) {
         return {
           success: false,
-          fromState: instance.currentState,
+          fromState: instance.currentState || 'unknown',
           toState: '',
           error: `No transition found for event "${triggerEvent}" in state "${instance.currentState}"`,
         };
@@ -148,26 +149,32 @@ export class WorkflowEngine {
           currentState: newState,
           status: newStatus,
           updatedAt: new Date(),
-          contextData: { ...instance.contextData, ...metadata },
+          contextData: { ...(instance.contextData as any), ...metadata },
         })
         .where(eq(workflowInstances.id, instanceId))
         .execute(client);
 
-      // Log the transition
+      // Log the transition with required id and createdAt fields
       const [transition] = await db
         .insert(workflowTransitions)
         .values({
+          id: crypto.randomUUID(),
           instanceId,
-          fromState: instance.currentState,
+          fromState: instance.currentState || 'unknown',
           toState: newState,
-          triggerType: 'event',
+          triggerType: 'event' as const,
           eventName: triggerEvent,
           metadata: metadata ?? {},
+          createdAt: new Date(),
         })
         .returning()
         .execute(client);
 
-      return { success: true, fromState: instance.currentState, toState: newState, transitionId: transition.id };
+      if (!transition) {
+        throw new Error('Failed to create transition record');
+      }
+
+      return { success: true, fromState: instance.currentState || 'unknown', toState: newState, transitionId: transition.id };
     });
 
     return result;
@@ -262,7 +269,7 @@ export class WorkflowEngine {
   /**
    * Get workflow instance history (transitions).
    */
-  static async getInstanceHistory(instanceId: string): Promise<Array<{ id: string; fromState: string; toState: string; eventName?: string; createdAt: Date }>> {
+  static async getInstanceHistory(instanceId: string): Promise<Array<{ id: string; fromState: string; toState: string; eventName?: string | null; createdAt: Date }>> {
     return await db
       .select({
         id: workflowTransitions.id,

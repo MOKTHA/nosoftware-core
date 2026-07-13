@@ -60,16 +60,19 @@ export function loadEnvConfig(): EnvConfig {
  * Get worker concurrency for a specific queue type.
  */
 export function getWorkerConcurrency(queueType: 'workflow' | 'event' | 'rules' | 'notification'): number {
+  const config = loadEnvConfig();
   const key = `WORKER_CONCURRENCY_${queueType.toUpperCase()}` as keyof EnvConfig;
-  return parseInt(loadEnvConfig()[key], 10);
+  const value = config[key];
+  return typeof value === 'string' ? parseInt(value, 10) : 5; // default to 5 if invalid
 }
 
 /**
  * Get queue name for a specific type.
  */
 export function getQueueName(queueType: 'workflow' | 'event' | 'rules' | 'notification'): string {
+  const config = loadEnvConfig();
   const key = `QUEUE_NAME_${queueType.toUpperCase()}` as keyof EnvConfig;
-  return loadEnvConfig()[key];
+  return typeof config[key] === 'string' ? config[key] : `${queueType}_queue`; // default queue name
 }
 
 /**

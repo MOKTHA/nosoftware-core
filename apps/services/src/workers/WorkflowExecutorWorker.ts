@@ -24,13 +24,13 @@ async function logTransitionAttempt(
 
   if (instance && !result.success) {
     // Log failed attempt in workflow_instances contextData
-    const attempts = Array.isArray(instance.contextData?.failedAttempts) ? instance.contextData.failedAttempts : [];
-    attempts.push(Date.now());
+    const existingAttempts = Array.isArray((instance.contextData as any)?.failedAttempts) ? (instance.contextData as any).failedAttempts : [];
+    const attempts = [...existingAttempts, Date.now()];
 
     await db
       .update(workflowInstances)
       .set({
-        contextData: { ...instance.contextData, failedAttempts: attempts },
+        contextData: { ...(instance.contextData || {}), failedAttempts: attempts },
       })
       .where(eq(workflowInstances.id, instanceId));
   }
@@ -68,38 +68,40 @@ export async function processWorkflowJob(job: Job): Promise<TransitionResult> {
       throw new Error('Invalid job: missing workflowId and instanceId');
     }
 
-    // Execute the transition
+    // Execute the transition with valid triggerEvent
+    const triggerEvent = data.triggerEvent ?? 'default';
     const result = await WorkflowEngine.executeTransition(
-      instanceId,
-      data.triggerEvent,
+      instanceId!,
+      triggerEvent,
       data.metadata
     );
 
     if (!result.success) {
-      console.warn(`Workflow transition failed for instance ${instanceId}:`, result.error);
+      const errorMsg = result.error || 'Unknown error';
+      console.warn(`Workflow transition failed for instance ${instanceId}:`, errorMsg);
 
       // Check if we should retry (e.g., transient error) or stop
       const retriableErrors = ['Instance not found', 'Definition not found'];
-      if (retriableErrors.some((err) => result.error?.includes(err))) {
-        throw new Error(result.error);
+      if (retriableErrors.some((err) => errorMsg.includes(err))) {
+        throw new Error(errorMsg);
       }
 
       // Non-retriable - log and return
-      await logTransitionAttempt(instanceId, result);
+      await logTransitionAttempt(instanceId!, result);
     } else {
       console.log(
         `Workflow transition succeeded: instance=${instanceId}, from=${result.fromState} -> to=${result.toState}`
       );
-      await logTransitionAttempt(instanceId, result);
+      await logTransitionAttempt(instanceId!, result);
 
       // Check if workflow completed and log final state
       const [instance] = await db
         .select()
         .from(workflowInstances)
-        .where(eq(workflowInstances.id, instanceId));
+        .where(eq(workflowInstances.id, instanceId!));
 
       if (instance?.status === 'completed') {
-        console.log(`Workflow completed: ${instance.definitionId} - ${data.triggerEvent}`);
+        console.log(`Workflow completed: ${instance.definitionId} - ${(data.triggerEvent ?? 'unknown event')}`);
       }
     }
 

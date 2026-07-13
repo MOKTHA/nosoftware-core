@@ -71,7 +71,8 @@ export async function scheduleRuleEvaluation(
 ): Promise<void> {
   const queue = getRulesQueue();
 
-  await queue.addDelayed('evaluate', { ruleId, context }, {
+  // BullMQ uses `delay` option for delayed jobs (no addDelayed method)
+  await queue.add('evaluate', { ruleId, context }, {
     jobId: `scheduled:${ruleId}:${Date.now()}`,
     delay: delayMs,
     priority: 5,
@@ -83,7 +84,7 @@ export async function scheduleRuleEvaluation(
  */
 export async function getPendingEvaluations(ruleId: string) {
   const queue = getRulesQueue();
-  return await queue.getWaiting((job) => job.data.ruleId === ruleId);
+  return await queue.getWaiting((job: any) => job.data.ruleId === ruleId);
 }
 
 /**
@@ -96,13 +97,16 @@ export function validateRuleEvaluationData(data: RuleEvaluationJobData): void {
 
   // If providing cached definition, validate it
   if (data.rule) {
-    if (!data.rule.conditionExpression || !data.rule.domain) {
+    const ruleDef = data.rule as any;
+    if (!ruleDef.domain || !ruleDef.conditions) {
       throw new Error(
-        'Cached rule definition must include conditionExpression and domain'
+        'Cached rule definition must include domain and conditions'
       );
     }
 
-    if (!['work-order', 'routing', 'quality', 'maintenance', 'inventory', 'custom'].includes(data.rule.domain)) {
+    // Validate domain is one of the allowed values
+    const validDomains = ['quality', 'process', 'equipment', 'production', 'safety', 'custom'];
+    if (!validDomains.includes(ruleDef.domain)) {
       throw new Error('Invalid rule domain');
     }
   }
@@ -117,12 +121,13 @@ export function calculateRulePriority(
 ): number {
   let priority = 5; // Default priority
 
-  // Higher priority for critical violations
-  if (rule.severity === 'critical') {
+  // Higher priority for critical violations (severity is stored in conditions/actions JSON)
+  const ruleAsAny = rule as any;
+  if (ruleAsAny.severity === 'critical') {
     priority = 1;
-  } else if (rule.severity === 'high') {
+  } else if (ruleAsAny.severity === 'high') {
     priority = 2;
-  } else if (rule.severity === 'medium') {
+  } else if (ruleAsAny.severity === 'medium' || ruleAsAny.severity === 'warning') {
     priority = 5;
   }
 

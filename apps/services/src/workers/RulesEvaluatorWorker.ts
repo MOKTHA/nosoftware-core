@@ -47,9 +47,6 @@ export function createRulesEvaluatorWorker() {
       concurrency,
       lockDuration: 30000, // Lock expires after 30s
       lockRenewTime: 15000, // Renew every 15s
-      keepJobs: {
-        count: 1000, // Keep last 1000 completed jobs
-      },
     }
   );
 }
