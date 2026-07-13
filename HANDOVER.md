@@ -56,8 +56,9 @@
 
 | Commit | Description | Files Changed |
 |--------|-------------|---------------|
-| `70a863a` | fix(Phase 8-9): Apply tenant isolation and API route fixes (this session) | 12 files, +94/-83 lines |
-| `6d688c6` | fix(Phase 8-9): Apply tenant isolation and API route fixes | 6 files, +116/-90 lines (previous commit) |
+| `967f31d` | fix(Phase 8-9): Fix artifact schema mismatches and type errors | 5 files, +41/-61 lines (this session) |
+| `70a863a` | fix(Phase 8-9): Apply tenant isolation and API route fixes | 12 files, +94/-83 lines (previous commit) |
+| `6d688c6` | fix(Phase 8-9): Apply tenant isolation and API route fixes | 6 files, +116/-90 lines (earlier session) |
 | `e7ef8f0` | feat(Phase 8-9): Complete industrial runtime services API routes and governance schemas | 15 files, +2.5k lines (previous commit) |
 | `ca95646` | feat(Phase 8): Apply runtime services API route fixes | artifacts/phase8/route.ts cleanup |
 | `dc7355c` | feat(Phase 8): Add industrial runtime services API routes | rollbacks, secrets APIs created |
@@ -70,9 +71,11 @@
 
 | Check | Status | Notes |
 |-------|--------|-------|
-| `pnpm typecheck` | ✅ TODO (run now) | All 9 packages should type-check cleanly after new schemas added |
-| `pnpm build` | ✅ TODO (run now) | Full build verification needed with all Phase 8-9 code in place |
+| `pnpm typecheck` | ✅ PASS | All 9 packages type-check cleanly after Phase 8-9 schemas added |
+| `pnpm build` | ✅ PASS | Full build successful with all Phase 8-9 code in place |
 | `pnpm lint` | ⚠ TODO | Linter not configured yet (stub commands in place) |
+
+**Build output**: All API routes compiled successfully including new Phase 8 (`/api/artifacts/phase8/*`) and Phase 9 (`/api/secrets`, `/api/quotas`, `/api/rollbacks/*`, `/api/approvals`, `/api/audit-logs`) endpoints.
 
 ---
 
@@ -97,9 +100,9 @@
 | Quota enforcement APIs | ✅ PASS | Per-tenant limits tracked with usage counters and violation logging |
 | Rollback mechanisms | ✅ PASS | Snapshot creation, rollback requests, artifact mapping all implemented |
 
-**Overall Phase 8 Status**: **COMPLETE** — All schemas defined and core API routes operational. The runtime services foundation is in place for workflow execution, event ingestion, rules evaluation, notifications, KPI aggregation, and file/evidence management.
+**Overall Phase 8 Status**: **COMPLETE** — All schemas defined and core API routes operational. The runtime services foundation is in place for workflow execution, event ingestion, rules evaluation, notifications, KPI aggregation, and file/evidence management. Verified with `pnpm typecheck` and `pnpm build`.
 
-**Overall Phase 9 Status**: **COMPLETE** — Governance infrastructure fully implemented with tenant isolation patterns, immutable audit logging, secrets management, quota enforcement, and rollback capabilities.
+**Overall Phase 9 Status**: **COMPLETE** — Governance infrastructure fully implemented with tenant isolation patterns, immutable audit logging, secrets management, quota enforcement, and rollback capabilities. All API routes verified with typecheck/build.
 
 ---
 
