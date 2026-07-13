@@ -85,7 +85,11 @@
 
 | Commit | Description | Files Changed | Lines Added |
 |--------|-------------|---------------|-------------|
+| `35c77ca` | docs(graphify): Add Phase 10 service workers knowledge graph documentation | GRAPH_PHASE_10.md created | +231 lines |
+| `dc34b9e` | fix(Phase 10): Fix TypeScript errors in service workers (queues, jobs, services) | 7 files, +41/-52 lines | Type fixes for BullMQ API usage |
 | `d559c98` | feat(Phase 10): Add service workers infrastructure for industrial runtime services | 11 files, +203/-280 lines | ~4.2k total (queues, processors, workers) |
+
+### Session 2 — Phase 8-9 Verification & Graph Update |
 
 ### Session 2 — Phase 8-9 Verification & Graph Update
 
