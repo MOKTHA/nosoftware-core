@@ -1,16 +1,16 @@
 # Graph Report - heynxt-core  (2026-07-13)
 
 ## Corpus Check
-- 235 files · ~171,855 words
+- 256 files · ~183,815 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 2530 nodes · 3512 edges · 183 communities (156 shown, 27 thin omitted)
+- 2684 nodes · 3942 edges · 196 communities (169 shown, 27 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `109ff608`
+- Built from commit: `17e329e4`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -123,6 +123,7 @@
 - docs/architecture/overview.md
 - docs/dev-setup.md
 - docs/gap-analysis.md
+- package.json
 - packages/agent-adapter/package.json
 - packages/agent-adapter/src/index.ts
 - packages/agent-adapter/tsconfig.json
@@ -191,18 +192,31 @@
 - ResolveBlueprintPlanStage
 - ValidateTestsStage
 - rbac.ts
+- tenant-isolation.ts
+- runtime-events.ts
+- route.ts
+- route.ts
+- route.ts
+- route.ts
+- route.ts
+- UserMenu.tsx
+- audit-log.ts
+- workspace.ts
+- route.ts
+- route.ts
+- route.ts
 
 ## God Nodes (most connected - your core abstractions)
-1. `errorResponse()` - 33 edges
-2. `badRequest()` - 32 edges
-3. `GenerationStageInput` - 28 edges
-4. `requireAuth()` - 25 edges
-5. `parseJsonBody()` - 24 edges
+1. `errorResponse()` - 81 edges
+2. `badRequest()` - 80 edges
+3. `requireAuth()` - 56 edges
+4. `parseJsonBody()` - 52 edges
+5. `GenerationStageInput` - 28 edges
 6. `GenerationStage` - 23 edges
 7. `requirePermission()` - 21 edges
 8. `ValidationStage` - 21 edges
 9. `LocalPathBlueprintLoader` - 21 edges
-10. `insertAuditEntry()` - 19 edges
+10. `insertAuditEntry()` - 20 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `POST()` --references--> `Invitation`  [EXTRACTED]
@@ -219,11 +233,11 @@
 ## Import Cycles
 - None detected.
 
-## Communities (183 total, 27 thin omitted)
+## Communities (196 total, 27 thin omitted)
 
 ### Community 0 - "index.ts"
-Cohesion: 0.21
-Nodes (28): POST(), POST(), GET(), POST(), ADR-0006, POST(), ApprovalQueryParams, CreateApprovalDecisionInput (+20 more)
+Cohesion: 0.17
+Nodes (22): POST(), POST(), GET(), PATCH(), ADR-0006, POST(), ADR-0006, POST() (+14 more)
 
 ### Community 1 - "errorResponse"
 Cohesion: 0.05
@@ -246,8 +260,8 @@ Cohesion: 0.04
 Nodes (45): dependencies, @auth/drizzle-adapter, drizzle-orm, @heynxt/agent-adapter, @heynxt/blueprint-registry, @heynxt/core-types, @heynxt/domain-models, @heynxt/persistence (+37 more)
 
 ### Community 6 - "scripts"
-Cohesion: 0.08
-Nodes (38): agentExecutionResults, agentSpecs, agentStatusEnum, agentTypeEnum, executionResultStatusEnum, ADR-0008, aggregationWindowTypeEnum, InsertKpiCalculationJob (+30 more)
+Cohesion: 0.07
+Nodes (45): agentExecutionResults, agentSpecs, agentStatusEnum, agentTypeEnum, executionResultStatusEnum, ADR-0008, aggregationWindowTypeEnum, InsertKpiCalculationJob (+37 more)
 
 ### Community 7 - "scripts"
 Cohesion: 0.05
@@ -274,8 +288,8 @@ Cohesion: 0.06
 Nodes (33): execa, @octokit/rest, @octokit/types, @octokit/webhooks-types, dependencies, @heynxt/core-types, @heynxt/prompt-spec, @octokit/rest (+25 more)
 
 ### Community 13 - "compilerOptions"
-Cohesion: 0.07
-Nodes (29): metadata, RootLayout(), initialsFor(), SessionUser, UserMenu(), UserMenuProps, ^build, .env (+21 more)
+Cohesion: 0.09
+Nodes (23): ^build, .env, .env.example, .next/**, !.next/cache/**, dependsOn, outputs, cache (+15 more)
 
 ### Community 14 - "package.json"
 Cohesion: 0.11
@@ -318,8 +332,8 @@ Cohesion: 0.09
 Nodes (23): dependencies, zod, devDependencies, typescript, vitest, exports, import, typescript (+15 more)
 
 ### Community 24 - "Graph Report — coding-agent-template"
-Cohesion: 0.17
-Nodes (16): accounts, artifactKindEnum, artifacts, artifactStorageKindEnum, generationRuns, generationRunStatusEnum, projects, projectStatusEnum (+8 more)
+Cohesion: 0.11
+Nodes (26): accounts, artifactKindEnum, artifactStorageKindEnum, auditActionEnum, auditEntityTypeEnum, auditLog, generationRuns, generationRunStatusEnum (+18 more)
 
 ### Community 25 - "workspace.ts"
 Cohesion: 0.10
@@ -330,16 +344,16 @@ Cohesion: 0.10
 Nodes (21): dependencies, @heynxt/core-types, zod, devDependencies, typescript, exports, import, @heynxt/core-types (+13 more)
 
 ### Community 27 - "control-plane.test.ts"
-Cohesion: 0.15
-Nodes (9): BlueprintMetadata, BlueprintValidator, BlueprintValidatorImpl, CompositionPlan, createValidator(), DomainEntity, ValidationReport, ValidationResult (+1 more)
+Cohesion: 0.10
+Nodes (10): BlueprintCatalog, BlueprintMetadata, BlueprintValidator, BlueprintValidatorImpl, CompositionPlan, createValidator(), DomainEntity, ValidationReport (+2 more)
 
 ### Community 28 - "blueprint.ts"
 Cohesion: 0.10
 Nodes (20): Artifact, ArtifactBase, ArtifactContentType, ArtifactId, ArtifactStorageType, ContentHash, DownloadArtifactRequest, DownloadArtifactResponse (+12 more)
 
 ### Community 30 - "ADR-0004: ORM and Database Choice for Control Plane"
-Cohesion: 0.09
-Nodes (24): WorkspacesList(), WorkspacesPage(), Invitation, InvitationId, InvitationStatus, InvitationSummary, InviteUserInput, Organization (+16 more)
+Cohesion: 0.12
+Nodes (17): WorkspacesPage(), Invitation, InvitationId, InvitationStatus, InvitationSummary, InviteUserInput, Organization, OrganizationId (+9 more)
 
 ### Community 31 - "Architecture Overview"
 Cohesion: 0.12
@@ -370,8 +384,8 @@ Cohesion: 0.14
 Nodes (12): BlueprintDomain, BlueprintFamily, BlueprintFilter, BlueprintPagination, BlueprintSort, BlueprintTag, CatalogQueryResult, createEmptyCatalog() (+4 more)
 
 ### Community 38 - "agent-spec.ts"
-Cohesion: 0.20
-Nodes (11): auditActionEnum, auditEntityTypeEnum, auditLog, invitations, invitationStatusEnum, ADR-0008, organizations, organizationStatusEnum (+3 more)
+Cohesion: 0.12
+Nodes (31): POST(), VerifyArtifactInput, GET(), GET(), GET(), KPIsQueryParams, GET(), ApproveRollbackInput (+23 more)
 
 ### Community 39 - "page.tsx"
 Cohesion: 0.27
@@ -398,16 +412,16 @@ Cohesion: 0.15
 Nodes (12): InsertNotification, InsertNotificationDeliveryAttempt, InsertNotificationTemplate, Notification, notificationChannelEnum, NotificationDeliveryAttempt, notificationDeliveryAttempts, notificationPriorityEnum (+4 more)
 
 ### Community 50 - "BlueprintCatalog"
-Cohesion: 0.08
-Nodes (43): GET(), GET(), GET(), TasksPage(), Artifact, ArtifactId, ArtifactKind, ArtifactStorageKind (+35 more)
+Cohesion: 0.12
+Nodes (22): Artifact, ArtifactId, ArtifactKind, ArtifactStorageKind, ArtifactSummary, CreateArtifactInput, hasInlineContent(), CreateGenerationRunInput (+14 more)
 
 ### Community 51 - "task.ts"
 Cohesion: 0.17
 Nodes (10): CreateTaskPayloadInput, CreateTaskPayloadInputSchema, TaskPayload, TaskPayloadId, TaskPayloadIdSchema, TaskPayloadSchema, TaskPayloadSummary, TaskPayloadSummarySchema (+2 more)
 
 ### Community 52 - "auth.ts"
-Cohesion: 0.17
-Nodes (11): InsertRule, InsertRuleEvaluationLog, InsertRuleViolation, RuleDefinition, ruleDomainEnum, RuleEvaluationLog, rules, ruleStatusEnum (+3 more)
+Cohesion: 0.14
+Nodes (15): AuditLogsQueryParams, GET(), parseJsonField(), POST(), calculateQuotaStatus(), GET(), POST(), QuotasQueryParams (+7 more)
 
 ### Community 53 - "rbac.ts"
 Cohesion: 0.17
@@ -418,8 +432,12 @@ Cohesion: 0.18
 Nodes (10): compilerOptions, lib, outDir, rootDir, extends, include, ES2022, src/**/* (+2 more)
 
 ### Community 55 - "ADR-0007 — Phase 1 UI Consolidation Pattern"
-Cohesion: 0.29
-Nodes (6): CreateWorkspaceForm(), errStyle, inputStyle, PageProps, tdStyle, thStyle
+Cohesion: 0.22
+Nodes (8): CreateWorkspaceForm(), errStyle, inputStyle, PageProps, tdStyle, thStyle, WorkspacesList(), Workspace
+
+### Community 59 - "tsconfig.json"
+Cohesion: 0.12
+Nodes (15): artifacts, InsertRollbackArtifactMapping, InsertRollbackRequest, InsertSnapshot, InsertSnapshotMetadataStorage, RollbackArtifactMapping, rollbackArtifactMappings, RollbackRequest (+7 more)
 
 ### Community 60 - "tsconfig.json"
 Cohesion: 0.06
@@ -490,8 +508,8 @@ Cohesion: 0.08
 Nodes (24): 1. Current State (from `graphify/heynxt-core/`), 2. Reference Repo Synthesis (from graphify reports), 3. Reuse Matrix (summary; full version in `buildplan.md` Phase 0), 4. Gap Analysis — What's Missing Between Current State and Target, 5. Summary: Three Blockers, One Slice, 6. Proposed Task 1, 7. Decision Required, Commands Run (+16 more)
 
 ### Community 100 - "apps/web/README.md"
-Cohesion: 0.08
-Nodes (24): API Routes (`apps/web/src/app/api/validation-runs/`), Completed for Phase 8 (2026-07-13 session), Completed Phases, Core Schemas (`packages/core-types`), Current State: Phase 7 COMPLETE, Phase 8 IN PROGRESS, Current Work: Phase 8 — Industrial Runtime Services (IN PROGRESS), Exit Criteria Status (Phase 7), Files Created (Phase 7) (+16 more)
+Cohesion: 0.06
+Nodes (31): API Routes Implemented (`apps/web/src/app/api/`), Approvals (`/api/approvals`), Artifacts Phase8 (`/api/artifacts/phase8`), Audit Logs (`/api/audit-logs`), Completed Phases, Current State: Phase 8 COMPLETE, Phase 9 COMPLETE, Exit Criteria Status, Graphify Update Status (Pending) (+23 more)
 
 ### Community 101 - "apps/web/package.json"
 Cohesion: 0.09
@@ -502,12 +520,12 @@ Cohesion: 0.10
 Nodes (20): 1. Adapter pattern for agents (`lib/sandbox/agents/index.ts`), 2. Sandboxed execution (`lib/sandbox/creation.ts` + `lib/sandbox/commands.ts`), 3. Streaming JSON output (claude.ts — reference implementation), 4. Session resumption, 5. Background orchestration via Next.js `after()`, 6. Per-user encrypted API keys + AI Gateway proxying, API Boundaries, Critical Files / High Blast Radius (+12 more)
 
 ### Community 103 - "apps/web/tsconfig.json"
-Cohesion: 0.10
-Nodes (19): Architecture Principles, CLI Behavior, Context Management, Core Rules, Current Phase, Development Commands, graphify, HeyNXT Core — Claude Instructions (+11 more)
+Cohesion: 0.09
+Nodes (22): 1) Coding agent execution reference, 2) Industrial blueprint reference — aluminum extrusion, 3) Industrial blueprint reference — PCB/electronics MES, Architecture Principles, CLI Behavior, Context Management, Core Rules, Current Phase (+14 more)
 
 ### Community 104 - "{ GET, POST }"
-Cohesion: 0.16
-Nodes (11): GET(), PATCH(), ADR-0006, ApiErrorBody, NextApiError, notFound(), InsertAuditEntryParams, insertStatusChangeEntry() (+3 more)
+Cohesion: 0.14
+Nodes (9): ArtifactKind, ArtifactKindEnum, getContentType(), POST(), UploadArtifactInput, ApiErrorBody, ForbiddenError, NextApiError (+1 more)
 
 ### Community 105 - "buildplan.md"
 Cohesion: 0.12
@@ -522,8 +540,8 @@ Cohesion: 0.12
 Nodes (17): 1. Install dependencies, 2. Create your local env file, 3. Start the local Postgres container, Container starts unhealthy, Daily Workflow, Database Details, `DATABASE_URL` connection refused, `docker compose: command not found` (+9 more)
 
 ### Community 108 - "docs/adr/0002-agent-substrate.md"
-Cohesion: 0.13
-Nodes (15): ADR-0002: Agent Substrate and Execution Model, Consequences, Context, Future Considerations, Implementation Notes, Negative, Neutral, Phase 5 Tasks (+7 more)
+Cohesion: 0.08
+Nodes (26): 1. Adapter Pattern with Uniform Contract, 2. Sandboxed Execution, 3. Streaming Output, 4. Credential Management, 5. Resumable Sessions, Adaptation for HeyNXT, ADR-0002: Agent Substrate and Execution Model, Agent Spec Schema (+18 more)
 
 ### Community 109 - "docs/adr/0003-industrial-blueprint-sources.md"
 Cohesion: 0.13
@@ -542,12 +560,12 @@ Cohesion: 0.17
 Nodes (11): ADR-0009: Migrations — Forward-Only with Reset as Phase 1 Reversibility, Consequences, Context, Decision, Option A — Hand-write down migrations for every forward migration, Option B — Treat `pnpm db:migrate:reset` as the reversibility mechanism, Option C — Defer reversibility entirely to Phase 9, Options Considered (+3 more)
 
 ### Community 113 - "docs/gap-analysis.md"
-Cohesion: 0.18
-Nodes (11): 1. Adapter Pattern with Uniform Contract, 2. Sandboxed Execution, 3. Streaming Output, 4. Credential Management, 5. Resumable Sessions, Adaptation for HeyNXT, Agent Spec Schema, Agent Substrate Architecture (+3 more)
+Cohesion: 0.15
+Nodes (12): InsertWorkflowDefinition, InsertWorkflowInstance, InsertWorkflowTransition, WorkflowDefinition, workflowDefinitions, workflowDefinitionStatusEnum, workflowDomainEnum, WorkflowInstance (+4 more)
 
 ### Community 115 - "packages/agent-adapter/package.json"
-Cohesion: 0.20
-Nodes (10): Architecture Overview, Blueprint Loading Flow, Data Flow, Extension Points, Package Dependency Graph, References, Security Considerations, Standard Generation Flow (+2 more)
+Cohesion: 0.12
+Nodes (17): Architectural Layers, Architecture Overview, Blueprint Loading Flow, Data Flow, Extension Points, Layer 1: Shared Schema Layer (`@heynxt/core-types`), Layer 2: Domain Models Layer (`@heynxt/domain-models`), Layer 3: Blueprint Registry Layer (`@heynxt/blueprint-registry`) (+9 more)
 
 ### Community 116 - "packages/agent-adapter/src/index.ts"
 Cohesion: 0.22
@@ -566,20 +584,20 @@ Cohesion: 0.25
 Nodes (7): ADR-0005 — Client Form Pattern (fetch + router.refresh), Consequences, Context, Costs / Tradeoffs, Decision, Rationale, Revisit When
 
 ### Community 120 - "packages/blueprint-registry/tsconfig.json"
-Cohesion: 0.38
-Nodes (5): ForbiddenError, getUserPermissions(), hasPermission(), PermissionScope, resolveOrganizationIdForRbac()
+Cohesion: 0.17
+Nodes (11): InsertSecret, InsertSecretAccessLog, InsertSecretRotationHistory, rotationPolicyEnum, Secret, SecretAccessLog, secretAccessLogs, SecretRotationHistory (+3 more)
 
 ### Community 121 - "packages/core-types/package.json"
-Cohesion: 0.29
-Nodes (7): Architectural Layers, Layer 1: Shared Schema Layer (`@heynxt/core-types`), Layer 2: Domain Models Layer (`@heynxt/domain-models`), Layer 3: Blueprint Registry Layer (`@heynxt/blueprint-registry`), Layer 4: Prompt-to-Spec Layer (`@heynxt/prompt-spec`), Layer 5: Agent Adapter Layer (`@heynxt/agent-adapter`), Layer 6: Control Plane UI (`apps/web`)
+Cohesion: 0.31
+Nodes (9): DELETE(), evaluateCondition(), EvaluateRuleInput, GET(), getFieldFromContext(), parseJsonField(), POST(), PUT() (+1 more)
 
 ### Community 122 - "packages/core-types/src/index.ts"
 Cohesion: 0.60
 Nodes (5): buildAcceptUrl(), findPendingInvitation(), findUserByEmail(), generateToken(), POST()
 
 ### Community 123 - "packages/core-types/src/schemas/artifact.ts"
-Cohesion: 0.53
-Nodes (5): executeAgentInBackground(), POST(), TODO: Stream events to client via SSE or store in DB, uuidValidate(), TaskStatus
+Cohesion: 0.22
+Nodes (10): executeAgentInBackground(), POST(), TODO: Stream events to client via SSE or store in DB, uuidValidate(), metadata, RootLayout(), AuthenticatedSession, getSession() (+2 more)
 
 ### Community 124 - "packages/core-types/src/schemas/audit-log.ts"
 Cohesion: 0.33
@@ -814,23 +832,75 @@ Cohesion: 0.50
 Nodes (4): A. Control Plane, Architecture Intent, B. Agent Execution Adapter, C. Industrial Blueprint Engine
 
 ### Community 182 - "rbac.ts"
-Cohesion: 0.50
-Nodes (4): 1) Coding agent execution reference, 2) Industrial blueprint reference — aluminum extrusion, 3) Industrial blueprint reference — PCB/electronics MES, External Reference Repositories
+Cohesion: 0.22
+Nodes (8): CreateTaskInput, isTaskTerminal(), TaskSummary, TaskType, User, UserId, UserStatus, UserSummary
+
+### Community 183 - "tenant-isolation.ts"
+Cohesion: 0.22
+Nodes (8): AccessControlLog, accessControlLogs, InsertAccessControlLog, InsertTenantIsolationRule, isolationRuleTypeEnum, isolationScopeEnum, TenantIsolationRule, tenantIsolationRules
+
+### Community 184 - "runtime-events.ts"
+Cohesion: 0.25
+Nodes (7): eventPriorityEnum, EventProcessingLog, eventSourceEnum, InsertEventProcessingLog, InsertRuntimeEvent, RuntimeEvent, runtimeEvents
+
+### Community 185 - "route.ts"
+Cohesion: 0.47
+Nodes (5): ApprovalsQueryParams, DecisionInput, GET(), POST(), RollbackStatusEnum
+
+### Community 186 - "route.ts"
+Cohesion: 0.53
+Nodes (5): BulkEventsInput, EventsQueryParams, GET(), POST(), RuntimeEventSchema
+
+### Community 187 - "route.ts"
+Cohesion: 0.53
+Nodes (5): GET(), NotificationsQueryParams, POST(), SendNotificationInput, simulateNotificationDelivery()
+
+### Community 188 - "route.ts"
+Cohesion: 0.53
+Nodes (5): evaluateCondition(), EvaluateRuleInput, getFieldFromContext(), parseJsonField(), POST()
+
+### Community 189 - "route.ts"
+Cohesion: 0.53
+Nodes (5): CreateRuleInput, GET(), parseJsonField(), POST(), RulesQueryParams
+
+### Community 190 - "UserMenu.tsx"
+Cohesion: 0.40
+Nodes (4): initialsFor(), SessionUser, UserMenu(), UserMenuProps
+
+### Community 191 - "audit-log.ts"
+Cohesion: 0.33
+Nodes (5): AuditAction, AuditEntityType, AuditLogEntry, AuditLogId, createStatusChangeEntry()
+
+### Community 192 - "workspace.ts"
+Cohesion: 0.33
+Nodes (5): CreateWorkspaceInput, WorkspaceLookupKey, WorkspaceSlug, WorkspaceStatus, WorkspaceSummary
+
+### Community 193 - "route.ts"
+Cohesion: 0.60
+Nodes (4): ApprovalQueryParams, CreateApprovalDecisionInput, GET(), POST()
+
+### Community 194 - "route.ts"
+Cohesion: 0.60
+Nodes (4): CreateValidationRunInput, GET(), POST(), ValidationRunsQueryParams
+
+### Community 195 - "route.ts"
+Cohesion: 0.60
+Nodes (4): CreateWorkflowDefinitionInput, GET(), POST(), WorkflowDefinitionsQueryParams
 
 ## Knowledge Gaps
-- **1259 isolated node(s):** `nextConfig`, `name`, `version`, `private`, `dev` (+1254 more)
+- **1270 isolated node(s):** `nextConfig`, `name`, `version`, `private`, `dev` (+1265 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **27 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `POST()` connect `packages/core-types/src/schemas/artifact.ts` to `index.ts`, `index.ts`, `task.ts`?**
-  _High betweenness centrality (0.049) - this node is a cross-community bridge._
-- **Why does `TaskStatus` connect `packages/core-types/src/schemas/artifact.ts` to `BlueprintCatalog`?**
-  _High betweenness centrality (0.046) - this node is a cross-community bridge._
+- **Why does `POST()` connect `packages/core-types/src/schemas/artifact.ts` to `index.ts`, `index.ts`, `agent-spec.ts`, `task.ts`, `auth.ts`?**
+  _High betweenness centrality (0.047) - this node is a cross-community bridge._
+- **Why does `TaskStatus` connect `packages/core-types/src/schemas/artifact.ts` to `BlueprintCatalog`, `rbac.ts`?**
+  _High betweenness centrality (0.029) - this node is a cross-community bridge._
 - **What connects `NOTE: This file should not be edited`, `nextConfig`, `name` to the rest of the system?**
-  _1264 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _1276 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `errorResponse` be split into smaller, more focused modules?**
   _Cohesion score 0.05359937402190924 - nodes in this community are weakly interconnected._
 - **Should `index.ts` be split into smaller, more focused modules?**
