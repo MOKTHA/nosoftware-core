@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { eq, and, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { db, rollbackRequests, rollbackStatusEnum } from '@heynxt/persistence';
+import { db, rollbackRequests, rollbackStatusEnum, generationRuns } from '@heynxt/persistence';
 
 import { badRequest, errorResponse, parseJsonBody } from '@/lib/api';
 import { requireAuth } from '@/lib/session';
@@ -63,9 +63,9 @@ export async function GET(
       return errorResponse(new Error('Rollback request not found'), 404);
     }
 
-    // Fetch generation run details in parallel
-    const [targetRun] = await db.select({ id: generationRuns.id, name: generationRuns.name }).from(generationRuns).where(eq(generationRuns.id, rollback.targetGenerationRunId)).limit(1);
-    const [sourceRun] = await db.select({ id: generationRuns.id, name: generationRuns.name }).from(generationRuns).where(eq(generationRuns.id, rollback.sourceGenerationRunId)).limit(1);
+    // Fetch generation run details in parallel (generation_runs doesn't have a 'name' column)
+    const [targetRun] = await db.select({ id: generationRuns.id, status: generationRuns.status }).from(generationRuns).where(eq(generationRuns.id, rollback.targetGenerationRunId)).limit(1);
+    const [sourceRun] = await db.select({ id: generationRuns.id, status: generationRuns.status }).from(generationRuns).where(eq(generationRuns.id, rollback.sourceGenerationRunId)).limit(1);
 
     return NextResponse.json({
       rollbackRequest: {
@@ -73,7 +73,7 @@ export async function GET(
         targetRun,
         sourceRun,
       },
-    }, { status: 200 });
+    });
   } catch (err) {
     if (err instanceof z.ZodError) {
       return errorResponse(badRequest(err.errors[0]?.message ?? 'Invalid request'));
@@ -105,24 +105,22 @@ export async function PUT(
 
     // Only pending rollbacks can be approved or cancelled
     const body = await parseJsonBody(req);
+
+    if (existing.status !== 'pending' && existing.status !== 'in-progress') {
+      throw badRequest('Only pending rollback requests can be processed');
+    }
+
     let updateValues: Record<string, any> = {};
+    const now = new Date();
 
-    if (body.action === 'approve') {
-      if (existing.status !== 'pending') {
-        throw badRequest('Only pending rollback requests can be approved');
-      }
-
+    if ((body as any).action === 'approve') {
       const input = ApproveRollbackInput.parse(body);
 
       // Verify the approver has permission (should check RBAC more thoroughly)
       updateValues.approvedBy = input.approvedBy;
-      updateValues.approvedAt = new Date().toISOString();
+      updateValues.approvedAt = now;
       updateValues.status = 'in-progress';
-    } else if (body.action === 'cancel') {
-      if (existing.status !== 'pending' && existing.status !== 'in-progress') {
-        throw badRequest('Only pending or in-progress rollback requests can be cancelled');
-      }
-
+    } else if ((body as any).action === 'cancel') {
       const input = CancelRollbackInput.parse(body);
 
       updateValues.status = 'cancelled';
@@ -137,9 +135,9 @@ export async function PUT(
     }
 
     return NextResponse.json({
-      message: `Rollback ${body.action}ed successfully`,
+      message: `Rollback ${(body as any).action}ed successfully`,
       rollbackRequest: updated,
-    }, { status: 200 });
+    });
   } catch (err) {
     if (err instanceof z.ZodError) {
       return errorResponse(badRequest(err.errors[0]?.message ?? 'Invalid request'));
@@ -161,9 +159,10 @@ export async function DELETE(
     }
 
     // Soft delete by cancelling the rollback request
+    const now = new Date();
     const [deleted] = await db.update(rollbackRequests).set({
       status: 'cancelled',
-      updatedAt: new Date().toISOString(),
+      updatedAt: now,
     }).where(eq(rollbackRequests.id, rollbackId)).returning({ id: rollbackRequests.id });
 
     if (!deleted) {

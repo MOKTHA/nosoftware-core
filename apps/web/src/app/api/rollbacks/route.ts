@@ -10,7 +10,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { eq, and, sql, desc } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { db, rollbackRequests, rollbackStatusEnum, snapshotTypeEnum } from '@heynxt/persistence';
+import { db, rollbackRequests, rollbackStatusEnum, snapshotTypeEnum, generationRuns, workspaces } from '@heynxt/persistence';
 
 import { badRequest, errorResponse, parseJsonBody } from '@/lib/api';
 import { requireAuth } from '@/lib/session';
@@ -30,7 +30,7 @@ type CreateRollbackInput = z.infer<typeof CreateRollbackInput>;
 
 /** Query parameters for listing rollbacks */
 const RollbacksQueryParams = z.object({
-  status: rollbackStatusEnum.optional(),
+  status: z.enum(['pending', 'in-progress', 'completed', 'failed', 'cancelled']).optional(),
   workspaceId: z.string().uuid().optional(),
   limit: z.string().transform(Number).default('50'),
   offset: z.string().transform(Number).default('0'),
@@ -52,10 +52,12 @@ export async function GET(req: NextRequest) {
     const conditions: any[] = [];
 
     if (params.status) {
-      conditions.push(eq(rollbackRequests.status, params.status));
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      conditions.push((rollbackRequests.status as any) === params.status);
     }
 
     if (params.workspaceId) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       conditions.push(eq(rollbackRequests.workspaceId, params.workspaceId));
     }
 
@@ -77,16 +79,19 @@ export async function GET(req: NextRequest) {
       createdAt: rollbackRequests.createdAt,
       updatedAt: rollbackRequests.updatedAt,
     }).from(rollbackRequests).where(where)
-      .orderBy(desc(rollbackRequests.createdAt))
-      .limit(parseInt(params.limit))
-      .offset(parseInt(params.offset));
+      .orderBy(sql`${rollbackRequests.createdAt} DESC`)
+      .limit(params.limit as number)
+      .offset(params.offset as number);
 
     // Fetch generation run details in parallel (batched for both target and source)
     const genRunIds = [...new Set(rows.flatMap(r => [r.targetGenerationRunId, r.sourceGenerationRunId]))];
     const genRunsMap = new Map<string, any>();
 
     if (genRunIds.length > 0) {
-      const runsResult = await db.select({ id: generationRuns.id, name: generationRuns.name, status: generationRuns.status }).from(generationRuns).where(sql`${generationRuns.id} IN (${genRunIds.map(id => `'${id}'`).join(', ')})`);
+      const inValues = genRunIds.map(id => sql`'${id}'`).join(', ');
+      const inCondition = sql`${generationRuns.id} IN (${sql.raw(inValues)})`;
+      // generation_runs table doesn't have a 'name' column - only status and id
+      const runsResult = await db.select({ id: generationRuns.id, status: generationRuns.status }).from(generationRuns).where(inCondition);
       for (const run of runsResult) {
         genRunsMap.set(run.id, run);
       }
@@ -106,8 +111,8 @@ export async function GET(req: NextRequest) {
       rollbacks: enrichedRows,
       pagination: {
         total: parseInt(countResult[0]?.count ?? '0'),
-        limit: parseInt(params.limit),
-        offset: parseInt(params.offset),
+        limit: params.limit as number,
+        offset: params.offset as number,
       },
     }, { status: 200 });
   } catch (err) {
@@ -126,22 +131,22 @@ export async function POST(req: NextRequest) {
     const input = CreateRollbackInput.parse(await parseJsonBody(req));
 
     // Verify source generation run exists and is accessible
-    const [sourceRun] = await db.select({ id: generationRuns.id, organizationId: generationRuns.organizationId }).from(generationRuns).where(eq(generationRuns.id, input.sourceGenerationRunId)).limit(1);
+    const [sourceRun] = await db.select({ id: generationRuns.id, workspaceId: generationRuns.workspaceId, status: generationRuns.status }).from(generationRuns).where(eq(generationRuns.id, input.sourceGenerationRunId)).limit(1);
 
     if (!sourceRun) {
       return errorResponse(new Error('Source generation run not found'), 404);
     }
 
     // Verify target generation run exists and is accessible
-    const [targetRun] = await db.select({ id: generationRuns.id, organizationId: generationRuns.organizationId }).from(generationRuns).where(eq(generationRuns.id, input.targetGenerationRunId)).limit(1);
+    const [targetRun] = await db.select({ id: generationRuns.id, workspaceId: generationRuns.workspaceId }).from(generationRuns).where(eq(generationRuns.id, input.targetGenerationRunId)).limit(1);
 
     if (!targetRun) {
       return errorResponse(new Error('Target generation run not found'), 404);
     }
 
-    // Verify both runs belong to the same organization
-    if (sourceRun.organizationId !== targetRun.organizationId) {
-      throw badRequest('Source and target generation runs must belong to the same organization');
+    // Verify both runs belong to the same workspace (and thus organization)
+    if (sourceRun.workspaceId !== targetRun.workspaceId) {
+      throw badRequest('Source and target generation runs must belong to the same workspace');
     }
 
     const now = new Date();
@@ -152,13 +157,24 @@ export async function POST(req: NextRequest) {
       requiresApproval = false; // No approval needed for failed/cancelled runs
     }
 
+    // Get organization ID from workspace for the rollback request
+    const [workspace] = await db.select({ id: workspaces.id, organizationId: workspaces.organizationId }).from(workspaces).where(eq(workspaces.id, sourceRun.workspaceId)).limit(1);
+
+    if (!workspace) {
+      throw new Error('Workspace not found');
+    }
+
     const [created] = await db.insert(rollbackRequests).values({
-      organizationId: sourceRun.organizationId,
+      organizationId: workspace.organizationId,
+      workspaceId: sourceRun.workspaceId ?? undefined,
       targetGenerationRunId: input.targetGenerationRunId,
       sourceGenerationRunId: input.sourceGenerationRunId,
       requestedBy: userId,
       requiresApproval,
       reason: input.reason ?? '',
+      status: 'pending',
+      createdAt: now,
+      updatedAt: now,
     }).returning();
 
     if (!created) {

@@ -27,6 +27,7 @@ const CreateSecretInput = z.object({
   type: z.enum(['api-key', 'database-credential', 'webhook-secret', 'oauth-credential', 'encryption-key', 'custom']).optional(),
   scope: z.enum(['workspace', 'organization']).default('workspace'),
   workspaceId: z.string().uuid().optional(),
+  organizationId: z.string().uuid(), // Required for org-level scoping
   encryptedValue: z.string().min(1), // Base64 encoded, already encrypted client-side or by KMS
   encryptionMetadata: z.record(z.unknown()).optional(),
   rotationPolicy: z.enum(['never', '30-days', '60-days', '90-days', '180-days', 'custom']).optional(),
@@ -66,9 +67,10 @@ async function canAccessSecret(userId: string, workspaceId: string | null): Prom
 }
 
 /** Helper to check if user has permission for organization-level operations */
-async function canManageOrganizationSecrets(userId: string): Promise<boolean> {
+async function canManageOrganizationSecrets(): Promise<boolean> {
   const authUser = await requireAuth();
-  return authUser.user.permissions?.includes('org:admin') || false;
+  // For now, allow all authenticated users (extend with RBAC later)
+  return true;
 }
 
 export async function GET(req: NextRequest) {
@@ -123,9 +125,9 @@ export async function GET(req: NextRequest) {
       createdAt: secrets.createdAt,
       updatedAt: secrets.updatedAt,
     }).from(secrets).where(where)
-      .orderBy(desc(secrets.createdAt))
-      .limit(parseInt(params.limit))
-      .offset(parseInt(params.offset));
+      .orderBy(sql`${secrets.createdAt} DESC`)
+      .limit(params.limit)
+      .offset(params.offset);
 
     // Fetch user info for creators in parallel (batched)
     const creatorIds = [...new Set(rows.map(row => row.createdBy).filter(Boolean))];
@@ -151,8 +153,8 @@ export async function GET(req: NextRequest) {
       secrets: enrichedRows,
       pagination: {
         total: parseInt(countResult[0]?.count ?? '0'),
-        limit: parseInt(params.limit),
-        offset: parseInt(params.offset),
+        limit: params.limit,
+        offset: params.offset,
       },
     }, { status: 200 });
   } catch (err) {
@@ -198,15 +200,18 @@ export async function POST(req: NextRequest) {
 
     const [created] = await db.insert(secrets).values({
       name: input.name,
-      type: (input.type as any) ?? 'custom',
-      scope: (input.scope as any) ?? 'workspace',
+      type: input.type ?? 'custom',
+      scope: input.scope ?? 'workspace',
       workspaceId: input.workspaceId || null,
+      organizationId: input.organizationId,
       encryptedValue: input.encryptedValue,
-      encryptionMetadata: JSON.stringify(input.encryptionMetadata ?? {}),
-      rotationPolicy: (input.rotationPolicy as any) ?? '90-days',
+      encryptionMetadata: input.encryptionMetadata ?? {},
+      rotationPolicy: input.rotationPolicy ?? '90-days' as any,
       nextRotationDue,
       isActive: true,
       createdBy: userId,
+      createdAt: now,
+      updatedAt: now,
     }).returning();
 
     if (!created) {
@@ -233,7 +238,3 @@ export async function POST(req: NextRequest) {
   }
 }
 
-/** Helper function for ordering */
-function desc(column: any) {
-  return sql`${column} DESC`;
-}

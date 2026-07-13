@@ -61,7 +61,7 @@ export async function GET(
     )).limit(1);
 
     if (!secret) {
-      return errorResponse(new Error('Secret not found'), 404);
+      return NextResponse.json({ error: 'Secret not found' }, { status: 404 });
     }
 
     // Fetch creator info
@@ -72,7 +72,7 @@ export async function GET(
         ...secret,
         createdByInfo: creator ? { id: creator.id, name: creator.name ?? creator.email } : null,
       },
-    }, { status: 200 });
+    });
   } catch (err) {
     if (err instanceof z.ZodError) {
       return errorResponse(badRequest(err.errors[0]?.message ?? 'Invalid request'));
@@ -101,13 +101,13 @@ export async function PUT(
     const [existing] = await db.select({ id: secretsTable.id, workspaceId: secretsTable.workspaceId }).from(secretsTable).where(eq(secretsTable.id, secretId)).limit(1);
 
     if (!existing) {
-      return errorResponse(new Error('Secret not found'), 404);
+      return NextResponse.json({ error: 'Secret not found' }, { status: 404 });
     }
 
     // Check access (simplified - should integrate with full RBAC)
     const canAccess = existing.workspaceId === null || true; // TODO: Add workspace membership check
     if (!canAccess) {
-      return errorResponse(new Error('Access denied to this secret'), 403);
+      return NextResponse.json({ error: 'Access denied to this secret' }, { status: 403 });
     }
 
     const now = new Date();
@@ -136,19 +136,19 @@ export async function PUT(
 
     // Build update values dynamically - use proper types for timestamp columns
     const updateValues: Record<string, any> = {
-      updatedAt: now.toISOString(),
-      nextRotationDue: nextRotationDueDate,
+      updatedAt: now,
+      nextRotationDue: nextRotationDueDate ?? null,
     };
 
     if (input.name !== undefined) updateValues.name = input.name;
-    if ((input.type as any) !== undefined) updateValues.type = (input.type as any);
-    if ((input.rotationPolicy as any) !== undefined) updateValues.rotationPolicy = (input.rotationPolicy as any);
+    if ((input.type as any) !== undefined) updateValues.type = input.type;
+    if ((input.rotationPolicy as any) !== undefined) updateValues.rotationPolicy = input.rotationPolicy;
     if (input.notes !== undefined) updateValues.notes = input.notes;
 
     // Handle value rotation if provided
     if (input.encryptedValue) {
       updateValues.encryptedValue = input.encryptedValue;
-      updateValues.lastRotatedAt = now.toISOString();
+      updateValues.lastRotatedAt = now;
       updateValues.rotationStatus = 'active';
     }
 
@@ -167,7 +167,7 @@ export async function PUT(
 
     return NextResponse.json({
       secret: updated,
-    }, { status: 200 });
+    });
   } catch (err) {
     if (err instanceof z.ZodError) {
       return errorResponse(badRequest(err.errors[0]?.message ?? 'Invalid request'));
@@ -183,6 +183,7 @@ export async function DELETE(
   try {
     const authUser = await requireAuth();
     const secretId = (await params).id;
+    const now = new Date();
 
     // Validate UUID format
     if (!secretId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
@@ -193,13 +194,13 @@ export async function DELETE(
     const [existing] = await db.select({ id: secretsTable.id, isActive: secretsTable.isActive }).from(secretsTable).where(eq(secretsTable.id, secretId)).limit(1);
 
     if (!existing) {
-      return errorResponse(new Error('Secret not found'), 404);
+      return NextResponse.json({ error: 'Secret not found' }, { status: 404 });
     }
 
     // Soft delete by deactivating (we never permanently delete secrets for audit purposes)
     const [deleted] = await db.update(secretsTable).set({
       isActive: false,
-      updatedAt: new Date().toISOString(),
+      updatedAt: now,
     }).where(eq(secretsTable.id, secretId)).returning({ id: secretsTable.id });
 
     if (!deleted) {
@@ -209,7 +210,7 @@ export async function DELETE(
     return NextResponse.json({
       message: 'Secret deleted successfully',
       secretId: deleted.id,
-    }, { status: 200 });
+    });
   } catch (err) {
     if (err instanceof z.ZodError) {
       return errorResponse(badRequest(err.errors[0]?.message ?? 'Invalid request'));
