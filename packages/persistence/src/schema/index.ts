@@ -94,3 +94,97 @@ export {
   type RerunRequest,
   type InsertRerunRequest,
 } from './approval-decisions.js';
+
+// ============================================================================
+// Phase 8 — Industrial Runtime Services (NEW)
+// ============================================================================
+
+// Workflow engine tables
+export {
+  workflowDefinitions,
+  workflowInstances,
+  workflowTransitions,
+  workflowDefinitionStatusEnum,
+  workflowDomainEnum,
+  workflowInstanceStatusEnum,
+  type WorkflowDefinition,
+  type InsertWorkflowDefinition,
+  type WorkflowInstance,
+  type InsertWorkflowInstance,
+  type WorkflowTransition,
+  type InsertWorkflowTransition,
+} from './workflow-definitions.js';
+
+// Runtime events (PLC signals, barcode scans, sensor data)
+export {
+  runtimeEvents,
+  eventProcessingLog,
+  eventSourceEnum,
+  eventPriorityEnum,
+  type RuntimeEvent,
+  type InsertRuntimeEvent,
+  type EventProcessingLog,
+  type InsertEventProcessingLog,
+} from './runtime-events.js';
+
+// Rules engine tables
+export {
+  rules,
+  ruleViolations,
+  ruleEvaluationLog,
+  ruleStatusEnum,
+  violationSeverityEnum,
+  ruleDomainEnum,
+  type RuleDefinition,
+  type InsertRule,
+  type RuleViolation,
+  type InsertRuleViolation,
+  type RuleEvaluationLog,
+  type InsertRuleEvaluationLog,
+} from './rules-engine.js';
+
+// Notification service tables
+export {
+  notifications,
+  notificationDeliveryAttempts,
+  notificationTemplates,
+  notificationChannelEnum,
+  notificationPriorityEnum,
+  notificationStatusEnum,
+  type Notification,
+  type InsertNotification,
+  type NotificationDeliveryAttempt,
+  type InsertNotificationDeliveryAttempt,
+  type NotificationTemplate,
+  type InsertNotificationTemplate,
+} from './notifications.js';
+
+// File/evidence service tables (artifacts)
+export {
+  artifacts as fileEvidenceArtifacts, // Renamed to avoid conflict with Phase 1 artifacts table
+  artifactVerificationLog,
+  artifactStorageTypeEnum,
+  artifactContentTypeEnum,
+  storageTierEnum,
+  evidenceTypeEnum,
+  type Artifact as FileArtifact,
+  type InsertArtifact as InsertFileArtifact,
+  type ArtifactVerificationLog,
+  type InsertArtifactVerificationLog,
+} from './file-evidence-service.js';
+
+// KPI aggregation tables
+export {
+  kpiSnapshots,
+  kpiDefinitions,
+  kpiCalculationJobs,
+  kpiTypeEnum,
+  aggregationWindowTypeEnum,
+  kpiCalculationStatusEnum,
+  type KpiSnapshot,
+  type InsertKpiSnapshot,
+  type KpiDefinition,
+  type InsertKpiDefinition,
+  type KpiCalculationJob,
+  type InsertKpiCalculationJob,
+} from './kpi-aggregation.js';

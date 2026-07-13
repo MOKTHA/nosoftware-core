@@ -5,12 +5,13 @@
 
 ---
 
-## Current State: Phase 7 COMPLETE, Ready for Phase 8 Planning
+## Current State: Phase 7 COMPLETE, Phase 8 IN PROGRESS
 
 ### Completed Phases
 - ✅ **Phase 5**: Blueprint Selection and Composition Engine — COMPLETE
 - ✅ **Phase 6**: Generation Pipeline Orchestration — COMPLETE  
 - ✅ **Phase 7**: Validation and Review Loop — **COMPLETE** (just now)
+- 🟡 **Phase 8**: Industrial Runtime Services — IN PROGRESS
 
 ---
 
@@ -113,22 +114,54 @@
 
 ---
 
-## Next Session Recommendations
+## Current Work: Phase 8 — Industrial Runtime Services (IN PROGRESS)
 
-### Phase 7 Status: VERIFIED AND READY FOR HANDOVER
-All verification checks passed. Graph updated. Phase 7 is complete and ready for handover to next developer or phase transition.
+### Completed for Phase 8 (2026-07-13 session)
+
+All Zod schemas are defined in `packages/core-types/src/schemas/`:
+| Schema File | Purpose | Status |
+|-------------|---------|--------|
+| `workflow-definitions.ts` | Workflow state machine definitions and instances | ✅ Complete |
+| `runtime-events.ts` | Event ingestion (PLC, barcode scans, sensors) | ✅ Complete |
+| `rules-engine.ts` | Business rules engine with conditions/actions | ✅ Complete |
+| `notifications.ts` | Email/Slack/webhook notification service | ✅ Complete |
+| `file-evidence-service.ts` | Content-addressable artifact storage | ✅ Complete |
+| `kpi-aggregation.ts` | OEE, throughput, quality metrics computation | ✅ Complete |
+
+All Drizzle table definitions created in `packages/persistence/src/schema/`:
+| Table File | Tables Created | Status |
+|------------|----------------|--------|
+| `workflow-definitions.ts` | workflow_definitions, workflow_instances, workflow_transitions | ✅ Complete |
+| `runtime-events.ts` | runtime_events, event_processing_log | ✅ Complete |
+| `rules-engine.ts` | rules, rule_violations, rule_evaluation_log | ✅ Complete |
+| `notifications.ts` | notifications, notification_delivery_attempts, notification_templates | ✅ Complete |
+| `file-evidence-service.ts` | file_evidence_artifacts, artifact_verification_log | ✅ Complete |
+| `kpi-aggregation.ts` | kpi_snapshots, kpi_definitions, kpi_calculation_jobs | ✅ Complete |
+
+Drizzle migration SQL created:
+- `packages/persistence/drizzle/0004_phase8_runtime_services.sql` — All Phase 8 tables in one migration (~600 lines)
+
+---
+
+## Next Session Recommendations
 
 ### Recommended Next Steps (Choose One Path)
 
-**Path A — Proceed to Phase 8 Planning** (recommended):
-1. Review `buildplan.md` Phase 8 exit criteria
-2. Draft Phase 8 implementation plan in HANDOVER.md
-3. Create initial schemas for runtime services:
-   - Workflow definitions schema (`workflow-definitions.ts`)
-   - Event ingestion schema (`events.ts`)
-   - Rules engine schema (`rules.ts`)
-   - Notification config schema (`notifications.ts`)
-4. Begin with workflow engine (most critical dependency)
+**Path A — Complete Phase 8 Implementation** (recommended):
+1. Create API routes for all runtime services:
+   - `/api/workflows` — CRUD workflow definitions, start/monitor instances
+   - `/api/events` — Event ingestion endpoint (bulk insert)
+   - `/api/rules` — CRUD rules with evaluation endpoints
+   - `/api/notifications` — Send notifications, query delivery status
+   - `/api/artifacts` — Upload/download artifacts with integrity verification
+   - `/api/kpis` — Query KPI snapshots and trends
+
+2. Implement runtime service workers:
+   - Workflow engine executor (evaluates state transitions)
+   - Rules engine evaluator (processes events against active rules)
+   - KPI aggregation jobs (scheduled computation from event stream)
+
+3. Add UI components for each service
 
 **Path B — Technical Debt Cleanup**:
 1. Add proper ESLint configuration to all packages
@@ -144,14 +177,14 @@ All verification checks passed. Graph updated. Phase 7 is complete and ready for
 ### Next Phases Overview
 
 **Phase 8 — Industrial Runtime Services** (~4–6 weeks):
-| Service | Purpose | Dependencies |
-|---------|---------|--------------|
-| Workflow engine | Execute state machines (work order FSM, routing FSM) | Phase 1 control plane |
-| Event ingestion | Accept PLC signals, barcode scans, sensor data | — |
-| Rules engine | Evaluate business rules at runtime | — |
-| File/evidence service | Persist and serve artifacts, logs, attachments | Phase 7 evidence capture |
-| Notification service | Email, Slack, webhook notifications for approvals/failures | — |
-| KPI aggregation | Compute OEE, throughput, quality rate from event stream | — |
+| Service | Purpose | Dependencies | Status |
+|---------|---------|--------------|--------|
+| Workflow engine | Execute state machines (work order FSM, routing FSM) | Phase 1 control plane | Schemas ✅ / API ⏳ |
+| Event ingestion | Accept PLC signals, barcode scans, sensor data | — | Schemas ✅ / API ⏳ |
+| Rules engine | Evaluate business rules at runtime | — | Schemas ✅ / API ⏳ |
+| File/evidence service | Persist and serve artifacts, logs, attachments | Phase 7 evidence capture | Schemas ✅ / API ⏳ |
+| Notification service | Email, Slack, webhook notifications for approvals/failures | — | Schemas ✅ / API ⏳ |
+| KPI aggregation | Compute OEE, throughput, quality rate from event stream | — | Schemas ✅ / API ⏳ |
 
 **Phase 9 — Governance and Hardening** (~3–4 weeks):
 - Tenant isolation enforcement (workspace-scoped data access)
@@ -212,4 +245,6 @@ The graph is current and reflects all Phase 7 implementation changes including:
 - Rerun capability with feedback-driven regeneration
 - Full CRUD APIs and interactive UI dashboard
 
-**Next step**: Verify build integrity, update graphify knowledge graphs, then proceed to Phase 8 planning.
+**Phase 8 schemas are complete**. All Zod type definitions and Drizzle database tables have been created for the industrial runtime services. The next step is to implement the API routes and service workers.
+
+**Next step**: Implement Phase 8 API routes and verify build integrity, then update graphify knowledge graphs before proceeding to Phase 9 planning.
