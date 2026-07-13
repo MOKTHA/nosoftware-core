@@ -5,8 +5,8 @@
     "semantic_hash": ""
   },
   ".claude/settings.local.json": {
-    "mtime": 1783876305.6080573,
-    "ast_hash": "db8f879670c286728bfeb68326203794",
+    "mtime": 1783907989.9136236,
+    "ast_hash": "da0bb10b1835231f3f4e249b3102a292",
     "semantic_hash": ""
   },
   "apps/web/next-env.d.ts": {
@@ -270,8 +270,8 @@
     "semantic_hash": ""
   },
   "packages/core-types/src/index.ts": {
-    "mtime": 1783843924.6013784,
-    "ast_hash": "3ecc2347b1815a50df00ab7b45455499",
+    "mtime": 1783884620.860201,
+    "ast_hash": "a5c05c4ddedd6f4b1fbdd82be31766f6",
     "semantic_hash": ""
   },
   "packages/core-types/src/schemas/agent-spec.ts": {
@@ -475,8 +475,8 @@
     "semantic_hash": ""
   },
   "packages/persistence/src/schema/index.ts": {
-    "mtime": 1783870907.556307,
-    "ast_hash": "174e86e7c69949e86c470ef34a394293",
+    "mtime": 1783888336.0453236,
+    "ast_hash": "d387696b978eb0d0f7d08f70dcbb26f3",
     "semantic_hash": ""
   },
   "packages/persistence/src/schema/invitations.ts": {
@@ -580,8 +580,8 @@
     "semantic_hash": ""
   },
   "HANDOVER.md": {
-    "mtime": 1783877140.5339034,
-    "ast_hash": "68778b8a0aab8dae6e19c4c01a213c44",
+    "mtime": 1783908226.9128726,
+    "ast_hash": "ed37eb25e0e306475bedc1dfe9fb927d",
     "semantic_hash": ""
   },
   "README.md": {
@@ -1137,6 +1137,71 @@
   "packages/persistence/src/schema/approval-decisions.ts": {
     "mtime": 1783873686.462415,
     "ast_hash": "da00f21c406248a0af07ee77e1e4d2ec",
+    "semantic_hash": ""
+  },
+  "packages/core-types/src/schemas/file-evidence-service.ts": {
+    "mtime": 1783883119.2198873,
+    "ast_hash": "fe675c30c3bd7289e14cb6f3233026a9",
+    "semantic_hash": ""
+  },
+  "packages/core-types/src/schemas/kpi-aggregation.ts": {
+    "mtime": 1783884033.5908291,
+    "ast_hash": "8c80917e54740475ff4dfb78b6ed5c3f",
+    "semantic_hash": ""
+  },
+  "packages/core-types/src/schemas/notifications.ts": {
+    "mtime": 1783884155.8772864,
+    "ast_hash": "fff8d7fefe161f4361c3d881ffff399e",
+    "semantic_hash": ""
+  },
+  "packages/core-types/src/schemas/rules-engine.ts": {
+    "mtime": 1783884868.0550594,
+    "ast_hash": "b5f3d5e85b1f52687a363a64270ed29b",
+    "semantic_hash": ""
+  },
+  "packages/core-types/src/schemas/runtime-events.ts": {
+    "mtime": 1783884956.1676526,
+    "ast_hash": "5cf2dbedf519ca5aa0a90d216ed336c8",
+    "semantic_hash": ""
+  },
+  "packages/core-types/src/schemas/workflow-definitions.ts": {
+    "mtime": 1783908084.5702448,
+    "ast_hash": "4f2aa2fdaceef28a090335143bb15999",
+    "semantic_hash": ""
+  },
+  "packages/persistence/drizzle/0004_phase8_runtime_services.sql": {
+    "mtime": 1783887947.3510575,
+    "ast_hash": "679092667d6bc050a8d0e9a31a59402d",
+    "semantic_hash": ""
+  },
+  "packages/persistence/src/schema/file-evidence-service.ts": {
+    "mtime": 1783888092.8704085,
+    "ast_hash": "5c4cc423ec21b47603c9afb7726fdd38",
+    "semantic_hash": ""
+  },
+  "packages/persistence/src/schema/kpi-aggregation.ts": {
+    "mtime": 1783888165.2560856,
+    "ast_hash": "763bd85a7cb31ce34c39dd2731272b3a",
+    "semantic_hash": ""
+  },
+  "packages/persistence/src/schema/notifications.ts": {
+    "mtime": 1783887530.3049543,
+    "ast_hash": "4901e927e8670e388e6a5c277b4f4706",
+    "semantic_hash": ""
+  },
+  "packages/persistence/src/schema/rules-engine.ts": {
+    "mtime": 1783888259.5906646,
+    "ast_hash": "32f665be8e1b3c27b6ac8d4bec318721",
+    "semantic_hash": ""
+  },
+  "packages/persistence/src/schema/runtime-events.ts": {
+    "mtime": 1783887384.7426186,
+    "ast_hash": "d43729de708f10035935e882ddb5e18e",
+    "semantic_hash": ""
+  },
+  "packages/persistence/src/schema/workflow-definitions.ts": {
+    "mtime": 1783887329.3978713,
+    "ast_hash": "e8909579e95e0cbfeb41d4f41e25f425",
     "semantic_hash": ""
   }
 }

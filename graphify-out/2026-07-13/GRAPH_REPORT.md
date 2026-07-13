@@ -1,13 +1,18 @@
-# Graph Report - /home/mohan/heynxt-core  (2026-07-13)
+# Graph Report - heynxt-core  (2026-07-13)
 
 ## Corpus Check
-- 241 files · ~171,880 words
+- 235 files · ~171,855 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1700 nodes · 2735 edges · 98 communities (71 shown, 27 thin omitted)
+- 2530 nodes · 3512 edges · 183 communities (156 shown, 27 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS
 - Token cost: 0 input · 0 output
+
+## Graph Freshness
+- Built from commit: `109ff608`
+- Run `git rev-parse HEAD` and compare to check if the graph is stale.
+- Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - index.ts
@@ -102,6 +107,90 @@
 - page.tsx
 - .env.example
 - .gitignore
+- README.md
+- apps/web
+- apps/web/README.md
+- apps/web/package.json
+- apps/web/src/index.ts
+- apps/web/tsconfig.json
+- { GET, POST }
+- buildplan.md
+- docker-compose.yml
+- docs/adr/0001-monorepo-and-boundaries.md
+- docs/adr/0002-agent-substrate.md
+- docs/adr/0003-industrial-blueprint-sources.md
+- docs/adr/0004-orm-and-database.md
+- docs/architecture/overview.md
+- docs/dev-setup.md
+- docs/gap-analysis.md
+- packages/agent-adapter/package.json
+- packages/agent-adapter/src/index.ts
+- packages/agent-adapter/tsconfig.json
+- packages/blueprint-registry/package.json
+- packages/blueprint-registry/src/index.ts
+- packages/blueprint-registry/tsconfig.json
+- packages/core-types/package.json
+- packages/core-types/src/index.ts
+- packages/core-types/src/schemas/artifact.ts
+- packages/core-types/src/schemas/audit-log.ts
+- packages/core-types/src/schemas/control-plane.test.ts
+- packages/core-types/src/schemas/generation-run.ts
+- packages/core-types/src/schemas/organization.ts
+- packages/core-types/src/schemas/project.ts
+- packages/core-types/src/schemas/rbac.ts
+- packages/core-types/src/schemas/task.ts
+- packages/core-types/src/schemas/user.ts
+- packages/core-types/src/schemas/workspace.ts
+- packages/core-types/tsconfig.json
+- packages/core-types/vitest.config.ts
+- packages/domain-models/package.json
+- packages/domain-models/src/index.ts
+- packages/domain-models/tsconfig.json
+- packages/persistence/README.md
+- packages/persistence/drizzle.config.ts
+- packages/persistence/drizzle/0000_great_sunspot.sql
+- packages/persistence/drizzle/meta
+- packages/persistence/package.json
+- packages/persistence/src/index.ts
+- packages/persistence/src/schema/artifacts.ts
+- packages/persistence/src/schema/audit-log.ts
+- packages/persistence/src/schema/generation-runs.ts
+- packages/persistence/src/schema/index.ts
+- packages/persistence/src/schema/organizations.ts
+- packages/persistence/src/schema/projects.ts
+- packages/persistence/src/schema/role-assignments.ts
+- packages/persistence/src/schema/tasks.ts
+- packages/persistence/src/schema/users.ts
+- packages/persistence/src/schema/workspaces.ts
+- packages/persistence/tsconfig.json
+- packages/persistence/vitest.config.ts
+- packages/prompt-spec/package.json
+- packages/prompt-spec/src/index.ts
+- packages/prompt-spec/tsconfig.json
+- vitest.config.ts
+- drizzle.config.ts
+- vitest.config.ts
+- pnpm-lock.yaml
+- pnpm-workspace.yaml
+- tsconfig.base.json
+- tsconfig.json
+- turbo.json
+- validator.ts
+- artifact.ts
+- Architectural Layers
+- workspace.ts
+- Troubleshooting
+- ValidateRoutesStage
+- GenerateBackendStage
+- GenerateFixturesTestsStage
+- GenerateFrontendStage
+- validation-stage.ts
+- ValidateBuildStage
+- DefaultPipelineBuilder
+- GenerateWorkflowsStage
+- ResolveBlueprintPlanStage
+- ValidateTestsStage
+- rbac.ts
 
 ## God Nodes (most connected - your core abstractions)
 1. `errorResponse()` - 33 edges
@@ -130,11 +219,11 @@
 ## Import Cycles
 - None detected.
 
-## Communities (98 total, 27 thin omitted)
+## Communities (183 total, 27 thin omitted)
 
 ### Community 0 - "index.ts"
-Cohesion: 0.09
-Nodes (61): GET(), POST(), GET(), POST(), GET(), buildAcceptUrl(), findPendingInvitation(), findUserByEmail() (+53 more)
+Cohesion: 0.21
+Nodes (28): POST(), POST(), GET(), POST(), ADR-0006, POST(), ApprovalQueryParams, CreateApprovalDecisionInput (+20 more)
 
 ### Community 1 - "errorResponse"
 Cohesion: 0.05
@@ -249,16 +338,16 @@ Cohesion: 0.10
 Nodes (20): Artifact, ArtifactBase, ArtifactContentType, ArtifactId, ArtifactStorageType, ContentHash, DownloadArtifactRequest, DownloadArtifactResponse (+12 more)
 
 ### Community 30 - "ADR-0004: ORM and Database Choice for Control Plane"
-Cohesion: 0.12
-Nodes (16): WorkspacesPage(), AuditAction, AuditEntityType, AuditLogEntry, AuditLogId, createStatusChangeEntry(), Organization, OrganizationId (+8 more)
+Cohesion: 0.09
+Nodes (24): WorkspacesList(), WorkspacesPage(), Invitation, InvitationId, InvitationStatus, InvitationSummary, InviteUserInput, Organization (+16 more)
 
 ### Community 31 - "Architecture Overview"
 Cohesion: 0.12
 Nodes (4): createStageExecution(), DefaultGenerationPipeline, MockGenerationStage, GenerationStageInput
 
 ### Community 32 - "page.tsx"
-Cohesion: 0.16
-Nodes (17): fileEvidenceService, kpiAggregation, notifications, rulesEngine, runtimeEvents, workflowDefinitions, ValidationCheckType, ValidationResult (+9 more)
+Cohesion: 0.09
+Nodes (34): fileEvidenceService, kpiAggregation, notifications, rulesEngine, runtimeEvents, workflowDefinitions, CreatePipelineInput, GenerationArtifact (+26 more)
 
 ### Community 33 - "InMemoryBlueprintCatalog"
 Cohesion: 0.11
@@ -269,8 +358,8 @@ Cohesion: 0.11
 Nodes (18): ApiEndpointDefinition, AppType, AuditRequirement, BlueprintHint, CreatePromptInput, DeploymentProfile, IntegrationDefinition, ParsedIntent (+10 more)
 
 ### Community 35 - "tsconfig.json"
-Cohesion: 0.11
-Nodes (17): CreatePipelineInput, GenerationArtifact, GenerationPipelineExecution, GenerationStageExecution, GenerationStageInput, GenerationStageInputSchema, GenerationStageName, GenerationStageOutput (+9 more)
+Cohesion: 0.05
+Nodes (38): 1. Monorepo with pnpm + Turbo, 2. Contract-First Architecture, 3. Agent Substrate Pattern, 4. Industrial Blueprint Sources, 5. TypeScript Configuration, Architecture Decision Records, Architecture Documentation, 🏗️ Architecture Summary (+30 more)
 
 ### Community 36 - "API Contract"
 Cohesion: 0.14
@@ -301,16 +390,16 @@ Cohesion: 0.18
 Nodes (11): CreateProjectForm(), errStyle, inputStyle, ADR-0006, WorkspaceOption, PageProps, ProjectsList(), ProjectsPage() (+3 more)
 
 ### Community 44 - "task-payload.ts"
-Cohesion: 0.17
-Nodes (11): Invitation, InvitationId, InvitationStatus, InvitationSummary, InviteUserInput, getRolePermissions(), Permission, ROLE_DEFINITIONS (+3 more)
+Cohesion: 0.06
+Nodes (32): API Boundaries, `app/routes/integrations.py` — ERP Adapter Patterns, `app/routes/operations.py` — Execution Engine, `app/routes/production.py` — Gantt Scheduler, Edit with Caution, Entry Points, FactoryNXT_PY_V2 — Structural Knowledge Graph, Governance (+24 more)
 
 ### Community 45 - "tsconfig.json"
 Cohesion: 0.15
 Nodes (12): InsertNotification, InsertNotificationDeliveryAttempt, InsertNotificationTemplate, Notification, notificationChannelEnum, NotificationDeliveryAttempt, notificationDeliveryAttempts, notificationPriorityEnum (+4 more)
 
 ### Community 50 - "BlueprintCatalog"
-Cohesion: 0.26
-Nodes (9): ALLOWED_PROJECT_STATUS_TRANSITIONS, CreateProjectInput, isProjectStatusTransitionAllowed(), Project, ProjectLookupKey, ProjectSlug, ProjectStatus, ProjectSummary (+1 more)
+Cohesion: 0.08
+Nodes (43): GET(), GET(), GET(), TasksPage(), Artifact, ArtifactId, ArtifactKind, ArtifactStorageKind (+35 more)
 
 ### Community 51 - "task.ts"
 Cohesion: 0.17
@@ -329,12 +418,12 @@ Cohesion: 0.18
 Nodes (10): compilerOptions, lib, outDir, rootDir, extends, include, ES2022, src/**/* (+2 more)
 
 ### Community 55 - "ADR-0007 — Phase 1 UI Consolidation Pattern"
-Cohesion: 0.22
-Nodes (8): CreateWorkspaceForm(), errStyle, inputStyle, PageProps, tdStyle, thStyle, WorkspacesList(), Workspace
+Cohesion: 0.29
+Nodes (6): CreateWorkspaceForm(), errStyle, inputStyle, PageProps, tdStyle, thStyle
 
 ### Community 60 - "tsconfig.json"
-Cohesion: 0.22
-Nodes (8): CreateTaskInput, isTaskTerminal(), TaskSummary, TaskType, User, UserId, UserStatus, UserSummary
+Cohesion: 0.06
+Nodes (30): ADR-0012: Prompt-to-Spec Engine Architecture, Blueprint Integration (Phase 5 Bridge), Consequences, Context and Problem Statement, Decision Drivers, Decision Options Considered, Follow-Up Tasks for Phase 4 Implementation, Idempotency and Deduplication Flow (+22 more)
 
 ### Community 61 - "tsconfig.json"
 Cohesion: 0.20
@@ -365,12 +454,12 @@ Cohesion: 0.22
 Nodes (8): compilerOptions, outDir, rootDir, extends, include, src/**/*, ../../tsconfig.base.json, $schema
 
 ### Community 73 - "Phase 4 — Prompt-to-Spec Engine"
-Cohesion: 0.25
-Nodes (7): Artifact, ArtifactId, ArtifactKind, ArtifactStorageKind, ArtifactSummary, CreateArtifactInput, hasInlineContent()
+Cohesion: 0.07
+Nodes (28): API Boundaries, Edit with Caution, Entry Points, Extrusion Add-on — APS (`models_aps.py`), Extrusion Core — Admin / User / Misc, Extrusion Core — Equipment, Extrusion Core — Integration, Extrusion Core — KPI / Alert (+20 more)
 
 ### Community 74 - "Phase 5 — Blueprint Selection and Composition"
-Cohesion: 0.25
-Nodes (7): CreateGenerationRunInput, GenerationRun, GenerationRunId, GenerationRunSnapshot, GenerationRunStatus, GenerationRunSummary, isGenerationRunTerminal()
+Cohesion: 0.07
+Nodes (27): ADR-0003: Industrial Blueprint Sources, Blueprint Extraction Strategy, Blueprint Schema Design, Consequences, Context, Decision, Domain Model Derivation, FactoryNXT_PY_v2_Extrusion (Aluminum Extrusion) (+19 more)
 
 ### Community 76 - "Phase 7 — Validation and Review Loop"
 Cohesion: 0.48
@@ -392,25 +481,361 @@ Nodes (3): createExtrusionBlueprints(), createExtrusionDieLifecycleBlueprint(), 
 Cohesion: 0.83
 Nodes (3): createPcbBlueprints(), createPcbGenealogyBlueprint(), createPcbSerialExecutionBlueprint()
 
+### Community 98 - "README.md"
+Cohesion: 0.07
+Nodes (26): 1. Schema Design — PromptSpec in `core-types`, 2. Input Schemas for Mutations, 3. Module Structure in `packages/prompt-spec/src/`, 4. Export Strategy, 5. Idempotency via Stability Hash, ADR-0011: Prompt-to-Spec Engine Architecture (Phase 4), Alternative 1: LLM-Only Parsing, Alternative 2: Form-First Input (+18 more)
+
+### Community 99 - "apps/web"
+Cohesion: 0.08
+Nodes (24): 1. Current State (from `graphify/heynxt-core/`), 2. Reference Repo Synthesis (from graphify reports), 3. Reuse Matrix (summary; full version in `buildplan.md` Phase 0), 4. Gap Analysis — What's Missing Between Current State and Target, 5. Summary: Three Blockers, One Slice, 6. Proposed Task 1, 7. Decision Required, Commands Run (+16 more)
+
+### Community 100 - "apps/web/README.md"
+Cohesion: 0.08
+Nodes (24): API Routes (`apps/web/src/app/api/validation-runs/`), Completed for Phase 8 (2026-07-13 session), Completed Phases, Core Schemas (`packages/core-types`), Current State: Phase 7 COMPLETE, Phase 8 IN PROGRESS, Current Work: Phase 8 — Industrial Runtime Services (IN PROGRESS), Exit Criteria Status (Phase 7), Files Created (Phase 7) (+16 more)
+
+### Community 101 - "apps/web/package.json"
+Cohesion: 0.09
+Nodes (22): 1. Schema Design — Blueprint Metadata (in `core-types`), 2. Domain Entity Schema — Industrial Entities, 3. Registry Infrastructure — Three Interfaces, 4. Composition Plan Schema, ADR-0010: Blueprint Registry Architecture, Alternative 1: JSON-based Blueprint Storage (vs. DB schema), Alternative 2: LLM-assisted Blueprint Matching (vs. keyword-based), Alternative 3: Single Monolithic Blueprint Schema (vs. Family/Domain classification) (+14 more)
+
+### Community 102 - "apps/web/src/index.ts"
+Cohesion: 0.10
+Nodes (20): 1. Adapter pattern for agents (`lib/sandbox/agents/index.ts`), 2. Sandboxed execution (`lib/sandbox/creation.ts` + `lib/sandbox/commands.ts`), 3. Streaming JSON output (claude.ts — reference implementation), 4. Session resumption, 5. Background orchestration via Next.js `after()`, 6. Per-user encrypted API keys + AI Gateway proxying, API Boundaries, Critical Files / High Blast Radius (+12 more)
+
+### Community 103 - "apps/web/tsconfig.json"
+Cohesion: 0.10
+Nodes (19): Architecture Principles, CLI Behavior, Context Management, Core Rules, Current Phase, Development Commands, graphify, HeyNXT Core — Claude Instructions (+11 more)
+
+### Community 104 - "{ GET, POST }"
+Cohesion: 0.16
+Nodes (11): GET(), PATCH(), ADR-0006, ApiErrorBody, NextApiError, notFound(), InsertAuditEntryParams, insertStatusChangeEntry() (+3 more)
+
+### Community 105 - "buildplan.md"
+Cohesion: 0.12
+Nodes (17): ADR-0001: Monorepo and Boundaries, Consequences, Context, Decision, Dependency Rules, Migration Plan, Monorepo Structure, Negative (+9 more)
+
+### Community 106 - "docker-compose.yml"
+Cohesion: 0.12
+Nodes (17): ADR-0004: ORM and Database Choice for Control Plane, Consequences, Considered Alternatives, Context, Decision, Decisions locked in (Task 4), Follow-ups (all landed), Implementation status (as of 2026-07-09) (+9 more)
+
+### Community 107 - "docs/adr/0001-monorepo-and-boundaries.md"
+Cohesion: 0.12
+Nodes (17): 1. Install dependencies, 2. Create your local env file, 3. Start the local Postgres container, Container starts unhealthy, Daily Workflow, Database Details, `DATABASE_URL` connection refused, `docker compose: command not found` (+9 more)
+
+### Community 108 - "docs/adr/0002-agent-substrate.md"
+Cohesion: 0.13
+Nodes (15): ADR-0002: Agent Substrate and Execution Model, Consequences, Context, Future Considerations, Implementation Notes, Negative, Neutral, Phase 5 Tasks (+7 more)
+
+### Community 109 - "docs/adr/0003-industrial-blueprint-sources.md"
+Cohesion: 0.13
+Nodes (15): ADRs, 🏗️ Architecture Overview, Coding Agent Substrate, 🤝 Contributing, 🎯 Current Phase: Phase 1 — Product Control Plane Foundation, 📚 Documentation, For Claude Sessions, HeyNXT Core - Industrial AI App Builder Platform (+7 more)
+
+### Community 110 - "docs/adr/0004-orm-and-database.md"
+Cohesion: 0.14
+Nodes (13): API Contract, Artifacts, Generation Runs, Health, @heynxt/web, Local Setup, Package Dependencies (runtime), Projects (+5 more)
+
+### Community 111 - "docs/architecture/overview.md"
+Cohesion: 0.14
+Nodes (13): ADR-0008 — Auth Library and OAuth Provider, Affected Code Surface (preview for next task), Affected Schema Surface, Consequences, Context, Costs / Tradeoffs, Decision, Exit Criteria for This Decision (+5 more)
+
+### Community 112 - "docs/dev-setup.md"
+Cohesion: 0.17
+Nodes (11): ADR-0009: Migrations — Forward-Only with Reset as Phase 1 Reversibility, Consequences, Context, Decision, Option A — Hand-write down migrations for every forward migration, Option B — Treat `pnpm db:migrate:reset` as the reversibility mechanism, Option C — Defer reversibility entirely to Phase 9, Options Considered (+3 more)
+
+### Community 113 - "docs/gap-analysis.md"
+Cohesion: 0.18
+Nodes (11): 1. Adapter Pattern with Uniform Contract, 2. Sandboxed Execution, 3. Streaming Output, 4. Credential Management, 5. Resumable Sessions, Adaptation for HeyNXT, Agent Spec Schema, Agent Substrate Architecture (+3 more)
+
+### Community 115 - "packages/agent-adapter/package.json"
+Cohesion: 0.20
+Nodes (10): Architecture Overview, Blueprint Loading Flow, Data Flow, Extension Points, Package Dependency Graph, References, Security Considerations, Standard Generation Flow (+2 more)
+
+### Community 116 - "packages/agent-adapter/src/index.ts"
+Cohesion: 0.22
+Nodes (8): ADR-0006 — `createdBy` Session Sweep Plan, Consequences, Context, Costs / Tradeoffs, Decision, Exit Criteria for the Sweep, Rationale, Sweep Plan
+
+### Community 117 - "packages/agent-adapter/tsconfig.json"
+Cohesion: 0.22
+Nodes (8): ADR-0007 — Phase 1 UI Consolidation Pattern, Consequences, Context, Conventions, Costs / Tradeoffs, Decision, Rationale, Revisit Triggers
+
+### Community 118 - "packages/blueprint-registry/package.json"
+Cohesion: 0.22
+Nodes (9): Cross-Repo Navigation, File Contents, Graphify — Unified Repo Map, How Graphs Are Generated, How to Use This Map, Layout, Priority Order for Any Repo, Refreshing a Graph (+1 more)
+
+### Community 119 - "packages/blueprint-registry/src/index.ts"
+Cohesion: 0.25
+Nodes (7): ADR-0005 — Client Form Pattern (fetch + router.refresh), Consequences, Context, Costs / Tradeoffs, Decision, Rationale, Revisit When
+
+### Community 120 - "packages/blueprint-registry/tsconfig.json"
+Cohesion: 0.38
+Nodes (5): ForbiddenError, getUserPermissions(), hasPermission(), PermissionScope, resolveOrganizationIdForRbac()
+
+### Community 121 - "packages/core-types/package.json"
+Cohesion: 0.29
+Nodes (7): Architectural Layers, Layer 1: Shared Schema Layer (`@heynxt/core-types`), Layer 2: Domain Models Layer (`@heynxt/domain-models`), Layer 3: Blueprint Registry Layer (`@heynxt/blueprint-registry`), Layer 4: Prompt-to-Spec Layer (`@heynxt/prompt-spec`), Layer 5: Agent Adapter Layer (`@heynxt/agent-adapter`), Layer 6: Control Plane UI (`apps/web`)
+
+### Community 122 - "packages/core-types/src/index.ts"
+Cohesion: 0.60
+Nodes (5): buildAcceptUrl(), findPendingInvitation(), findUserByEmail(), generateToken(), POST()
+
+### Community 123 - "packages/core-types/src/schemas/artifact.ts"
+Cohesion: 0.53
+Nodes (5): executeAgentInBackground(), POST(), TODO: Stream events to client via SSE or store in DB, uuidValidate(), TaskStatus
+
+### Community 124 - "packages/core-types/src/schemas/audit-log.ts"
+Cohesion: 0.33
+Nodes (6): Blueprint Extraction Targets, Dependencies, Exit Criteria, Initial Blueprint Families, Phase 3 — Industrial Blueprint Extraction, Risks
+
+### Community 125 - "packages/core-types/src/schemas/control-plane.test.ts"
+Cohesion: 0.33
+Nodes (6): Completed Deliverables, Cross-Repo Reuse Matrix, Exit Criteria, Files Changed, Gaps Documented, Phase 0 — Multi-Repo Audit ✓ COMPLETE
+
+### Community 126 - "packages/core-types/src/schemas/generation-run.ts"
+Cohesion: 0.33
+Nodes (5): Completion, Context, Execution Protocol (CLAUDE.md Work Order), Exit Criteria, Task P1-T1 — Phase 1: ORM + DB selection, ADR 0004
+
+### Community 127 - "packages/core-types/src/schemas/organization.ts"
+Cohesion: 0.33
+Nodes (5): Completion, Context, Execution Protocol (CLAUDE.md Work Order), Exit Criteria, Task P1-T2 — Phase 1: Zod schemas: user, org, workspace, project, task, artifact, generation-run, rbac
+
+### Community 128 - "packages/core-types/src/schemas/project.ts"
+Cohesion: 0.33
+Nodes (5): Completion, Context, Execution Protocol (CLAUDE.md Work Order), Exit Criteria, Task P1-T3 — Phase 1: DB migrations + ORM layer
+
+### Community 129 - "packages/core-types/src/schemas/rbac.ts"
+Cohesion: 0.33
+Nodes (5): Completion, Context, Execution Protocol (CLAUDE.md Work Order), Exit Criteria, Task P1-T4 — Phase 1: Control plane API routes (REST/tRPC)
+
+### Community 130 - "packages/core-types/src/schemas/task.ts"
+Cohesion: 0.33
+Nodes (5): Completion, Context, Execution Protocol (CLAUDE.md Work Order), Exit Criteria, Task P1-T5 — Phase 1: Next.js auth + workspace UI
+
+### Community 131 - "packages/core-types/src/schemas/user.ts"
+Cohesion: 0.33
+Nodes (5): Completion, Context, Execution Protocol (CLAUDE.md Work Order), Exit Criteria, Task P1-T6 — Phase 1: RBAC middleware + activity log
+
+### Community 132 - "packages/core-types/src/schemas/workspace.ts"
+Cohesion: 0.33
+Nodes (5): Completion, Context, Execution Protocol (CLAUDE.md Work Order), Exit Criteria, Task P2-T1 — Phase 2: AgentSpec + AgentExecutionResult Zod schemas
+
+### Community 133 - "packages/core-types/tsconfig.json"
+Cohesion: 0.33
+Nodes (5): Completion, Context, Execution Protocol (CLAUDE.md Work Order), Exit Criteria, Task P2-T2 — Phase 2: AgentRuntime interface + Vercel AI SDK adapter
+
+### Community 134 - "packages/core-types/vitest.config.ts"
+Cohesion: 0.33
+Nodes (5): Completion, Context, Execution Protocol (CLAUDE.md Work Order), Exit Criteria, Task P2-T3 — Phase 2: Sandbox lifecycle manager
+
+### Community 135 - "packages/domain-models/package.json"
+Cohesion: 0.33
+Nodes (5): Completion, Context, Execution Protocol (CLAUDE.md Work Order), Exit Criteria, Task P2-T4 — Phase 2: Streaming JSON stdout parser + progress tracker
+
+### Community 136 - "packages/domain-models/src/index.ts"
+Cohesion: 0.33
+Nodes (5): Completion, Context, Execution Protocol (CLAUDE.md Work Order), Exit Criteria, Task P2-T5 — Phase 2: Branch-per-task Git flow + task-to-commit traceability
+
+### Community 137 - "packages/domain-models/tsconfig.json"
+Cohesion: 0.33
+Nodes (5): Completion, Context, Execution Protocol (CLAUDE.md Work Order), Exit Criteria, Task P2-T6 — Phase 2: POST /api/tasks/:id/execute end-to-end wiring
+
+### Community 138 - "packages/persistence/README.md"
+Cohesion: 0.33
+Nodes (5): Completion, Context, Execution Protocol (CLAUDE.md Work Order), Exit Criteria, Task P3-T1 — Phase 3: domain-models: Equipment + Process Zod schemas
+
+### Community 139 - "packages/persistence/drizzle.config.ts"
+Cohesion: 0.33
+Nodes (5): Completion, Context, Execution Protocol (CLAUDE.md Work Order), Exit Criteria, Task P3-T2 — Phase 3: domain-models: Material + Quality + Production schemas
+
+### Community 140 - "packages/persistence/drizzle/0000_great_sunspot.sql"
+Cohesion: 0.33
+Nodes (5): Completion, Context, Execution Protocol (CLAUDE.md Work Order), Exit Criteria, Task P3-T3 — Phase 3: domain-models: Traceability + Reliability schemas
+
+### Community 141 - "packages/persistence/drizzle/meta"
+Cohesion: 0.33
+Nodes (5): Completion, Context, Execution Protocol (CLAUDE.md Work Order), Exit Criteria, Task P3-T4 — Phase 3: blueprint-registry: loader + catalog + validator
+
+### Community 142 - "packages/persistence/package.json"
+Cohesion: 0.33
+Nodes (5): Completion, Context, Execution Protocol (CLAUDE.md Work Order), Exit Criteria, Task P3-T5 — Phase 3: Blueprint family extraction: Extrusion + Production Execution
+
+### Community 143 - "packages/persistence/src/index.ts"
+Cohesion: 0.33
+Nodes (5): Completion, Context, Execution Protocol (CLAUDE.md Work Order), Exit Criteria, Task P3-T6 — Phase 3: Blueprint family extraction: Quality + Maintenance + Traceability
+
+### Community 144 - "packages/persistence/src/schema/artifacts.ts"
+Cohesion: 0.33
+Nodes (5): Completion, Context, Execution Protocol (CLAUDE.md Work Order), Exit Criteria, Task P4-T1 — Phase 4: PromptSpec + SpecTemplate Zod schemas
+
+### Community 145 - "packages/persistence/src/schema/audit-log.ts"
+Cohesion: 0.33
+Nodes (5): Completion, Context, Execution Protocol (CLAUDE.md Work Order), Exit Criteria, Task P4-T2 — Phase 4: Prompt parser (NL → structured intent)
+
+### Community 146 - "packages/persistence/src/schema/generation-runs.ts"
+Cohesion: 0.33
+Nodes (5): Completion, Context, Execution Protocol (CLAUDE.md Work Order), Exit Criteria, Task P4-T3 — Phase 4: Spec generator (intent → SpecTemplate via LLM)
+
+### Community 147 - "packages/persistence/src/schema/index.ts"
+Cohesion: 0.33
+Nodes (5): Completion, Context, Execution Protocol (CLAUDE.md Work Order), Exit Criteria, Task P4-T4 — Phase 4: Spec validation + idempotency test
+
+### Community 148 - "packages/persistence/src/schema/organizations.ts"
+Cohesion: 0.33
+Nodes (5): Completion, Context, Execution Protocol (CLAUDE.md Work Order), Exit Criteria, Task P5-T1 — Phase 5: Blueprint selection algorithm (keyword → scored candidates)
+
+### Community 149 - "packages/persistence/src/schema/projects.ts"
+Cohesion: 0.33
+Nodes (5): Completion, Context, Execution Protocol (CLAUDE.md Work Order), Exit Criteria, Task P5-T2 — Phase 5: Composition engine (base + module + role + KPI packs)
+
+### Community 150 - "packages/persistence/src/schema/role-assignments.ts"
+Cohesion: 0.33
+Nodes (5): Completion, Context, Execution Protocol (CLAUDE.md Work Order), Exit Criteria, Task P5-T3 — Phase 5: Versioned blueprint plan + manual override with audit trail
+
+### Community 151 - "packages/persistence/src/schema/tasks.ts"
+Cohesion: 0.33
+Nodes (5): Completion, Context, Execution Protocol (CLAUDE.md Work Order), Exit Criteria, Task P6-T1 — Phase 6: Generation pipeline orchestrator (9-stage runner)
+
+### Community 152 - "packages/persistence/src/schema/users.ts"
+Cohesion: 0.33
+Nodes (5): Completion, Context, Execution Protocol (CLAUDE.md Work Order), Exit Criteria, Task P6-T2 — Phase 6: Stage 1-3: Normalize spec + resolve blueprint + generate schema
+
+### Community 153 - "packages/persistence/src/schema/workspaces.ts"
+Cohesion: 0.33
+Nodes (5): Completion, Context, Execution Protocol (CLAUDE.md Work Order), Exit Criteria, Task P6-T3 — Phase 6: Stage 4-6: Permissions + backend modules + frontend modules
+
+### Community 154 - "packages/persistence/tsconfig.json"
+Cohesion: 0.33
+Nodes (5): Completion, Context, Execution Protocol (CLAUDE.md Work Order), Exit Criteria, Task P6-T4 — Phase 6: Stage 7-9: Workflows + fixtures/tests + deployment metadata
+
+### Community 155 - "packages/persistence/vitest.config.ts"
+Cohesion: 0.33
+Nodes (5): Completion, Context, Execution Protocol (CLAUDE.md Work Order), Exit Criteria, Task P6-T5 — Phase 6: End-to-end: prompt → generated runnable app slice
+
+### Community 156 - "packages/prompt-spec/package.json"
+Cohesion: 0.33
+Nodes (5): Completion, Context, Execution Protocol (CLAUDE.md Work Order), Exit Criteria, Task P7-T1 — Phase 7: Automated validation suite (lint + typecheck + test + migrations + smoke)
+
+### Community 157 - "packages/prompt-spec/src/index.ts"
+Cohesion: 0.33
+Nodes (5): Completion, Context, Execution Protocol (CLAUDE.md Work Order), Exit Criteria, Task P7-T2 — Phase 7: PR creation automation with evidence attachment
+
+### Community 158 - "packages/prompt-spec/tsconfig.json"
+Cohesion: 0.33
+Nodes (5): Completion, Context, Execution Protocol (CLAUDE.md Work Order), Exit Criteria, Task P7-T3 — Phase 7: Review loop: approve/reject → rerun with feedback
+
+### Community 159 - "vitest.config.ts"
+Cohesion: 0.33
+Nodes (5): Completion, Context, Execution Protocol (CLAUDE.md Work Order), Exit Criteria, Task P8-T1 — Phase 8: Workflow engine: state machine executor with audit trail
+
+### Community 160 - "drizzle.config.ts"
+Cohesion: 0.33
+Nodes (5): Completion, Context, Execution Protocol (CLAUDE.md Work Order), Exit Criteria, Task P8-T2 — Phase 8: Event ingestion service (PLC signals, barcode scans, sensors)
+
+### Community 161 - "vitest.config.ts"
+Cohesion: 0.33
+Nodes (5): Completion, Context, Execution Protocol (CLAUDE.md Work Order), Exit Criteria, Task P8-T3 — Phase 8: Rules engine + KPI aggregation (OEE, throughput, quality rate)
+
+### Community 162 - "pnpm-lock.yaml"
+Cohesion: 0.33
+Nodes (5): Completion, Context, Execution Protocol (CLAUDE.md Work Order), Exit Criteria, Task P8-T4 — Phase 8: Notification + scheduler services
+
+### Community 163 - "pnpm-workspace.yaml"
+Cohesion: 0.33
+Nodes (5): Completion, Context, Execution Protocol (CLAUDE.md Work Order), Exit Criteria, Task P9-T1 — Phase 9: Tenant isolation enforcement + workspace-scoped data access audit
+
+### Community 164 - "tsconfig.base.json"
+Cohesion: 0.33
+Nodes (5): Completion, Context, Execution Protocol (CLAUDE.md Work Order), Exit Criteria, Task P9-T2 — Phase 9: Immutable audit log (all state-changing ops)
+
+### Community 165 - "tsconfig.json"
+Cohesion: 0.33
+Nodes (5): Completion, Context, Execution Protocol (CLAUDE.md Work Order), Exit Criteria, Task P9-T3 — Phase 9: Secret management + per-workspace secret scopes
+
+### Community 166 - "turbo.json"
+Cohesion: 0.33
+Nodes (5): Completion, Context, Execution Protocol (CLAUDE.md Work Order), Exit Criteria, Task P9-T4 — Phase 9: Quota enforcement + observability (Prometheus, Grafana, Loki)
+
+### Community 167 - "validator.ts"
+Cohesion: 0.33
+Nodes (5): Completion, Context, Execution Protocol (CLAUDE.md Work Order), Exit Criteria, Task P9-T5 — Phase 9: Rollback system + one-click revert per generation run
+
+### Community 168 - "artifact.ts"
+Cohesion: 0.33
+Nodes (5): Completion, Context, Execution Protocol (CLAUDE.md Work Order), Exit Criteria, Task P9-T6 — Phase 9: Production readiness: security review + runbook + pilot sign-off
+
+### Community 169 - "Architectural Layers"
+Cohesion: 0.40
+Nodes (5): Definition of Done, HeyNXT Core — Build Plan, Implementation Phases, Objective, Summary
+
+### Community 170 - "workspace.ts"
+Cohesion: 0.40
+Nodes (5): Dependencies, Exit Criteria, Phase 1 — Product Control Plane Foundation, Risks, Scope
+
+### Community 171 - "Troubleshooting"
+Cohesion: 0.40
+Nodes (5): Dependencies, Exit Criteria, Phase 2 — Agent Execution Integration, Risks, Scope
+
+### Community 172 - "ValidateRoutesStage"
+Cohesion: 0.40
+Nodes (5): Dependencies, Exit Criteria, Phase 4 — Prompt-to-Spec Engine, Risks, Scope
+
+### Community 173 - "GenerateBackendStage"
+Cohesion: 0.40
+Nodes (5): Dependencies, Exit Criteria, Phase 5 — Blueprint Selection and Composition, Risks, Scope
+
+### Community 174 - "GenerateFixturesTestsStage"
+Cohesion: 0.40
+Nodes (5): Dependencies, Exit Criteria, Phase 6 — Generation Pipeline, Risks, Scope
+
+### Community 175 - "GenerateFrontendStage"
+Cohesion: 0.40
+Nodes (5): Dependencies, Exit Criteria, Phase 7 — Validation and Review Loop, Risks, Scope
+
+### Community 176 - "validation-stage.ts"
+Cohesion: 0.40
+Nodes (5): Dependencies, Exit Criteria, Phase 8 — Industrial Runtime Services, Risks, Scope
+
+### Community 177 - "ValidateBuildStage"
+Cohesion: 0.40
+Nodes (5): Dependencies, Exit Criteria, Phase 9 — Governance and Hardening, Risks, Scope
+
+### Community 178 - "DefaultPipelineBuilder"
+Cohesion: 0.40
+Nodes (4): Absolute Rules, Completion Signal Format (MANDATORY — output EXACTLY one of these), HeyNXT Autonomous Loop Session, Read Before Executing
+
+### Community 179 - "GenerateWorkflowsStage"
+Cohesion: 0.40
+Nodes (4): Design decisions, @heynxt/persistence, References, What it exposes
+
+### Community 180 - "ResolveBlueprintPlanStage"
+Cohesion: 0.50
+Nodes (4): 1) Coding agent execution reference, 2) Industrial blueprint references, 3) Product platform repository, Source-of-Truth Repositories
+
+### Community 181 - "ValidateTestsStage"
+Cohesion: 0.50
+Nodes (4): A. Control Plane, Architecture Intent, B. Agent Execution Adapter, C. Industrial Blueprint Engine
+
+### Community 182 - "rbac.ts"
+Cohesion: 0.50
+Nodes (4): 1) Coding agent execution reference, 2) Industrial blueprint reference — aluminum extrusion, 3) Industrial blueprint reference — PCB/electronics MES, External Reference Repositories
+
 ## Knowledge Gaps
-- **651 isolated node(s):** `nextConfig`, `name`, `version`, `private`, `dev` (+646 more)
+- **1259 isolated node(s):** `nextConfig`, `name`, `version`, `private`, `dev` (+1254 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **27 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `POST()` connect `index.ts` to `index.ts`, `task.ts`?**
-  _High betweenness centrality (0.097) - this node is a cross-community bridge._
-- **Why does `TaskStatus` connect `index.ts` to `BlueprintCatalog`, `tsconfig.json`?**
-  _High betweenness centrality (0.076) - this node is a cross-community bridge._
+- **Why does `POST()` connect `packages/core-types/src/schemas/artifact.ts` to `index.ts`, `index.ts`, `task.ts`?**
+  _High betweenness centrality (0.049) - this node is a cross-community bridge._
+- **Why does `TaskStatus` connect `packages/core-types/src/schemas/artifact.ts` to `BlueprintCatalog`?**
+  _High betweenness centrality (0.046) - this node is a cross-community bridge._
 - **What connects `NOTE: This file should not be edited`, `nextConfig`, `name` to the rest of the system?**
-  _656 weakly-connected nodes found - possible documentation gaps or missing edges._
-- **Should `index.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.08732309545317675 - nodes in this community are weakly interconnected._
+  _1264 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `errorResponse` be split into smaller, more focused modules?**
   _Cohesion score 0.05359937402190924 - nodes in this community are weakly interconnected._
 - **Should `index.ts` be split into smaller, more focused modules?**
   _Cohesion score 0.07380520266182698 - nodes in this community are weakly interconnected._
 - **Should `index.ts` be split into smaller, more focused modules?**
   _Cohesion score 0.03773584905660377 - nodes in this community are weakly interconnected._
+- **Should `dependencies` be split into smaller, more focused modules?**
+  _Cohesion score 0.04081632653061224 - nodes in this community are weakly interconnected._

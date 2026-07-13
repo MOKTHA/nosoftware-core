@@ -1,0 +1,35 @@
+{
+  "name": "@heynxt/services",
+  "version": "0.1.0",
+  "private": true,
+  "description": "HeyNXT Core Service Workers - Industrial runtime services execution layer",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/",
+    "clean": "rm -rf dist node_modules"
+  },
+  "dependencies": {
+    "@heynxt/persistence": "workspace:*",
+    "bullmq": "^4.12.0",
+    "drizzle-orm": "^0.32.0",
+    "ioredis": "^5.3.2",
+    "node-cron": "^3.0.3",
+    "nodemailer": "^6.9.7",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/node-cron": "^3.0.11",
+    "@types/nodemailer": "^6.4.14",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

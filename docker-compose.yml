@@ -19,6 +19,21 @@
 # =============================================================================
 
 services:
+  redis:
+    image: redis:7-alpine
+    container_name: heynxt-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   postgres:
     image: postgres:15-alpine
     container_name: heynxt-postgres
@@ -56,3 +71,4 @@ volumes:
     # Data persists across `docker compose down` unless passing `--volumes`.
     # Useful when iterating on migrations — your seed data isn't wiped each run.
     name: heynxt-postgres-data
+  redis-data:
