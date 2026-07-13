@@ -172,7 +172,7 @@ export const FinalStateSchema = StateBaseSchema.extend({
 export const NormalStateSchema = StateBaseSchema.extend({
   id: z.string().min(1, 'State ID is required'),
   name: z.string().min(1, 'State name is required'),
-  type: z.enum(['normal', 'initial']).optional(), // Allow normal or initial for flexibility
+  type: z.literal('normal').optional(), // Distinct from initial/final types
 });
 
 /** Union of all state types - discriminated by type */
