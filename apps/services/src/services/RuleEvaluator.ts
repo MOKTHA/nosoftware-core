@@ -5,7 +5,7 @@
 import { eq, and } from 'drizzle-orm';
 import crypto from 'crypto';
 import { db, rules, ruleViolations, ruleEvaluationLog, type RuleDefinition, InsertRuleViolation, type RuleEvaluationLog as DBRuleEvaluationLog, kpiDefinitions, kpiSnapshots, kpiCalculationJobs } from '@heynxt/persistence';
-import { withTransaction } from '../database/db';
+import { withTransaction, getDrizzleClient } from '../database/db';
 
 export interface EvaluationResult {
   ruleId: string;
@@ -51,12 +51,14 @@ export class RuleEvaluator {
     const startTime = Date.now();
 
     return await withTransaction(async (client) => {
+      // Get transaction-scoped Drizzle client
+      const txDb = getDrizzleClient(client);
+
       // Get rule definition
-      const [rule] = await db
+      const [rule] = await txDb
         .select()
         .from(rules)
-        .where(eq(rules.id, ruleId))
-        .execute(client);
+        .where(eq(rules.id, ruleId));
 
       if (!rule) {
         throw new Error(`Rule not found: ${ruleId}`);
@@ -69,7 +71,7 @@ export class RuleEvaluator {
 
       if (matched) {
         // Create violation record with required fields matching schema
-        [violation] = await db
+        [violation] = await txDb
           .insert(ruleViolations)
           .values({
             id: crypto.randomUUID(),
@@ -80,8 +82,7 @@ export class RuleEvaluator {
             actionsTaken: [],
             createdAt: new Date(),
           })
-          .returning()
-          .execute(client);
+          .returning();
 
         console.log(`Rule matched: ${rule.name} (severity=warning)`);
       } else {
@@ -89,7 +90,7 @@ export class RuleEvaluator {
       }
 
       // Log evaluation result with required fields matching schema
-      const [logEntry] = await db
+      const [logEntry] = await txDb
         .insert(ruleEvaluationLog)
         .values({
           id: crypto.randomUUID(),
@@ -98,8 +99,7 @@ export class RuleEvaluator {
           evaluatedAt: new Date(),
           contextSnapshot: context ?? {},
         })
-        .returning()
-        .execute(client);
+        .returning();
 
       return {
         ruleId,
@@ -134,67 +134,179 @@ export class RuleEvaluator {
   }
 
   /**
-   * Evaluate a condition expression (placeholder).
-   * In production, implement proper expression parsing and evaluation.
+   * Evaluate a condition expression against provided context.
+   * Supports: comparison operators (> < >= <= == !=), compound conditions (AND/OR/NOT)
    */
   private static async evaluateCondition(
     conditionExpression: any,
     context?: Record<string, any>
   ): Promise<boolean> {
-    // Placeholder implementation - replace with actual expression evaluator
-
-    // Example patterns to support:
-    // "temperature > 1200" -> check if temperature in context exceeds threshold
-    // "status == 'error'" -> check status field
-    // "duration > 3600 AND temperature < 800" -> compound conditions
-
     try {
-      // Parse simple comparison expressions (placeholder logic)
-      const match = typeof conditionExpression === 'string' ?
-        conditionExpression.match(/(\w+)\s*(>|<|>=|<=|==|!=)\s*([\d.]+)/) : null;
+      if (!conditionExpression || typeof conditionExpression !== 'string') {
+        return false; // No valid expression to evaluate
+      }
 
-      if (!match || !conditionExpression) {
-        // For complex expressions, log and return false as default
-        console.warn(`Unparseable condition expression: ${conditionExpression}`);
+      const expr = conditionExpression.trim();
+      if (expr === '') {
         return false;
       }
 
-      const [, field, operator, value] = match;
-      if (!field || !value) {
-        console.warn(`Invalid match pattern: ${conditionExpression}`);
-        return false;
-      }
-
-      const fieldValue = context?.[field];
-
-      if (fieldValue === undefined) {
-        // Field not in context - rule doesn't apply
-        return false;
-      }
-
-      const numericValue = parseFloat(String(value));
-
-      switch (operator) {
-        case '>':
-          return fieldValue > numericValue;
-        case '<':
-          return fieldValue < numericValue;
-        case '>=':
-          return fieldValue >= numericValue;
-        case '<=':
-          return fieldValue <= numericValue;
-        case '==':
-          return fieldValue == numericValue;
-        case '!=':
-          return fieldValue != numericValue;
-        default:
-          console.warn(`Unknown operator: ${operator}`);
-          return false;
-      }
+      return this.evaluateExpression(expr, context);
     } catch (error) {
       console.error('Error evaluating condition:', error);
       return false; // Fail safe - don't trigger violations on evaluation errors
     }
+  }
+
+  /**
+   * Evaluate a parsed expression against context.
+   */
+  private static evaluateExpression(expr: string, context?: Record<string, any>): boolean {
+    // Handle NOT operator (highest precedence)
+    if (expr.startsWith('NOT ')) {
+      return !this.evaluateExpression(expr.substring(4).trim(), context);
+    }
+
+    // Handle OR operators (lowest precedence among binary ops)
+    const orParts = this.splitByOperator(expr, /\s+OR\s+/i);
+    if (orParts.length > 1) {
+      return orParts.some(part => this.evaluateExpression(part.trim(), context));
+    }
+
+    // Handle AND operators (higher precedence than OR)
+    const andParts = this.splitByOperator(expr, /\s+AND\s+/i);
+    if (andParts.length > 1) {
+      return andParts.every(part => this.evaluateExpression(part.trim(), context));
+    }
+
+    // Handle parenthesized expressions
+    if (expr.startsWith('(') && expr.endsWith(')')) {
+      return this.evaluateExpression(expr.substring(1, expr.length - 1), context);
+    }
+
+    // Evaluate comparison expression
+    return this.evaluateComparison(expr, context);
+  }
+
+  /**
+   * Split expression by operator while respecting parentheses.
+   */
+  private static splitByOperator(expr: string, regex: RegExp): string[] {
+    const parts: string[] = [];
+    let current = '';
+    let parenDepth = 0;
+
+    for (let i = 0; i < expr.length; i++) {
+      const char = expr[i];
+
+      if (char === '(') {
+        parenDepth++;
+        current += char;
+      } else if (char === ')') {
+        parenDepth--;
+        current += char;
+      } else if (parenDepth === 0 && regex.test(expr.substring(i))) {
+        // Check for operator match at this position
+        const match = expr.substring(i).match(regex);
+        if (match) {
+          parts.push(current.trim());
+          current = '';
+          i += match[0].length - 1;
+          continue;
+        }
+      }
+
+      current += char;
+    }
+
+    if (current.trim()) {
+      parts.push(current.trim());
+    }
+
+    return parts;
+  }
+
+  /**
+   * Evaluate a single comparison expression.
+   */
+  private static evaluateComparison(expr: string, context?: Record<string, any>): boolean {
+    // Match patterns like: field > value, field == 'string', field != null
+    const match = expr.match(/^(\w+)\s*(>|<|>=|<=|==|!=)\s*([\d.]+|'[^']*'|"[^"]*"|\bnull\b)$/i);
+
+    if (!match || !match[1] || !match[2] || !match[3]) {
+      console.warn(`Unparseable comparison expression: ${expr}`);
+      return false;
+    }
+
+    const [, field, operator, valueStr] = match;
+
+    // Get field value from context
+    const fieldValue = this.getFieldValue(field, context);
+
+    if (fieldValue === undefined) {
+      // Field not in context - rule doesn't apply
+      return false;
+    }
+
+    // Parse the comparison value
+    let compareValue: string | number | null;
+    if (valueStr === 'null') {
+      compareValue = null;
+    } else if (valueStr.startsWith("'") || valueStr.startsWith('"')) {
+      compareValue = valueStr.slice(1, -1); // Remove quotes
+    } else {
+      compareValue = parseFloat(valueStr);
+    }
+
+    // Perform comparison
+    switch (operator) {
+      case '>':
+        return compareValue !== null && fieldValue > compareValue;
+      case '<':
+        return compareValue !== null && fieldValue < compareValue;
+      case '>=':
+        return compareValue !== null && fieldValue >= compareValue;
+      case '<=':
+        return compareValue !== null && fieldValue <= compareValue;
+      case '==':
+        // Loose equality for type flexibility
+        if (compareValue === null) {
+          return fieldValue == null;
+        }
+        if (typeof compareValue === 'number' && typeof fieldValue === 'string') {
+          return parseFloat(fieldValue) == compareValue;
+        }
+        return fieldValue == compareValue;
+      case '!=':
+        // Loose equality for type flexibility
+        if (compareValue === null) {
+          return fieldValue != null;
+        }
+        if (typeof compareValue === 'number' && typeof fieldValue === 'string') {
+          return parseFloat(fieldValue) != compareValue;
+        }
+        return fieldValue != compareValue;
+      default:
+        console.warn(`Unknown operator: ${operator}`);
+        return false;
+    }
+  }
+
+  /**
+   * Get field value from context, supporting nested paths like 'process.temperature'.
+   */
+  private static getFieldValue(field: string, context?: Record<string, any>): any {
+    const keys = field.split('.');
+    let value: any = context;
+
+    for (const key of keys) {
+      if (value === undefined || value === null) {
+        return undefined;
+      }
+      value = value[key];
+    }
+
+    return value;
   }
 
   /**

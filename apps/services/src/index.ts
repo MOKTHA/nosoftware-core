@@ -19,6 +19,11 @@ import {
   createNotificationDispatcherWorker,
 } from './workers';
 import { KpiComputationJob, QuotaCheckJob } from './jobs';
+import { getHealthStatus, getLivenessStatus, getReadinessStatus, type HealthStatus } from './health';
+
+// Export health utilities for CLI usage and external integration
+export { getHealthStatus, getLivenessStatus, getReadinessStatus };
+export type { HealthStatus };
 
 /**
  * Graceful shutdown handler.

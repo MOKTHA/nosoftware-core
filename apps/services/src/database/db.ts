@@ -19,6 +19,13 @@ export const pool = new Pool({
 export const db = drizzle(pool, { schema });
 
 /**
+ * Get a transaction-scoped Drizzle client for use within transactions.
+ */
+export function getDrizzleClient(client: PoolClient) {
+  return drizzle(client, { schema });
+}
+
+/**
  * Get a client from the connection pool.
  * Caller is responsible for releasing the client.
  */

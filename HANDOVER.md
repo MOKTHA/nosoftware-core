@@ -235,38 +235,60 @@ The service workers infrastructure has been committed. The foundation for async 
 | API: audit-logs | route.ts | ~230 | Immutable log search + purge |
 | Library: tenant-isolation | tenant-isolation.ts | ~140 | Workspace access helpers |
 
-### Phase 10 Tasks — IN PROGRESS (Commit d559c98)
-| Component | Files Created | Lines Added | Details |
-|-----------|---------------|-------------|---------|
-| Queue: eventQueue | eventQueue.ts | ~130 lines | Event ingestion with deduplication, batch processing |
-| Queue: rulesQueue | rulesQueue.ts | ~140 lines | Rule evaluation scheduling, priority calculation |
-| Queue: notificationQueue | notificationQueue.ts | ~160 lines | Multi-channel dispatch (email/slack/webhook) |
-| Processor: EventProcessor | EventProcessor.ts | ~220 lines | Normalization, routing, deduplication engine |
-| Processor: RuleEvaluator | RuleEvaluator.ts | ~90 lines | Condition evaluation skeleton |
-| Processor: WorkflowEngine | WorkflowEngine.ts | ~50 lines | State machine orchestration skeleton |
-| Worker: RulesEvaluatorWorker | RulesEvaluatorWorker.ts | Ready for FSM logic | Queue integration complete |
-| Worker: WorkflowExecutorWorker | WorkflowExecutorWorker.ts | Ready for FSM logic | Queue integration complete |
+### Phase 10 Tasks — WORKER IMPLEMENTATION COMPLETE ✅
+| Component | Files Created/Updated | Lines Added | Details | Status |
+|-----------|----------------------|-------------|---------|--------|
+| Queue: eventQueue | eventQueue.ts | ~130 lines | Event ingestion with deduplication, batch processing | ✅ Complete |
+| Queue: rulesQueue | rulesQueue.ts | ~140 lines | Rule evaluation scheduling, priority calculation | ✅ Complete |
+| Queue: notificationQueue | notificationQueue.ts | ~160 lines | Multi-channel dispatch (email/slack/webhook) | ✅ Complete |
+| Processor: EventProcessor | EventProcessor.ts | ~250 lines | Normalization, routing to workflow/rules/genealogy | ✅ Complete |
+| Processor: RuleEvaluator | RuleEvaluator.ts | ~300 lines | Full expression parser with AND/OR/NOT support | ✅ Complete |
+| Processor: WorkflowEngine | WorkflowEngine.ts | ~320 lines | FSM with create/execute/pause/resume/cancel operations | ✅ Complete |
+| Worker: RulesEvaluatorWorker | RulesEvaluatorWorker.ts | ~60 lines | Queue integration complete | ✅ Ready |
+| Worker: WorkflowExecutorWorker | WorkflowExecutorWorker.ts | ~150 lines | FSM logic fully implemented | ✅ Ready |
+| Service: NotificationService | NotificationService.ts | ~250 lines | Multi-channel delivery (email/Slack/webhook) | ✅ Complete |
 
 ---
 
-## Graphify Update Status (Updated — 2026-07-13 Session 4)
+## Phase 10 Worker Implementation Status — COMPLETE ✅
 
-**Last Updated**: Pending manual refresh after Phase 10 commit  
-**Graph Stats**: 2,684 nodes · 3,942 edges · 196 communities (Phase 9 state)
-**Status**: ⚠️ **NEEDS UPDATE** — Phase 10 service workers files committed but not yet indexed
+### Infrastructure — COMPLETE ✅
+- Redis/BullMQ queue system configured with separate queues per worker type
+- Environment configuration with Zod validation for runtime config  
+- Worker concurrency settings and queue name customization
+- SMTP and Slack webhook integration ready
+- PostgreSQL connection pool (pg) properly typed with @types/pg
 
-The graph currently includes:
-- All Phase 8 runtime service APIs (`artifacts/phase8/*`, `events/*`, `rules/*`, `notifications/*`, `workflows/*`, `kpis/*`)
-- All Phase 9 governance APIs (`secrets/*`, `quotas/*`, `rollbacks/*`, `approvals/*`, `audit-logs/*`)
-- New schema tables in `packages/persistence/src/schema/` (tenant-isolation, secrets, quotas, rollbacks)
+### Core Processors — FULLY IMPLEMENTED ✅
+| Processor | Status | Key Features |
+|-----------|--------|--------------|
+| EventProcessor | ✅ Complete | Deduplication, source-based routing (PLC→workflow, barcode→genealogy, sensor→rules), batch processing |
+| WorkflowEngine | ✅ Complete | FSM with createInstance/executeTransition/pause/resume/cancel operations, state machine orchestration |
+| RuleEvaluator | ✅ Complete | Full expression parser supporting > < >= <= == != operators, AND/OR/NOT compound conditions, nested field paths (e.g., "process.temperature") |
 
-**Action Required**: Run `graphify update .` after Phase 10 commit to index:
-- apps/services/package.json and dependency changes
-- Queue definitions: eventQueue.ts, rulesQueue.ts, notificationQueue.ts  
-- Core processors: EventProcessor.ts, RuleEvaluator.ts, WorkflowEngine.ts
-- Worker implementations: RulesEvaluatorWorker.ts, WorkflowExecutorWorker.ts
+### Workers — FULLY INTEGRATED ✅
+| Worker | Status | Key Features |
+|--------|--------|--------------|
+| WorkflowExecutorWorker | ✅ Ready | Queue integration complete, FSM logic fully implemented in WorkflowEngine |
+| EventIngestionWorker | ✅ Ready | Main startup script with graceful shutdown handling (SIGINT/SIGTERM) |
+| RulesEvaluatorWorker | ✅ Ready | Condition evaluation expression parser complete |
+| NotificationDispatcherWorker | ✅ Ready | Multi-channel delivery (email/Slack/webhook) fully implemented |
 
-**Recommendation**: Update graphify knowledge graphs to reflect Phase 10 service workers infrastructure before proceeding with worker implementation.
+### New Files Created This Session:
+- `apps/services/src/jobs/index.ts` — Job module exports
+- `apps/services/bin/start-workers.ts` — CLI entry point for workers  
+- `apps/services/.env.example` — Environment variable documentation
+- `apps/services/src/health.ts` — Health check utilities (liveness/readiness probes)
+- `apps/services/bin/health-check.ts` — CLI health check utility
+
+### Build Status:
+| Check | Result | Notes |
+|-------|--------|-------|
+| pnpm typecheck | ✅ PASS | All Phase 10 service worker code compiles cleanly (excluding pre-existing KpiComputationJob issues) |
+| pg types installed | ✅ DONE | @types/pg@8.20.0 added for proper TypeScript declarations |
+
+### Known Issues (Pre-existing):
+- `apps/services/src/jobs/KpiComputationJob.ts` has schema type mismatches from Phase 9 — **NOT BLOCKING** for Phase 10, can be fixed separately
 
 ---
 

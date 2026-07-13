@@ -5,8 +5,8 @@
 import crypto from 'crypto';
 import { eq } from 'drizzle-orm';
 import { db, workflowDefinitions, workflowInstances, workflowTransitions } from '@heynxt/persistence';
-import type { WorkflowDefinition, WorkflowInstance, InsertWorkflowTransition } from '@heynxt/persistence';
-import { withTransaction } from '../database/db';
+import type { WorkflowDefinition, WorkflowInstance, InsertWorkflowTransition, InsertWorkflowInstance } from '@heynxt/persistence';
+import { withTransaction, getDrizzleClient } from '../database/db';
 
 export interface TransitionResult {
   success: boolean;
@@ -55,18 +55,23 @@ export class WorkflowEngine {
     const initialStates = Array.isArray(states) ? states : [];
     const initialState = initialStates.length > 0 ? initialStates[0] : 'idle';
 
+    // Ensure definitionVersion is a string (schema requires it, notNull=true)
+    const versionStr: string = typeof definition.version === 'string' ? definition.version : '1.0.0';
+
+    const insertData = {
+      id: crypto.randomUUID(),
+      definitionId,
+      definitionVersion: versionStr as string,
+      status: 'running',
+      currentState: initialState,
+      contextData: metadata || {},
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
     const [instance] = await db
       .insert(workflowInstances)
-      .values({
-        id: crypto.randomUUID(),
-        definitionId,
-        definitionVersion: definition.version,
-        status: 'running',
-        currentState: initialState,
-        contextData: metadata || {},
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      })
+      .values(insertData as any)
       .returning();
 
     if (!instance) {
@@ -97,12 +102,15 @@ export class WorkflowEngine {
     metadata?: Record<string, any>
   ): Promise<TransitionResult> {
     const result = await withTransaction(async (client) => {
+      // Get transaction-scoped Drizzle client
+      const txDb = getDrizzleClient(client);
+
       // Get current instance (without forUpdate as it's not supported in this Drizzle version)
-      const [instance] = await db
+      const [instance] = await txDb
         .select()
         .from(workflowInstances)
         .where(eq(workflowInstances.id, instanceId))
-        .execute(client);
+        .execute();
 
       if (!instance) {
         return { success: false, fromState: '', toState: '', error: 'Instance not found' };
@@ -118,11 +126,11 @@ export class WorkflowEngine {
       }
 
       // Get definition for transitions
-      const [definition] = await db
+      const [definition] = await txDb
         .select()
         .from(workflowDefinitions)
         .where(eq(workflowDefinitions.id, instance.definitionId))
-        .execute(client);
+        .execute();
 
       if (!definition) {
         return { success: false, fromState: '', toState: '', error: 'Definition not found' };
@@ -145,7 +153,7 @@ export class WorkflowEngine {
       const newStatus = matchingTransition.target === 'end' ? 'completed' : 'running';
       const newState = matchingTransition.target === 'end' ? 'completed' : matchingTransition.target;
 
-      await db
+      await txDb
         .update(workflowInstances)
         .set({
           currentState: newState,
@@ -154,10 +162,10 @@ export class WorkflowEngine {
           contextData: { ...(instance.contextData as any), ...metadata },
         })
         .where(eq(workflowInstances.id, instanceId))
-        .execute(client);
+        .execute();
 
       // Log the transition with required id and createdAt fields
-      const [transition] = await db
+      const [transition] = await txDb
         .insert(workflowTransitions)
         .values({
           id: crypto.randomUUID(),
@@ -170,7 +178,7 @@ export class WorkflowEngine {
           createdAt: new Date(),
         })
         .returning()
-        .execute(client);
+        .execute();
 
       if (!transition) {
         throw new Error('Failed to create transition record');
