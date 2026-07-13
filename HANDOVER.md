@@ -78,13 +78,11 @@
 
 | Commit | Description | Files Changed |
 |--------|-------------|---------------|
+| `109ff60` | fix(Phase 8): Fix Zod discriminated union conflict in workflow definitions | 1 file, type enum correction |
+| `4995731` | docs(graphify): Update knowledge graph after Phase 8 completion | 3 files, graph update only |
+| `fa4d9b1` | feat(Phase 8): Add industrial runtime services schemas and update HANDOVER.md | 9 files, +1.7k lines |
+| `e193768` | feat(Phase 8): Implement industrial runtime services schemas | All Phase 8 Drizzle tables |
 | `bbcfbce` | feat(Phase 7): Finalize validation loop with approval workflow and RBAC improvements | 63 files, +38k/+296 lines (includes graphify artifacts) |
-| `be0f701` | fix(Phase 7): Improve validation flow robustness and type safety | 10 files, +83/-73 lines |
-| `37c56ca` | feat(Phase 7.5): Implement approval/rejection workflow for validation loop | 11 files, +35k/+1.6k insertions (graphify updates) |
-| `7a56f2a` | docs(HANDOVER): Update handover documentation | Documentation update |
-| `d87196f` | feat(Phase 7.3): Implement validation runs schema, evidence capture, API routes | 7 files, +786 insertions |
-| `ce3c67e` | fix(Phase 7): Fix validation-runs route type errors and schema mismatches | Type fixes, enum consistency |
-| `5f13525` | feat(Phase 7.1/7.2): Complete Phase 7 scaffolding with all schemas and stages | 12 files (8 new, 6 modified) |
 
 ---
 
@@ -93,7 +91,7 @@
 | Check | Status | Notes |
 |-------|--------|-------|
 | `pnpm typecheck` | ✅ PASS | All 7 packages type-check cleanly |
-| `pnpm build` | ✅ PASS | All packages compile; Next.js app builds successfully (7 static pages) |
+| `pnpm build` | ✅ PASS | All packages compile; Next.js app builds successfully (7 static pages). Fixed Zod discriminated union conflict in workflow-definitions.ts. |
 | `pnpm lint` | ⚠ TODO | Linter not configured yet (stub commands in place) |
 | Graphify update | ✅ DONE | 2,278 nodes, 3,125 edges, 241 communities indexed |
 
