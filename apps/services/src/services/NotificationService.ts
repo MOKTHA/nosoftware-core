@@ -215,12 +215,10 @@ export class NotificationService {
       },
       {
         type: 'section',
-        fields: [
-          {
-            type: 'mrkdwn',
-            text: message,
-          },
-        ],
+        text: {
+          type: 'mrkdwn',
+          text: message,
+        },
       },
     ];
   }

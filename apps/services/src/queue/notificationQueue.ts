@@ -39,7 +39,7 @@ export async function enqueueNotification(
     jobId,
     attempts: 3, // Retry up to 3 times for transient failures
     backoff: { type: 'exponential', delay: 2000 }, // Exponential backoff
-    priority: priority ?? (data.priority === 'high' ? 1 : data.priority === 'medium' ? 5 : 10),
+    priority: priority ?? (data.priority === 'high' || data.priority === 'critical' ? 1 : data.priority === 'normal' ? 5 : 10),
   });
 
   return jobId;
@@ -119,9 +119,10 @@ export async function enqueueBatchNotifications(
  */
 export async function getPendingNotificationsByChannel(
   channel: 'email' | 'slack' | 'webhook'
-) {
+): Promise<any[]> {
   const queue = getNotificationQueue();
-  return await queue.getWaiting((job: any) => job.data.channel === channel);
+  const jobs = await queue.getWaiting();
+  return jobs.filter((job) => job.data.channel === channel);
 }
 
 /**

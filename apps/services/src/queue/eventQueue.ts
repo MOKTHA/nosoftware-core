@@ -81,9 +81,10 @@ export async function enqueueBulkEvents(
 /**
  * Get pending events by source.
  */
-export async function getPendingEventsBySource(source: string) {
+export async function getPendingEventsBySource(source: string): Promise<any[]> {
   const queue = getEventQueue();
-  return await queue.getWaiting((job) => job.data.source === source);
+  const jobs = await queue.getWaiting();
+  return jobs.filter((job) => job.data.source === source);
 }
 
 /**

@@ -61,13 +61,15 @@ export class WorkflowEngine {
         id: crypto.randomUUID(),
         definitionId,
         definitionVersion: definition.version,
-        status: 'running' as const,
+        status: 'running',
         currentState: initialState,
-        contextData: metadata ?? {},
+        contextData: metadata || {},
+        createdAt: new Date(),
+        updatedAt: new Date(),
       })
       .returning();
 
-    if (!instance || !instance.id) {
+    if (!instance) {
       throw new Error('Failed to create workflow instance');
     }
 

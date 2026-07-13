@@ -160,7 +160,6 @@ export class QueueManager {
       active: await queue.getActiveCount(),
       completed: await queue.getCompletedCount(),
       failed: await queue.getFailedCount(),
-      paused: await queue.getPausedCount(),
     };
   }
 

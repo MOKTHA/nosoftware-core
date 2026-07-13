@@ -2,7 +2,9 @@
  * Quota check job - daily enforcement of tenant quotas.
  */
 
+import crypto from 'crypto';
 import cron from 'node-cron';
+import { eq } from 'drizzle-orm';
 import { db, tenantQuotas, usageCounters, quotaViolations } from '@heynxt/persistence';
 import type { TenantQuota, UsageCounter, QuotaViolation } from '@heynxt/persistence';
 
@@ -78,42 +80,37 @@ export class QuotaCheckJob {
    * Fetch all active quotas with current usage counts.
    */
   private static async getActiveQuotasWithUsage(): Promise<QuotaCheckResult[]> {
-    // Get all active tenant quotas
+    // Get all active tenant quotas (select only available columns)
     const quotas = await db
       .select({
         id: tenantQuotas.id,
-        tenantId: tenantQuotas.tenantId,
+        organizationId: tenantQuotas.organizationId,
         quotaType: tenantQuotas.quotaType,
-        limitValue: tenantQuotas.limitValue,
-        thresholdPercent: tenantQuotas.thresholdPercent,
+        hardLimit: tenantQuotas.hardLimit,
+        softLimit: tenantQuotas.softLimit,
       })
       .from(tenantQuotas)
-      .where(db.eq(tenantQuotas.status, 'active'));
+      .where(eq(tenantQuotas.status, 'active'));
 
     const results: QuotaCheckResult[] = [];
 
     for (const quota of quotas) {
-      // Get current usage counter for this tenant/quota combination
+      // Get current usage counter for this quota
       const [usage] = await db
-        .select({ count: usageCounters.currentUsage })
+        .select({ count: usageCounters.currentValue })
         .from(usageCounters)
-        .where(
-          db.and(
-            db.eq(usageCounters.tenantId, quota.tenantId),
-            db.eq(usageCounters.quotaType, quota.quotaType)
-          )
-        );
+        .where(eq(usageCounters.quotaId, quota.id));
 
       const currentUsage = usage?.count ?? 0;
-      const thresholdPercent = quota.thresholdPercent ?? 80; // Default 80% threshold
-      const thresholdReached = (currentUsage / quota.limitValue) * 100 >= thresholdPercent;
+      const thresholdPercent = quota.softLimit ? (quota.softLimit / quota.hardLimit) * 100 : 80; // Default 80% threshold
+      const thresholdReached = (currentUsage / quota.hardLimit) * 100 >= thresholdPercent;
 
       results.push({
-        tenantId: quota.tenantId,
+        tenantId: quota.organizationId,
         quotaId: quota.id,
         currentUsage,
-        limit: quota.limitValue,
-        exceeded: currentUsage >= quota.limitValue,
+        limit: quota.hardLimit,
+        exceeded: currentUsage >= quota.hardLimit,
         thresholdReached,
       });
     }
@@ -126,21 +123,14 @@ export class QuotaCheckJob {
    */
   private static async createViolation(result: QuotaCheckResult): Promise<void> {
     await db.insert(quotaViolations).values({
-      tenantId: result.tenantId,
+      id: crypto.randomUUID(),
       quotaId: result.quotaId,
-      currentUsage: result.currentUsage,
+      currentValue: result.currentUsage,
       limitValue: result.limit,
-      severity: 'critical',
-      status: 'active',
-      detectedAt: new Date(),
-    });
-
-    // Also log usage history snapshot for audit trail
-    await db.insert(usageHistorySnapshots).values({
-      tenantId: result.tenantId,
-      quotaType: null as any, // Would need to look up from tenantQuotas
-      recordedUsage: result.currentUsage,
-      timestamp: new Date(),
+      violationType: 'exceeded_hard_limit',
+      severity: 'critical' as const,
+      triggeredAction: false,
+      createdAt: new Date(),
     });
 
     console.log(`Created violation for tenant ${result.tenantId}, quota ${result.quotaId}`);
@@ -164,6 +154,3 @@ export class QuotaCheckJob {
     await this.runQuotaCheck();
   }
 }
-
-// Import required tables for the usage history snapshot
-import { usageHistorySnapshots, tableNames as persistenceTableNames } from '@heynxt/persistence';

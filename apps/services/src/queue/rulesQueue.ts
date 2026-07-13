@@ -82,9 +82,10 @@ export async function scheduleRuleEvaluation(
 /**
  * Get pending evaluations for a specific rule.
  */
-export async function getPendingEvaluations(ruleId: string) {
+export async function getPendingEvaluations(ruleId: string): Promise<any[]> {
   const queue = getRulesQueue();
-  return await queue.getWaiting((job: any) => job.data.ruleId === ruleId);
+  const jobs = await queue.getWaiting();
+  return jobs.filter((job) => job.data.ruleId === ruleId);
 }
 
 /**
