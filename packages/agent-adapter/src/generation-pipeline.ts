@@ -285,6 +285,9 @@ export class DefaultGenerationPipeline implements GenerationPipeline {
 
         this.stageResults.push({ orderIndex: resultOrderIndex, execution: stageExecution });
 
+        // Notify subscribers before checking required-stage early exit
+        this.notifySubscribers();
+
         // Mark pipeline as failed if a required stage failed
         if (this.requiredStages.has(pending.stageName)) {
           this._status = 'failed';
@@ -294,17 +297,8 @@ export class DefaultGenerationPipeline implements GenerationPipeline {
         }
       }
 
-      // Notify subscribers of stage completion
-      const lastResult = this.stageResults[this.stageResults.length - 1];
-      if (lastResult) {
-        for (const subscriber of this.subscribers) {
-          try {
-            subscriber(lastResult);
-          } catch (e) {
-            console.error('Subscriber error:', e);
-          }
-        }
-      }
+      // Notify subscribers of stage completion (success path)
+      this.notifySubscribers();
     }
 
     // Finalize pipeline status
@@ -380,6 +374,20 @@ export class DefaultGenerationPipeline implements GenerationPipeline {
         this.subscribers.splice(idx, 1);
       }
     };
+  }
+
+  /** Notify all subscribers with the most recently pushed stage result. */
+  private notifySubscribers(): void {
+    const lastResult = this.stageResults[this.stageResults.length - 1];
+    if (lastResult) {
+      for (const subscriber of this.subscribers) {
+        try {
+          subscriber(lastResult);
+        } catch (e) {
+          console.error('Subscriber error:', e);
+        }
+      }
+    }
   }
 
   private get finalOutputHash(): string | null {

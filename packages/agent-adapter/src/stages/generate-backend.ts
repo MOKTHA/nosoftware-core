@@ -74,7 +74,7 @@ export class GenerateBackendStage implements GenerationStage {
     }
 
     const routeCode = await callOpenRouter({
-      model: 'anthropic/claude-3-5-sonnet',
+      model: 'anthropic/claude-sonnet-4',
       systemPrompt: [
         'You are a Next.js 15 App Router API route generator.',
         'Given a Drizzle schema, generate CRUD route handlers.',

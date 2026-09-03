@@ -66,7 +66,7 @@ export class GenerateFrontendStage implements GenerationStage {
     }
 
     const pageCode = await callOpenRouter({
-      model: 'anthropic/claude-3-5-sonnet',
+      model: 'anthropic/claude-sonnet-4',
       systemPrompt: [
         'You are a Next.js 15 App Router page generator using React Server Components.',
         'Generate pages using Tailwind CSS for styling.',

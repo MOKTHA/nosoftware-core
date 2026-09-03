@@ -29,6 +29,12 @@ export interface SandboxConfig {
   env: Record<string, string>;
   /** Auto-terminate timeout in ms (default 15 minutes). */
   timeoutMs?: number;
+  /** Vercel API token (falls back to VERCEL_TOKEN env var). */
+  token?: string;
+  /** Vercel team ID (falls back to VERCEL_TEAM_ID env var). */
+  teamId?: string;
+  /** Vercel project ID (falls back to VERCEL_PROJECT_ID env var). */
+  projectId?: string;
 }
 
 /** ------------------------------------------------------------------ */
@@ -40,17 +46,31 @@ export class SandboxSession {
 
   /** Create a fresh sandbox with the given config. */
   static async create(config: SandboxConfig): Promise<SandboxSession> {
+    const token = config.token ?? process.env['VERCEL_TOKEN'];
+    const teamId = config.teamId ?? process.env['VERCEL_TEAM_ID'];
+    const projectId = config.projectId ?? process.env['VERCEL_PROJECT_ID'];
+
     const sandbox = await Sandbox.create({
       name: config.sessionId,
       timeout: config.timeoutMs ?? 15 * 60 * 1000,
       env: config.env,
+      // Pass credentials explicitly so the SDK doesn't need OIDC context
+      ...(token && teamId && projectId ? { token, teamId, projectId } : {}),
     });
     return new SandboxSession(sandbox);
   }
 
   /** Resume an existing sandbox by session ID. */
   static async resume(sessionId: string): Promise<SandboxSession> {
-    const sandbox = await Sandbox.get({ name: sessionId });
+    const token = process.env['VERCEL_TOKEN'];
+    const teamId = process.env['VERCEL_TEAM_ID'];
+    const projectId = process.env['VERCEL_PROJECT_ID'];
+
+    const sandbox = await Sandbox.get({
+      name: sessionId,
+      // Pass credentials explicitly so the SDK doesn't need OIDC context
+      ...(token && teamId && projectId ? { token, teamId, projectId } : {}),
+    });
     return new SandboxSession(sandbox);
   }
 
