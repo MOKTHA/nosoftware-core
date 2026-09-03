@@ -196,8 +196,10 @@ export class DefaultGenerationPipeline implements GenerationPipeline {
         'generate-fixtures-tests', 'generate-deployment'] as GenerationStageName[]).map((name, idx) => [name, idx])
     );
 
+    // Run ALL registered stages, not just required ones.
+    // `requiredStages` controls whether a failure is fatal (aborts the
+    // pipeline) vs tolerated (pipeline continues in 'partial' status).
     for (const stage of this.stages.values()) {
-      if (!this.requiredStages.has(stage.name)) continue;
       this.pendingStages.push({
         stageName: stage.name,
         orderIndex: stageOrderMap.get(stage.name) ?? 999,
