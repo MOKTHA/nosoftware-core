@@ -24,17 +24,26 @@ export class BuildEventEmitter extends EventTarget {
   private startTime = Date.now();
   private controller: ReadableStreamDefaultController<string> | null = null;
 
+  /** Buffered events for persistence — callers can read this to save to DB. */
+  readonly buffer: BuildEvent[] = [];
+
+  /** Optional callback invoked on every event (used to flush to DB). */
+  onEvent?: (event: BuildEvent) => void;
+
   /** Emit a build event with the given step name and status. */
   emit(step: string, status: BuildEvent['status'], detail: string): void {
+    const event: BuildEvent = {
+      step,
+      status,
+      detail,
+      elapsed_ms: Date.now() - this.startTime,
+    };
+
+    this.buffer.push(event);
+    this.onEvent?.(event);
+
     this.dispatchEvent(
-      new CustomEvent<BuildEvent>('build', {
-        detail: {
-          step,
-          status,
-          detail,
-          elapsed_ms: Date.now() - this.startTime,
-        },
-      }),
+      new CustomEvent<BuildEvent>('build', { detail: event }),
     );
   }
 

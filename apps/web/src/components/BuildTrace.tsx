@@ -6,7 +6,14 @@
  *   - Main: terminal-style scrolling log output
  *
  * Connects to GET /api/builds/:buildId/stream, parses incoming BuildEvent
- * objects. Closes the EventSource automatically when the pipeline emits a
+ * objects. Supports two modes:
+ *   - Live: events arrive in real-time from a running pipeline
+ *   - Replay: stored events arrive instantly from DB (after page refresh)
+ *
+ * When the stream sends a `__replay` event with detail "replay-end:poll",
+ * the component switches to polling the build API for completion.
+ *
+ * Closes the EventSource automatically when the pipeline emits a
  * terminal event (step=pipeline, status=done|error) or on unmount.
  */
 'use client';
@@ -48,11 +55,19 @@ export function BuildTrace({ buildId, onDeployed }: BuildTraceProps) {
   const [failed, setFailed] = useState(false);
   const esRef = useRef<EventSource | null>(null);
   const logEndRef = useRef<HTMLDivElement>(null);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Auto-scroll terminal
   useEffect(() => {
     logEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [logs]);
+
+  // Cleanup polling on unmount
+  useEffect(() => {
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     const es = new EventSource(`/api/builds/${buildId}/stream`);
@@ -61,6 +76,13 @@ export function BuildTrace({ buildId, onDeployed }: BuildTraceProps) {
 
     es.onmessage = (e: MessageEvent) => {
       const event = JSON.parse(e.data as string) as BuildEvent;
+
+      // Handle replay-end marker: switch to polling mode
+      if (event.step === '__replay' && event.detail === 'replay-end:poll') {
+        es.close();
+        startPolling();
+        return;
+      }
 
       // Update step state
       setSteps((prev) => {
@@ -72,7 +94,7 @@ export function BuildTrace({ buildId, onDeployed }: BuildTraceProps) {
         return updated;
       });
 
-      // Add to terminal log
+      // Add to terminal log (skip duplicates from replay)
       setLogs((prev) => [
         ...prev,
         {
@@ -113,6 +135,87 @@ export function BuildTrace({ buildId, onDeployed }: BuildTraceProps) {
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps -- onDeployed is stable (arrow in parent)
   }, [buildId]);
+
+  /**
+   * Poll the build API for completion when we can't reconnect to SSE
+   * (build is already running from a prior connection).
+   */
+  function startPolling() {
+    if (pollRef.current) return;
+    pollRef.current = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/builds/${buildId}`);
+        if (!res.ok) return;
+        const data = (await res.json()) as {
+          status: string;
+          deployedUrl: string | null;
+          errorMessage: string | null;
+        };
+
+        if (data.status === 'succeeded' || data.status === 'failed') {
+          if (pollRef.current) clearInterval(pollRef.current);
+          pollRef.current = null;
+
+          // Re-fetch the full event stream to get the final events
+          try {
+            const streamRes = await fetch(`/api/builds/${buildId}/stream`);
+            if (streamRes.ok) {
+              const text = await streamRes.text();
+              const lines = text.split('\n');
+              for (const line of lines) {
+                if (!line.startsWith('data: ')) continue;
+                const event = JSON.parse(line.slice(6)) as BuildEvent;
+                if (event.step === '__replay') continue;
+
+                // Only add events we don't already have
+                setSteps((prev) => {
+                  const idx = prev.findIndex((s) => s.step === event.step);
+                  const next: StepState = { ...event };
+                  if (idx === -1) return [...prev, next];
+                  const updated = [...prev];
+                  updated[idx] = next;
+                  return updated;
+                });
+              }
+
+              // Find and add the terminal event
+              for (const line of lines) {
+                if (!line.startsWith('data: ')) continue;
+                const event = JSON.parse(line.slice(6)) as BuildEvent;
+                if (event.step === '__replay') continue;
+                if (event.step === 'pipeline' && (event.status === 'done' || event.status === 'error')) {
+                  setLogs((prev) => [
+                    ...prev,
+                    {
+                      timestamp: Date.now(),
+                      step: event.step,
+                      status: event.status,
+                      detail: event.detail,
+                      elapsed_ms: event.elapsed_ms,
+                    },
+                  ]);
+                  setDone(true);
+                  if (event.status === 'error') setFailed(true);
+                  if (event.status === 'done' && event.detail.startsWith('https://')) {
+                    onDeployed?.(event.detail);
+                  }
+                }
+              }
+            }
+          } catch {
+            // Fallback: just mark done based on API response
+            setDone(true);
+            if (data.status === 'failed') setFailed(true);
+            if (data.status === 'succeeded' && data.deployedUrl) {
+              onDeployed?.(data.deployedUrl);
+            }
+          }
+        }
+      } catch {
+        // Swallow poll errors — retry on next interval
+      }
+    }, 3000);
+  }
 
   if (!connected && steps.length === 0) {
     return (
@@ -166,7 +269,9 @@ export function BuildTrace({ buildId, onDeployed }: BuildTraceProps) {
                 : '✓ Build Complete'
               : currentStepIndex >= 0
                 ? getStepVerb(pipelineSteps[currentStepIndex]!.step)
-                : 'Starting build…'}
+                : pollRef.current
+                  ? 'Build in progress…'
+                  : 'Starting build…'}
           </span>
           <span style={{ fontSize: '0.75rem', color: '#a3a3a3' }}>
             {completedCount}/{totalVisible} steps
@@ -253,6 +358,25 @@ export function BuildTrace({ buildId, onDeployed }: BuildTraceProps) {
             </span>
             <span style={{ color: '#d4d4d4' }}>·</span>
             <span>{(pipelineSteps[currentStepIndex]!.elapsed_ms / 1000).toFixed(1)}s</span>
+          </div>
+        )}
+
+        {/* Polling indicator (for reconnected running builds) */}
+        {!done && currentStepIndex < 0 && pollRef.current && (
+          <div
+            style={{
+              marginTop: '0.5rem',
+              fontSize: '0.6875rem',
+              color: '#737373',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.375rem',
+            }}
+          >
+            <Spinner />
+            <span style={{ color: '#525252', fontWeight: 500 }}>
+              Waiting for build to finish…
+            </span>
           </div>
         )}
       </div>

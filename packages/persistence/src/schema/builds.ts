@@ -55,6 +55,9 @@ export const builds = pgTable('builds', {
   /** Error message when the build fails. */
   errorMessage: text('errorMessage'),
 
+  /** Build events (SSE) stored as JSON array for replay on reconnect. */
+  eventsJson: text('eventsJson'),
+
   createdAt: timestamp('createdAt', { mode: 'date' }).notNull(),
   updatedAt: timestamp('updatedAt', { mode: 'date' }),
 });
