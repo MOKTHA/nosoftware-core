@@ -11,7 +11,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { BuildTrace } from '@/components/BuildTrace';
+import { useRouter } from 'next/navigation';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                             */
@@ -51,6 +51,7 @@ interface Message {
 /* ------------------------------------------------------------------ */
 
 export default function BuildPage() {
+  const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
@@ -60,9 +61,7 @@ export default function BuildPage() {
   const [customInputs, setCustomInputs] = useState<Record<string, string>>({});
 
   // Build state
-  const [buildId, setBuildId] = useState<string | null>(null);
   const [buildLoading, setBuildLoading] = useState(false);
-  const [deployedUrl, setDeployedUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const threadRef = useRef<HTMLDivElement>(null);
@@ -173,7 +172,7 @@ export default function BuildPage() {
   /* ---------------------------------------------------------------- */
 
   async function handleStartBuild() {
-    if (buildLoading || buildId) return;
+    if (buildLoading) return;
     setBuildLoading(true);
     setError(null);
 
@@ -194,11 +193,11 @@ export default function BuildPage() {
 
       if (!res.ok) throw new Error(await res.text());
 
-      const { buildId: id } = (await res.json()) as { buildId: string };
-      setBuildId(id);
+      const { buildId } = (await res.json()) as { buildId: string };
+      // Navigate to the persistent build URL
+      router.push(`/build/${buildId}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
-    } finally {
       setBuildLoading(false);
     }
   }
@@ -222,11 +221,11 @@ export default function BuildPage() {
   /*  Render                                                          */
   /* ---------------------------------------------------------------- */
 
-  const showPromptInput = !buildId;
-  const showBuildButton = analysis?.readyToBuild && !buildId;
+  const showPromptInput = !buildLoading;
+  const showBuildButton = analysis?.readyToBuild && !buildLoading;
   const showQuestions =
-    analysis && !analysis.readyToBuild && !buildId && analysis.questions.length > 0;
-  const isInitial = messages.length === 0 && !buildId;
+    analysis && !analysis.readyToBuild && !buildLoading && analysis.questions.length > 0;
+  const isInitial = messages.length === 0;
 
   return (
     <div
@@ -238,16 +237,15 @@ export default function BuildPage() {
           'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif',
       }}
     >
-      {/* ── Left panel: conversation ─────────────────────────────── */}
+      {/* ── Conversation panel ─────────────────────────────── */}
       <div
         style={{
-          flex: buildId ? '0 0 400px' : '1',
+          flex: '1',
           display: 'flex',
           flexDirection: 'column',
-          maxWidth: buildId ? '400px' : '780px',
-          margin: buildId ? '0' : '0 auto',
-          transition: 'all 0.3s ease',
-          padding: buildId ? '0 1rem 0 0' : '0 1rem',
+          maxWidth: '780px',
+          margin: '0 auto',
+          padding: '0 1rem',
         }}
       >
         {/* ── Hero (initial state — matches coding-agent-template) ── */}
@@ -604,8 +602,6 @@ export default function BuildPage() {
           </div>
         )}
 
-        {/* Build trace is now in the right panel */}
-
         {/* ── Prompt input (coding-agent-template style) ── */}
         {showPromptInput && (
           <div
@@ -787,172 +783,7 @@ export default function BuildPage() {
         )}
       </div>
 
-      {/* ── Right panel: build trace → preview ─────────────────── */}
-      {buildId && (
-        <div
-          style={{
-            flex: 1,
-            borderRadius: '0.75rem',
-            display: 'flex',
-            flexDirection: 'column',
-            overflow: 'hidden',
-            border: '1px solid #e5e5e5',
-            background: deployedUrl ? '#f5f5f5' : '#ffffff',
-          }}
-        >
-          {deployedUrl ? (
-            /* ── Preview mode (app is deployed) ── */
-            <DeployedPreview url={deployedUrl} />
-
-          ) : (
-            /* ── Build mode (steps + terminal logs) ── */
-            <BuildTrace buildId={buildId} onDeployed={(url) => setDeployedUrl(url)} />
-          )}
-        </div>
-      )}
     </div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  Deployed preview (iframe with X-Frame-Options fallback)           */
-/* ------------------------------------------------------------------ */
-
-function DeployedPreview({ url }: { url: string }) {
-  const [iframeBlocked, setIframeBlocked] = useState(false);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
-
-  // Detect iframe blocking: if the iframe hasn't loaded after 8s, assume blocked
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      try {
-        // Try to access iframe content — if blocked, it throws
-        const doc = iframeRef.current?.contentDocument;
-        if (!doc || !doc.body || doc.body.innerHTML === '') {
-          setIframeBlocked(true);
-        }
-      } catch {
-        setIframeBlocked(true);
-      }
-    }, 8000);
-    return () => clearTimeout(timer);
-  }, [url]);
-
-  return (
-    <>
-      {/* URL bar */}
-      <div
-        style={{
-          padding: '0.5rem 0.75rem',
-          borderBottom: '1px solid #e5e5e5',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          background: '#ffffff',
-          borderRadius: '0.75rem 0.75rem 0 0',
-        }}
-      >
-        <span
-          style={{
-            fontSize: '0.75rem',
-            color: '#16a34a',
-            fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.375rem',
-          }}
-        >
-          <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#16a34a', flexShrink: 0 }} />
-          {url}
-        </span>
-        <a
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{
-            fontSize: '0.75rem',
-            color: '#ffffff',
-            background: '#0a0a0a',
-            padding: '0.25rem 0.75rem',
-            borderRadius: '9999px',
-            textDecoration: 'none',
-            fontWeight: 500,
-          }}
-        >
-          Open in new tab ↗
-        </a>
-      </div>
-
-      {/* Preview area */}
-      <div style={{ flex: 1, position: 'relative' }}>
-        {iframeBlocked ? (
-          /* Fallback when iframe is blocked */
-          <div
-            style={{
-              width: '100%',
-              height: '100%',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '1rem',
-              background: '#fafafa',
-            }}
-          >
-            <div
-              style={{
-                width: 48,
-                height: 48,
-                borderRadius: '50%',
-                background: '#dcfce7',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '1.5rem',
-              }}
-            >
-              ✓
-            </div>
-            <div style={{ textAlign: 'center' }}>
-              <p style={{ fontWeight: 600, fontSize: '1rem', color: '#0a0a0a', margin: '0 0 0.25rem' }}>
-                Your app is live!
-              </p>
-              <p style={{ fontSize: '0.8125rem', color: '#737373', margin: '0 0 1rem' }}>
-                Preview blocked by security headers. Open in a new tab to view.
-              </p>
-              <a
-                href={url}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  padding: '0.625rem 1.5rem',
-                  background: '#0a0a0a',
-                  color: '#fafafa',
-                  border: 'none',
-                  borderRadius: '0.5rem',
-                  fontSize: '0.875rem',
-                  fontWeight: 500,
-                  textDecoration: 'none',
-                }}
-              >
-                View App ↗
-              </a>
-            </div>
-          </div>
-        ) : (
-          <iframe
-            ref={iframeRef}
-            src={url}
-            style={{ width: '100%', height: '100%', border: 'none' }}
-            title="Generated app preview"
-            onError={() => setIframeBlocked(true)}
-          />
-        )}
-      </div>
-    </>
   );
 }
 
