@@ -68,19 +68,35 @@ export class GenerateFrontendStage implements GenerationStage {
     const pageCode = await callOpenRouter({
       model: 'anthropic/claude-sonnet-4',
       systemPrompt: [
-        'You are a Next.js 15 App Router page generator using React Server Components.',
-        'Generate pages using Tailwind CSS for styling.',
+        'You are a Next.js 15 App Router page generator producing PRODUCTION-READY code.',
+        'Generate pages using Tailwind CSS for styling. Use React Server Components.',
+        '',
+        '## Imports',
         'Import db from "@/lib/db" and tables from "@/lib/schema" for server-side queries.',
-        'IMPORTANT: Every page that queries the database MUST export `export const dynamic = "force-dynamic";` at the top of the file so Next.js does not try to statically pre-render it at build time.',
-        'Create list, detail, and create pages for each entity.',
+        'Only import modules from: "next/server", "next/link", "next/navigation", "react", "@/lib/db", "@/lib/schema", "drizzle-orm".',
+        'Do NOT import from libraries not in package.json.',
+        '',
+        '## Critical rules',
+        'EVERY file MUST start with: export const dynamic = "force-dynamic";',
+        'EVERY database query MUST be wrapped in try/catch — on error, render a user-friendly message, never throw.',
+        'EVERY page must handle empty state (no data yet) gracefully — show a message, never crash.',
+        'Use `eq` from "drizzle-orm" for WHERE clauses.',
+        '',
+        '## Pages to generate',
+        'Generate app/page.tsx as a DASHBOARD home page: a clean landing with the app name, navigation cards linking to each entity list, and a summary count for each entity (use try/catch around the count query).',
+        'For each entity: generate a list page, a detail page (app/entity/[id]/page.tsx), and a create page (app/entity/new/page.tsx).',
+        'List pages should use an HTML <table> with Tailwind styling. Detail pages should show all fields.',
+        'Create pages should have a <form> with method="POST" action to the API route.',
+        '',
+        '## File format',
         'Separate each file with "// FILE: <path>" on its own line.',
         'Paths are relative to the project root, e.g. app/tickets/page.tsx, app/tickets/[id]/page.tsx.',
         'Do NOT use route groups like (dashboard) or (auth) — put pages directly under app/.',
-        'Do NOT use a src/ directory — there is no src/ folder in this project.',
+        'Do NOT use a src/ directory.',
         'Do NOT generate app/layout.tsx or app/globals.css — they already exist.',
-        'Do NOT generate app/page.tsx — the home page already exists.',
-        'Output ONLY TypeScript/TSX. No markdown fences, no explanations, no ```typescript blocks.',
-      ].join(' '),
+        '',
+        'Output ONLY TypeScript/TSX. No markdown fences, no explanations.',
+      ].join('\n'),
       userPrompt: `Schema:\n${schemaContent}\n\nSpec:\n${JSON.stringify(input.spec, null, 2)}`,
     });
 
@@ -121,8 +137,10 @@ export class GenerateFrontendStage implements GenerationStage {
       // These cause Next.js build failures when the group doesn't have its own layout.
       path = path.replace(/\([^)]+\)\//g, '');
 
-      // Guard: skip layout/globals/home page that already exist from the scaffold
-      if (path === 'app/layout.tsx' || path === 'app/globals.css' || path === 'app/page.tsx') {
+      // Guard: skip layout/globals that already exist from the scaffold.
+      // app/page.tsx is allowed — the LLM generates a proper dashboard to
+      // replace the scaffold placeholder.
+      if (path === 'app/layout.tsx' || path === 'app/globals.css') {
         continue;
       }
 

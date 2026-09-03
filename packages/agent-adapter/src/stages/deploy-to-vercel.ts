@@ -85,33 +85,52 @@ export class DeployToVercelStage implements GenerationStage {
 
     const appName = (input.spec['appName'] as string) ?? 'heynxt-app';
 
-    // 1. Collect project files from the sandbox
-    this.emitter?.emit('deploy-to-vercel', 'running', 'Collecting project files...');
+    // 1. Run production build in sandbox to catch errors before deploying
+    this.emitter?.emit('deploy-to-vercel', 'running', 'Running production build (QA check)...');
     const { SandboxSession, collectProjectFiles } = await import('@heynxt/sandbox');
     const session = await SandboxSession.resume(sessionId);
+
+    const buildResult = await session.runCommand('npm', ['run', 'build'], {
+      cwd: '/workspace/app',
+    });
+
+    if (buildResult.exitCode !== 0) {
+      // Attempt an auto-fix: feed build errors back to LLM and retry once
+      this.emitter?.emit('deploy-to-vercel', 'warning', 'Build failed — attempting auto-fix...');
+      const fixed = await this.attemptBuildFix(session, buildResult.stderr || buildResult.stdout);
+      if (!fixed) {
+        throw new Error(
+          `Production build failed (QA gate):\n${(buildResult.stderr || buildResult.stdout).slice(0, 2000)}`,
+        );
+      }
+      this.emitter?.emit('deploy-to-vercel', 'running', 'Auto-fix applied — continuing...');
+    }
+
+    // 2. Collect project files from the sandbox
+    this.emitter?.emit('deploy-to-vercel', 'running', 'Collecting project files...');
     const projectFiles = await collectProjectFiles(session);
 
-    // 2. Create (or get) the Vercel project
+    // 3. Create (or get) the Vercel project
     this.emitter?.emit('deploy-to-vercel', 'running', 'Creating Vercel project...');
     const slug = toProjectSlug(appName);
     const project = await createOrGetVercelProject(slug);
 
-    // 3. Set environment variables on the Vercel project
+    // 4. Set environment variables on the Vercel project
     await setVercelProjectEnvVars(project.id, {
       DATABASE_URL: databaseUrl ?? '',
       NEXTAUTH_SECRET: nextauthSecret ?? crypto.randomUUID(),
       NEXTAUTH_URL: `https://${project.name}.vercel.app`,
     });
 
-    // 4. Upload files to Vercel
+    // 5. Upload files to Vercel
     this.emitter?.emit('deploy-to-vercel', 'running', `Uploading ${projectFiles.length} files to Vercel...`);
     const fileRefs = await uploadProjectFiles(projectFiles);
 
-    // 5. Create the deployment
+    // 6. Create the deployment
     this.emitter?.emit('deploy-to-vercel', 'running', `Creating Vercel deployment (${fileRefs.length} files)...`);
     const deployment = await createVercelDeployment(project.id, project.name, fileRefs);
 
-    // 6. Poll until the deployment is live
+    // 7. Poll until the deployment is live
     this.emitter?.emit('deploy-to-vercel', 'running', 'Waiting for Vercel build to complete...');
     let deployedUrl: string;
     try {
@@ -121,10 +140,10 @@ export class DeployToVercelStage implements GenerationStage {
       throw pollError;
     }
 
-    // 7. Delete the sandbox — no longer needed (deployment succeeded)
+    // 8. Delete the sandbox — no longer needed (deployment succeeded)
     await session.delete();
 
-    // 8. Write to shared context for downstream consumers
+    // 9. Write to shared context for downstream consumers
     if (this.ctx) {
       this.ctx.deployedUrl = deployedUrl;
     }
@@ -147,6 +166,84 @@ export class DeployToVercelStage implements GenerationStage {
       summary: deployedUrl,
       warnings: [],
     };
+  }
+
+  /**
+   * Attempt to fix build errors by feeding them back to the LLM.
+   * Reads the broken files, asks the LLM to fix them, writes them back,
+   * and retries the build. Returns true if the retry succeeds.
+   */
+  private async attemptBuildFix(
+    session: import('@heynxt/sandbox').SandboxSession,
+    buildErrors: string,
+  ): Promise<boolean> {
+    try {
+      const { callOpenRouter } = await import('../llm.js');
+
+      // Extract file paths from build errors (Next.js format: ./app/path/file.tsx)
+      const errorFiles = new Set<string>();
+      const fileRegex = /\.\/([^\s:]+\.tsx?)/g;
+      let match: RegExpExecArray | null;
+      while ((match = fileRegex.exec(buildErrors)) !== null) {
+        errorFiles.add(match[1]!);
+      }
+
+      if (errorFiles.size === 0) return false;
+
+      // Read the broken files
+      const fileContents: string[] = [];
+      for (const filePath of errorFiles) {
+        try {
+          const content = await session.readFile(`/workspace/app/${filePath}`);
+          fileContents.push(`// FILE: ${filePath}\n${content}`);
+        } catch {
+          // Skip unreadable files
+        }
+      }
+
+      if (fileContents.length === 0) return false;
+
+      // Ask LLM to fix
+      const fixedCode = await callOpenRouter({
+        model: 'anthropic/claude-sonnet-4',
+        systemPrompt: [
+          'You are a Next.js 15 build error fixer.',
+          'Given files with build errors, output the FIXED versions.',
+          'Fix ALL TypeScript and import errors. Keep the same functionality.',
+          'EVERY file MUST start with: export const dynamic = "force-dynamic";',
+          'Wrap all database queries in try/catch.',
+          'Only import from: "next/server", "next/link", "next/navigation", "react", "@/lib/db", "@/lib/schema", "drizzle-orm".',
+          'Separate each file with "// FILE: <path>" on its own line.',
+          'Output ONLY TypeScript/TSX. No markdown fences, no explanations.',
+        ].join('\n'),
+        userPrompt: `Build errors:\n${buildErrors.slice(0, 3000)}\n\nFiles with errors:\n${fileContents.join('\n\n')}`,
+      });
+
+      // Parse and write fixed files
+      const output = fixedCode.replace(/^```[a-z]*\n?/gm, '').replace(/```$/gm, '');
+      const parts = output.split(/^\/\/\s*FILE:\s*/m);
+      for (const part of parts) {
+        if (!part.trim()) continue;
+        const newlineIdx = part.indexOf('\n');
+        if (newlineIdx === -1) continue;
+        let path = part.slice(0, newlineIdx).trim();
+        const content = part.slice(newlineIdx + 1).trim();
+        if (path.startsWith('src/')) path = path.slice(4);
+        path = path.replace(/\([^)]+\)\//g, '');
+        if (path && content) {
+          await session.writeFile(`/workspace/app/${path}`, content);
+        }
+      }
+
+      // Retry build
+      const retryResult = await session.runCommand('npm', ['run', 'build'], {
+        cwd: '/workspace/app',
+      });
+
+      return retryResult.exitCode === 0;
+    } catch {
+      return false;
+    }
   }
 
   private async computeHash(content: string): Promise<string> {

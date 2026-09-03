@@ -94,6 +94,16 @@ const config: NextConfig = {
   // runtime behaviour. Skip these checks so the build succeeds on Vercel.
   typescript: { ignoreBuildErrors: true },
   eslint: { ignoreDuringBuilds: true },
+  // Allow embedding in iframes (the control plane previews deployed apps).
+  async headers() {
+    return [{
+      source: '/:path*',
+      headers: [
+        { key: 'X-Frame-Options', value: 'ALLOWALL' },
+        { key: 'Content-Security-Policy', value: 'frame-ancestors *' },
+      ],
+    }];
+  },
 };
 export default config;
 `;
@@ -126,8 +136,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 }
 `;
 
-const HOME_PAGE = `export default function Home() {
-  return <main className="p-8">Loading...</main>;
+const HOME_PAGE = `export const dynamic = "force-dynamic";
+
+export default function Home() {
+  return (
+    <main className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="text-center">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome</h1>
+        <p className="text-gray-500">Your app is live. Navigate using the links above.</p>
+      </div>
+    </main>
+  );
 }
 `;
 
