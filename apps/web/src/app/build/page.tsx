@@ -46,8 +46,6 @@ interface Message {
 /*  Rotating words for hero                                           */
 /* ------------------------------------------------------------------ */
 
-const ROTATING_WORDS = ['MES', 'ERP', 'SCADA', 'CMMS', 'QMS', 'WMS', 'APS', 'OEE'];
-
 /* ------------------------------------------------------------------ */
 /*  Component                                                         */
 /* ------------------------------------------------------------------ */
@@ -67,9 +65,6 @@ export default function BuildPage() {
   const [deployedUrl, setDeployedUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Hero rotating word
-  const [wordIndex, setWordIndex] = useState(0);
-
   const threadRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -79,14 +74,6 @@ export default function BuildPage() {
 
   useEffect(() => {
     textareaRef.current?.focus();
-  }, []);
-
-  // Rotate hero word every 2.5s
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setWordIndex((prev) => (prev + 1) % ROTATING_WORDS.length);
-    }, 2500);
-    return () => clearInterval(interval);
   }, []);
 
   /* ---------------------------------------------------------------- */
@@ -275,51 +262,20 @@ export default function BuildPage() {
               paddingBottom: '2rem',
             }}
           >
-            {/* Title line 1 */}
-            <div
+            {/* Title */}
+            <h1
               style={{
-                textAlign: 'center',
-                marginBottom: '0.25rem',
-              }}
-            >
-              <span
-                style={{
-                  fontSize: '3rem',
-                  fontWeight: 700,
-                  letterSpacing: '-0.03em',
-                  color: '#0a0a0a',
-                }}
-              >
-                Hey NXT,
-              </span>{' '}
-              <span
-                style={{
-                  fontSize: '3rem',
-                  fontWeight: 400,
-                  letterSpacing: '-0.03em',
-                  color: '#a3a3a3',
-                }}
-              >
-                build
-              </span>
-            </div>
-
-            {/* Rotating word */}
-            <div
-              style={{
-                fontSize: '4.5rem',
-                fontWeight: 800,
-                letterSpacing: '-0.04em',
+                fontSize: '2.25rem',
+                fontWeight: 500,
+                letterSpacing: '-0.02em',
                 color: '#0a0a0a',
-                lineHeight: 1.1,
-                marginBottom: '2.5rem',
-                minHeight: '5rem',
-                display: 'flex',
-                alignItems: 'center',
+                textAlign: 'center',
+                margin: '0 0 2.5rem',
+                lineHeight: 1.3,
               }}
             >
-              {ROTATING_WORDS[wordIndex]}
-            </div>
+              What do you want to Build?
+            </h1>
 
             {/* CTA buttons */}
             <div
