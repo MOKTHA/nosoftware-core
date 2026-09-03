@@ -2,13 +2,15 @@
  * /build — Prompt-driven build page.
  *
  * UI modeled on vercel-labs/coding-agent-template:
+ *   - "Hey NXT, build MES" hero with rotating industry words
+ *   - "+ Start Building" and "View Projects" CTA buttons
  *   - Centered rounded prompt form with textarea + circular submit
  *   - Conversational thread with sticky user cards
  *   - Split panel during build (trace left, preview right)
  */
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { BuildTrace } from '@/components/BuildTrace';
 
 /* ------------------------------------------------------------------ */
@@ -41,6 +43,12 @@ interface Message {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Rotating words for hero                                           */
+/* ------------------------------------------------------------------ */
+
+const ROTATING_WORDS = ['MES', 'ERP', 'SCADA', 'CMMS', 'QMS', 'WMS', 'APS', 'OEE'];
+
+/* ------------------------------------------------------------------ */
 /*  Component                                                         */
 /* ------------------------------------------------------------------ */
 
@@ -59,6 +67,9 @@ export default function BuildPage() {
   const [deployedUrl, setDeployedUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Hero rotating word
+  const [wordIndex, setWordIndex] = useState(0);
+
   const threadRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -68,6 +79,14 @@ export default function BuildPage() {
 
   useEffect(() => {
     textareaRef.current?.focus();
+  }, []);
+
+  // Rotate hero word every 2.5s
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setWordIndex((prev) => (prev + 1) % ROTATING_WORDS.length);
+    }, 2500);
+    return () => clearInterval(interval);
   }, []);
 
   /* ---------------------------------------------------------------- */
@@ -201,12 +220,16 @@ export default function BuildPage() {
   /*  Keyboard handler                                                */
   /* ---------------------------------------------------------------- */
 
-  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmitPrompt();
-    }
-  }
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        handleSubmitPrompt();
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [prompt, loading],
+  );
 
   /* ---------------------------------------------------------------- */
   /*  Render                                                          */
@@ -225,7 +248,7 @@ export default function BuildPage() {
         height: 'calc(100vh - 5rem)',
         gap: 0,
         fontFamily:
-          'var(--font-geist-sans, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif)',
+          'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif',
       }}
     >
       {/* ── Left panel: conversation ─────────────────────────────── */}
@@ -234,13 +257,13 @@ export default function BuildPage() {
           flex: buildId ? '0 0 400px' : '1',
           display: 'flex',
           flexDirection: 'column',
-          maxWidth: buildId ? '400px' : '672px',
+          maxWidth: buildId ? '400px' : '780px',
           margin: buildId ? '0' : '0 auto',
           transition: 'all 0.3s ease',
           padding: buildId ? '0 1rem 0 0' : '0 1rem',
         }}
       >
-        {/* ── Hero (initial state) ── */}
+        {/* ── Hero (initial state — matches coding-agent-template) ── */}
         {isInitial && (
           <div
             style={{
@@ -249,30 +272,121 @@ export default function BuildPage() {
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              paddingBottom: '6rem',
+              paddingBottom: '2rem',
             }}
           >
-            <h1
+            {/* Title line 1 */}
+            <div
               style={{
-                fontSize: '2.5rem',
-                fontWeight: 700,
-                letterSpacing: '-0.03em',
-                margin: '0 0 1rem',
+                textAlign: 'center',
+                marginBottom: '0.25rem',
+              }}
+            >
+              <span
+                style={{
+                  fontSize: '3rem',
+                  fontWeight: 700,
+                  letterSpacing: '-0.03em',
+                  color: '#0a0a0a',
+                }}
+              >
+                Hey NXT,
+              </span>{' '}
+              <span
+                style={{
+                  fontSize: '3rem',
+                  fontWeight: 400,
+                  letterSpacing: '-0.03em',
+                  color: '#a3a3a3',
+                }}
+              >
+                build
+              </span>
+            </div>
+
+            {/* Rotating word */}
+            <div
+              style={{
+                fontSize: '4.5rem',
+                fontWeight: 800,
+                letterSpacing: '-0.04em',
                 color: '#0a0a0a',
+                lineHeight: 1.1,
+                marginBottom: '2.5rem',
+                minHeight: '5rem',
+                display: 'flex',
+                alignItems: 'center',
               }}
             >
-              NoSoftware
-            </h1>
-            <p
+              {ROTATING_WORDS[wordIndex]}
+            </div>
+
+            {/* CTA buttons */}
+            <div
               style={{
-                color: '#737373',
-                fontSize: '1.125rem',
-                margin: 0,
-                lineHeight: 1.5,
+                display: 'flex',
+                gap: '0.75rem',
+                marginBottom: '2.5rem',
               }}
             >
-              Describe what you want to build — AI does the rest.
-            </p>
+              <button
+                onClick={() => textareaRef.current?.focus()}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.625rem 1.25rem',
+                  background: '#0a0a0a',
+                  color: '#fafafa',
+                  border: 'none',
+                  borderRadius: '0.5rem',
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                }}
+              >
+                <span style={{ fontSize: '1rem' }}>+</span>
+                Start Building
+                <span style={{ fontSize: '0.875rem' }}>→</span>
+              </button>
+              <a
+                href="/projects"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.625rem 1.25rem',
+                  background: '#ffffff',
+                  color: '#0a0a0a',
+                  border: '1px solid #e5e5e5',
+                  borderRadius: '0.5rem',
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  textDecoration: 'none',
+                  fontFamily: 'inherit',
+                }}
+              >
+                {/* Calendar/grid icon */}
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <rect x="3" y="3" width="7" height="7" />
+                  <rect x="14" y="3" width="7" height="7" />
+                  <rect x="3" y="14" width="7" height="7" />
+                  <rect x="14" y="14" width="7" height="7" />
+                </svg>
+                View Projects
+              </a>
+            </div>
           </div>
         )}
 
@@ -293,7 +407,7 @@ export default function BuildPage() {
             {messages.map((msg, i) => (
               <div key={i}>
                 {msg.role === 'user' ? (
-                  /* ── User message (sticky card — matches task-chat.tsx Card pattern) ── */
+                  /* ── User message (sticky card) ── */
                   <div
                     style={{
                       position: 'sticky',
@@ -506,11 +620,14 @@ export default function BuildPage() {
               onClick={handleStartBuild}
               disabled={buildLoading}
               style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.5rem',
                 padding: '0.625rem 1.5rem',
                 background: buildLoading ? '#a3a3a3' : '#0a0a0a',
                 color: '#fafafa',
                 border: 'none',
-                borderRadius: '9999px',
+                borderRadius: '0.5rem',
                 fontSize: '0.875rem',
                 fontWeight: 500,
                 cursor: buildLoading ? 'default' : 'pointer',
@@ -519,11 +636,13 @@ export default function BuildPage() {
               }}
             >
               {buildLoading ? (
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+                <>
                   <Spinner /> Starting…
-                </span>
+                </>
               ) : (
-                `Build "${analysis?.appName}"`
+                <>
+                  <span>+</span> Build &ldquo;{analysis?.appName}&rdquo; <span>→</span>
+                </>
               )}
             </button>
           </div>
@@ -545,6 +664,9 @@ export default function BuildPage() {
               boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
               overflow: 'hidden',
               background: 'rgba(245,245,245,0.3)',
+              maxWidth: '672px',
+              width: '100%',
+              alignSelf: 'center',
             }}
           >
             <textarea
@@ -552,14 +674,14 @@ export default function BuildPage() {
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Describe what you want to build…"
-              rows={4}
+              placeholder="Describe what you want the AI agent to do..."
+              rows={2}
               style={{
                 width: '100%',
                 border: 'none',
                 outline: 'none',
                 resize: 'none',
-                padding: '1rem',
+                padding: '1rem 1rem 0.5rem',
                 fontSize: '1rem',
                 lineHeight: 1.6,
                 fontFamily: 'inherit',
@@ -568,52 +690,134 @@ export default function BuildPage() {
                 boxSizing: 'border-box',
               }}
             />
+            {/* Bottom toolbar */}
             <div
               style={{
-                padding: '0.75rem 1rem',
+                padding: '0.5rem 1rem 0.75rem',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'flex-end',
+                justifyContent: 'space-between',
               }}
             >
-              <button
-                onClick={handleSubmitPrompt}
-                disabled={!prompt.trim() || loading}
-                aria-label="Submit"
+              {/* Left side — model info */}
+              <div
                 style={{
-                  width: '2rem',
-                  height: '2rem',
-                  borderRadius: '9999px',
-                  border: 'none',
-                  background:
-                    !prompt.trim() || loading ? '#e5e5e5' : '#0a0a0a',
-                  color: '#fafafa',
-                  cursor: !prompt.trim() || loading ? 'default' : 'pointer',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  transition: 'background 0.15s',
-                  padding: 0,
+                  gap: '0.75rem',
+                  fontSize: '0.8125rem',
+                  color: '#737373',
                 }}
               >
-                {loading ? (
-                  <Spinner />
-                ) : (
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <line x1="12" y1="19" x2="12" y2="5" />
-                    <polyline points="5 12 12 5 19 12" />
+                {/* Claude icon (asterisk/spark) */}
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.375rem',
+                    color: '#0a0a0a',
+                    fontWeight: 500,
+                  }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
                   </svg>
-                )}
-              </button>
+                  Claude
+                </span>
+                <span style={{ color: '#d4d4d4' }}>·</span>
+                <span>Sonnet 4</span>
+              </div>
+
+              {/* Right side — action icons + submit */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                {/* Globe icon */}
+                <button
+                  type="button"
+                  style={{
+                    width: '2rem',
+                    height: '2rem',
+                    borderRadius: '9999px',
+                    border: 'none',
+                    background: 'transparent',
+                    color: '#a3a3a3',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: 0,
+                  }}
+                  title="Web search"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="2" y1="12" x2="22" y2="12" />
+                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                  </svg>
+                </button>
+                {/* Settings icon */}
+                <button
+                  type="button"
+                  style={{
+                    width: '2rem',
+                    height: '2rem',
+                    borderRadius: '9999px',
+                    border: 'none',
+                    background: 'transparent',
+                    color: '#a3a3a3',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: 0,
+                  }}
+                  title="Settings"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="3" />
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                  </svg>
+                </button>
+                {/* Submit button */}
+                <button
+                  onClick={handleSubmitPrompt}
+                  disabled={!prompt.trim() || loading}
+                  aria-label="Submit"
+                  style={{
+                    width: '2rem',
+                    height: '2rem',
+                    borderRadius: '9999px',
+                    border: 'none',
+                    background:
+                      !prompt.trim() || loading ? '#e5e5e5' : '#0a0a0a',
+                    color: '#fafafa',
+                    cursor: !prompt.trim() || loading ? 'default' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'background 0.15s',
+                    padding: 0,
+                    marginLeft: '0.25rem',
+                  }}
+                >
+                  {loading ? (
+                    <Spinner />
+                  ) : (
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <line x1="12" y1="19" x2="12" y2="5" />
+                      <polyline points="5 12 12 5 19 12" />
+                    </svg>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -624,6 +828,7 @@ export default function BuildPage() {
               color: '#dc2626',
               fontSize: '0.8125rem',
               marginTop: '0.5rem',
+              textAlign: 'center',
             }}
           >
             {error}
