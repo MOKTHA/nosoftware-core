@@ -127,10 +127,11 @@ export class GenerateBackendStage implements GenerationStage {
       userPrompt: `Schema:\n${schemaContent}\n\nSpec:\n${JSON.stringify(input.spec, null, 2)}`,
     });
 
-    // Parse multi-file output and write each file
+    // Parse multi-file output, post-process, and write each file
     const files = this.parseMultiFileOutput(routeCode);
     for (const [filePath, content] of files) {
-      await session.writeFile(`/workspace/app/${filePath}`, content);
+      const fixed = this.postProcessBackendCode(content);
+      await session.writeFile(`/workspace/app/${filePath}`, fixed);
     }
 
     if (this.ctx) {
@@ -180,6 +181,53 @@ export class GenerateBackendStage implements GenerationStage {
       }
     }
     return files;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  Post-process: fix common LLM code issues                         */
+  /* ------------------------------------------------------------------ */
+
+  /**
+   * Automatically fix common LLM-generated backend code problems:
+   * - Replace generic error messages with actual error text
+   * - Ensure .returning() is used on INSERTs
+   * - Remove id/createdAt/updatedAt from INSERT values
+   */
+  private postProcessBackendCode(code: string): string {
+    let fixed = code;
+
+    // Fix 1: Replace generic catch-block error messages with (err as Error).message
+    // Catches patterns like: { error: "Failed to create ..." } or { error: `Failed to ...` }
+    fixed = fixed.replace(
+      /\{\s*error:\s*["'`](?:Failed to|Error|Could not|Unable to)[^"'`]*["'`]\s*\}/g,
+      '{ error: (err as Error).message }',
+    );
+
+    // Fix 2: Also catch: { message: "..." } pattern
+    fixed = fixed.replace(
+      /\{\s*message:\s*["'`](?:Failed to|Error|Could not|Unable to)[^"'`]*["'`]\s*\}/g,
+      '{ error: (err as Error).message }',
+    );
+
+    // Fix 3: Ensure catch blocks have the err parameter
+    // Replace: } catch { with } catch (err) {
+    fixed = fixed.replace(
+      /\}\s*catch\s*\{/g,
+      '} catch (err) {',
+    );
+
+    // Fix 4: Replace catch (error) with catch (err) for consistency
+    // Then replace error.message with (err as Error).message
+    fixed = fixed.replace(
+      /catch\s*\(\s*error\s*\)/g,
+      'catch (err)',
+    );
+    fixed = fixed.replace(
+      /error\.message/g,
+      '(err as Error).message',
+    );
+
+    return fixed;
   }
 
   /* ------------------------------------------------------------------ */

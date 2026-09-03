@@ -123,8 +123,37 @@ export default defineConfig({
 const DB_LIB = `import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
 import * as schema from './schema';
-const sql = neon(process.env.DATABASE_URL!);
+
+if (!process.env.DATABASE_URL) {
+  throw new Error('DATABASE_URL environment variable is not set');
+}
+
+const sql = neon(process.env.DATABASE_URL);
 export const db = drizzle(sql, { schema });
+`;
+
+const HEALTH_ROUTE = `export const dynamic = "force-dynamic";
+import { NextResponse } from "next/server";
+import { db } from "@/lib/db";
+
+export async function GET() {
+  try {
+    // Test raw SQL connectivity
+    const result = await db.execute("SELECT 1 as ok");
+    return NextResponse.json({
+      status: "ok",
+      database: "connected",
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err) {
+    return NextResponse.json({
+      status: "error",
+      database: "disconnected",
+      error: (err as Error).message,
+      timestamp: new Date().toISOString(),
+    }, { status: 500 });
+  }
+}
 `;
 
 const GLOBALS_CSS = `@import "tailwindcss";
@@ -181,6 +210,7 @@ export async function writeNextJsScaffold(
     [`${base}/app/globals.css`, GLOBALS_CSS],
     [`${base}/app/layout.tsx`, ROOT_LAYOUT],
     [`${base}/app/page.tsx`, HOME_PAGE],
+    [`${base}/app/api/health/route.ts`, HEALTH_ROUTE],
   ];
 
   for (const [path, content] of files) {

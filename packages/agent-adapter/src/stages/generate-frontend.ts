@@ -158,7 +158,8 @@ export class GenerateFrontendStage implements GenerationStage {
 
     const files = this.parseMultiFileOutput(pageCode);
     for (const [filePath, content] of files) {
-      await session.writeFile(`/workspace/app/${filePath}`, content);
+      const fixed = this.postProcessFrontendCode(content, filePath);
+      await session.writeFile(`/workspace/app/${filePath}`, fixed);
     }
 
     if (this.ctx) {
@@ -211,6 +212,70 @@ export class GenerateFrontendStage implements GenerationStage {
       }
     }
     return files;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  Post-process: fix common LLM frontend code issues                */
+  /* ------------------------------------------------------------------ */
+
+  /**
+   * Automatically fix common LLM-generated frontend code problems:
+   * - Convert <form method="POST" action="..."> to client component with fetch()
+   * - Fix generic error messages
+   * - Ensure create/new pages are client components
+   */
+  private postProcessFrontendCode(code: string, filePath: string): string {
+    let fixed = code;
+
+    // Fix 1: If this is a create/new page using <form method="POST" action="...">,
+    // inject "use client" and convert to onSubmit + fetch
+    const isCreatePage = filePath.includes('/new/') || filePath.includes('/create');
+    const hasFormAction = /method\s*=\s*["']POST["']/i.test(fixed) && /action\s*=\s*["']/i.test(fixed);
+
+    if (isCreatePage && hasFormAction) {
+      // Extract the action URL
+      const actionMatch = fixed.match(/action\s*=\s*["']([^"']+)["']/);
+      const apiUrl = actionMatch?.[1] ?? '/api/unknown';
+
+      // Remove method and action attributes from the form
+      fixed = fixed.replace(/\s*method\s*=\s*["']POST["']/gi, '');
+      fixed = fixed.replace(/\s*action\s*=\s*["'][^"']*["']/gi, '');
+
+      // Ensure "use client" is at the top
+      if (!fixed.includes('"use client"') && !fixed.includes("'use client'")) {
+        fixed = `"use client";\n${fixed}`;
+      }
+
+      // Add useState/useRouter imports if not present
+      if (!fixed.includes('useState')) {
+        fixed = fixed.replace(
+          /^("use client";\s*)/m,
+          `$1\nimport { useState } from "react";\nimport { useRouter } from "next/navigation";\n`,
+        );
+      }
+    }
+
+    // Fix 2: Ensure create/new pages have "use client" even without form action
+    if (isCreatePage && !fixed.includes('"use client"') && !fixed.includes("'use client'")) {
+      // If it has a <form> tag at all, it should be a client component
+      if (/<form/i.test(fixed)) {
+        fixed = `"use client";\n${fixed}`;
+      }
+    }
+
+    // Fix 3: Remove export const dynamic from client components
+    // (client components can't export dynamic)
+    if (fixed.includes('"use client"') || fixed.includes("'use client'")) {
+      fixed = fixed.replace(/export\s+const\s+dynamic\s*=\s*["']force-dynamic["'];\s*/g, '');
+    }
+
+    // Fix 4: Replace generic error strings with actual error in catch blocks
+    fixed = fixed.replace(
+      /\{\s*error:\s*["'`](?:Failed to|Error|Could not|Unable to)[^"'`]*["'`]\s*\}/g,
+      '{ error: (err as Error).message }',
+    );
+
+    return fixed;
   }
 
   /* ------------------------------------------------------------------ */

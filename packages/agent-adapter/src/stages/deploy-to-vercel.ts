@@ -140,10 +140,34 @@ export class DeployToVercelStage implements GenerationStage {
       throw pollError;
     }
 
-    // 8. Delete the sandbox — no longer needed (deployment succeeded)
+    // 8. Verify deployment — hit /api/health to confirm DB connectivity
+    this.emitter?.emit('deploy-to-vercel', 'running', 'Verifying deployment health...');
+    try {
+      const healthUrl = `${deployedUrl}/api/health`;
+      // Wait a few seconds for serverless cold start
+      await new Promise((r) => setTimeout(r, 3000));
+      const healthRes = await fetch(healthUrl, {
+        headers: { 'User-Agent': 'NoSoftware-HealthCheck/1.0' },
+      });
+      if (healthRes.ok) {
+        const health = (await healthRes.json()) as { status: string; database: string };
+        if (health.database === 'connected') {
+          this.emitter?.emit('deploy-to-vercel', 'running', '✓ Database connected');
+        } else {
+          this.emitter?.emit('deploy-to-vercel', 'warning', `Health check: DB ${health.database}`);
+        }
+      } else {
+        this.emitter?.emit('deploy-to-vercel', 'warning', `Health check returned ${healthRes.status}`);
+      }
+    } catch {
+      // Health check is best-effort — don't fail the deploy for it
+      this.emitter?.emit('deploy-to-vercel', 'warning', 'Health check skipped (endpoint not reachable)');
+    }
+
+    // 9. Delete the sandbox — no longer needed (deployment succeeded)
     await session.delete();
 
-    // 9. Write to shared context for downstream consumers
+    // 10. Write to shared context for downstream consumers
     if (this.ctx) {
       this.ctx.deployedUrl = deployedUrl;
     }
