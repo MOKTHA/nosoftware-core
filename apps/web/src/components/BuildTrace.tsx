@@ -83,6 +83,7 @@ export function BuildTrace({ buildId, onDeployed }: BuildTraceProps) {
     return () => {
       es.close();
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- onDeployed is stable (arrow in parent)
   }, [buildId]);
 
   if (!connected && steps.length === 0) {
