@@ -163,8 +163,10 @@ export function BuildTrace({ buildId, onDeployed }: BuildTraceProps) {
             {done
               ? failed
                 ? 'Build Failed'
-                : 'Build Complete'
-              : 'Building…'}
+                : '✓ Build Complete'
+              : currentStepIndex >= 0
+                ? getStepVerb(pipelineSteps[currentStepIndex]!.step)
+                : 'Starting build…'}
           </span>
           <span style={{ fontSize: '0.75rem', color: '#a3a3a3' }}>
             {completedCount}/{totalVisible} steps
@@ -233,7 +235,7 @@ export function BuildTrace({ buildId, onDeployed }: BuildTraceProps) {
           })}
         </div>
 
-        {/* Current step label */}
+        {/* Current step label — Claude-style verb phrase */}
         {!done && currentStepIndex >= 0 && (
           <div
             style={{
@@ -246,7 +248,9 @@ export function BuildTrace({ buildId, onDeployed }: BuildTraceProps) {
             }}
           >
             <Spinner />
-            {formatStepName(pipelineSteps[currentStepIndex]!.step)}
+            <span style={{ color: '#525252', fontWeight: 500 }}>
+              {getStepVerb(pipelineSteps[currentStepIndex]!.step)}
+            </span>
             <span style={{ color: '#d4d4d4' }}>·</span>
             <span>{(pipelineSteps[currentStepIndex]!.elapsed_ms / 1000).toFixed(1)}s</span>
           </div>
@@ -302,7 +306,7 @@ export function BuildTrace({ buildId, onDeployed }: BuildTraceProps) {
               [{(log.elapsed_ms / 1000).toFixed(1)}s]
             </span>
 
-            {/* Step name */}
+            {/* Step name — use verb phrase for running steps */}
             <span
               style={{
                 color:
@@ -317,7 +321,9 @@ export function BuildTrace({ buildId, onDeployed }: BuildTraceProps) {
                 flexShrink: 0,
               }}
             >
-              {formatStepName(log.step)}
+              {log.status === 'running'
+                ? getStepVerb(log.step).replace(/…$/, '')
+                : formatStepName(log.step)}
             </span>
 
             {/* Detail */}
@@ -388,4 +394,23 @@ function formatStepName(step: string): string {
   return step
     .replace(/-/g, ' ')
     .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+/** Claude-style verbs for each pipeline stage — shown while running. */
+const STEP_VERBS: Record<string, string> = {
+  'normalize-spec': 'Parsing and normalizing your spec…',
+  'resolve-blueprint-plan': 'Resolving blueprint architecture…',
+  'generate-schema': 'Designing the database schema…',
+  'generate-permissions': 'Wiring up roles and permissions…',
+  'generate-backend': 'Generating API routes and services…',
+  'generate-frontend': 'Crafting pages, forms, and components…',
+  'generate-workflows': 'Orchestrating business workflows…',
+  'generate-fixtures-tests': 'Seeding test data and writing tests…',
+  'generate-deployment': 'Preparing deployment configuration…',
+  'deploy-to-vercel': 'Deploying to Vercel — almost there…',
+};
+
+/** Returns a Claude-style active verb phrase for the current step. */
+function getStepVerb(step: string): string {
+  return STEP_VERBS[step] ?? `Working on ${formatStepName(step)}…`;
 }
