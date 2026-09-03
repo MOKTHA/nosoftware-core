@@ -1,32 +1,49 @@
 /**
- * @heynxt/agent-adapter — Stage 5: Generate Backend (Phase 6)
+ * @heynxt/agent-adapter — Stage 5: Generate Backend (Phase 5)
  *
- * Generates backend modules: routes, services, repositories, models.
+ * Stub mode: generates artifact metadata for routes, services, repositories.
+ *
+ * Live mode (sandbox + LLM available): calls the LLM to produce Next.js
+ * App Router CRUD API routes for every entity and writes them into the sandbox.
+ *
+ * Context reads:  sessionId
+ * Context writes: apiRoutesGenerated
  */
 
 import type { GenerationStage, GenerationStageInput, GenerationStageOutput } from '../generation-pipeline.js';
+import type { PipelineContext } from '../pipeline-context.js';
 
 export class GenerateBackendStage implements GenerationStage {
   readonly name = 'generate-backend' as const;
   readonly description = 'Generate backend modules → routes, services, repositories, models';
 
+  constructor(private readonly ctx?: PipelineContext) {}
+
   validateInput(input: GenerationStageInput): boolean {
-    // Need spec to generate backend
     return input.spec !== undefined && Object.keys(input.spec).length > 0;
   }
 
   async execute(input: GenerationStageInput): Promise<GenerationStageOutput> {
-    const inputHash = await this.computeHash(JSON.stringify({
-      spec: input.spec,
-      blueprintPlan: input.blueprintPlan ?? null,
-      params: input.params,
-    }));
+    const inputHash = await this.computeHash(
+      JSON.stringify({
+        spec: input.spec,
+        blueprintPlan: input.blueprintPlan ?? null,
+        params: input.params,
+      }),
+    );
 
-    // Generate backend artifacts based on schema and permissions
+    // Live mode: call LLM → write API routes into sandbox
+    if (
+      this.ctx?.sessionId &&
+      process.env['OPENROUTER_API_KEY']
+    ) {
+      await this.generateBackendInSandbox(input);
+    }
+
     const artifacts = this.generateBackendArtifacts(
       input.spec,
       input.blueprintPlan ?? null,
-      input.params
+      input.params,
     );
 
     return {
@@ -38,19 +55,82 @@ export class GenerateBackendStage implements GenerationStage {
     };
   }
 
+  /* ------------------------------------------------------------------ */
+  /*  Live mode: LLM + Sandbox                                         */
+  /* ------------------------------------------------------------------ */
+
+  private async generateBackendInSandbox(input: GenerationStageInput): Promise<void> {
+    const { SandboxSession } = await import('@heynxt/sandbox');
+    const { callOpenRouter } = await import('../llm.js');
+
+    const session = await SandboxSession.resume(this.ctx!.sessionId!);
+
+    // Read the schema so the LLM knows the tables
+    let schemaContent = '';
+    try {
+      schemaContent = await session.readFile('/workspace/app/lib/schema.ts');
+    } catch {
+      // Schema may not exist in stub mode — that's fine
+    }
+
+    const routeCode = await callOpenRouter({
+      model: 'anthropic/claude-3-5-sonnet',
+      systemPrompt: [
+        'You are a Next.js 15 App Router API route generator.',
+        'Given a Drizzle schema, generate CRUD route handlers.',
+        'Output ONLY TypeScript. Create one file per entity with GET (list+single), POST, PATCH, DELETE.',
+        'Import db from "@/lib/db" and tables from "@/lib/schema".',
+        'Use NextRequest/NextResponse from "next/server".',
+        'Separate each file with "// FILE: <path>" on its own line.',
+        'Paths are relative to the app directory, e.g. app/api/tickets/route.ts.',
+        'No markdown fences, no explanations.',
+      ].join(' '),
+      userPrompt: `Schema:\n${schemaContent}\n\nSpec:\n${JSON.stringify(input.spec, null, 2)}`,
+    });
+
+    // Parse multi-file output and write each file
+    const files = this.parseMultiFileOutput(routeCode);
+    for (const [filePath, content] of files) {
+      await session.writeFile(`/workspace/app/${filePath}`, content);
+    }
+
+    if (this.ctx) {
+      this.ctx.apiRoutesGenerated = true;
+    }
+  }
+
   /**
-   * Generate backend artifacts from schema and permissions.
+   * Parse LLM output that uses "// FILE: <path>" separators.
    */
+  private parseMultiFileOutput(output: string): Map<string, string> {
+    const files = new Map<string, string>();
+    const parts = output.split(/^\/\/\s*FILE:\s*/m);
+
+    for (const part of parts) {
+      if (!part.trim()) continue;
+      const newlineIdx = part.indexOf('\n');
+      if (newlineIdx === -1) continue;
+      const path = part.slice(0, newlineIdx).trim();
+      const content = part.slice(newlineIdx + 1).trim();
+      if (path && content) {
+        files.set(path, content);
+      }
+    }
+    return files;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  Stub artifact generation (always runs)                            */
+  /* ------------------------------------------------------------------ */
+
   private generateBackendArtifacts(
     spec: Record<string, unknown>,
     blueprintPlan: Record<string, unknown> | null,
-    params: Record<string, unknown>
+    params: Record<string, unknown>,
   ): Array<import('@heynxt/core-types').GenerationArtifact> {
     const artifacts: Array<import('@heynxt/core-types').GenerationArtifact> = [];
 
-    // Generate API routes based on domain
     const routeDefinitions = this.generateRoutes(spec);
-
     for (const route of routeDefinitions) {
       artifacts.push({
         id: crypto.randomUUID(),
@@ -66,7 +146,6 @@ export class GenerateBackendStage implements GenerationStage {
       });
     }
 
-    // Generate service layer
     const services = this.generateServices(spec);
     for (const service of services) {
       artifacts.push({
@@ -83,7 +162,6 @@ export class GenerateBackendStage implements GenerationStage {
       });
     }
 
-    // Generate repository layer
     const repositories = this.generateRepositories(spec);
     for (const repo of repositories) {
       artifacts.push({
@@ -103,72 +181,42 @@ export class GenerateBackendStage implements GenerationStage {
     return artifacts;
   }
 
-  /**
-   * Generate API route definitions based on spec.
-   */
   private generateRoutes(spec: Record<string, unknown>): Array<{ path: string; method: string }> {
     const domain = this.detectDomain(spec);
-    const routes: Array<{ path: string; method: string }> = [];
-
-    // Standard RESTful routes for the primary entity
     const basePath = `/${domain}`;
-
-    routes.push({ path: `${basePath}`, method: 'GET' });      // List entities
-    routes.push({ path: `${basePath}`, method: 'POST' });     // Create entity
-    routes.push({ path: `${basePath}/:id`, method: 'GET' });  // Get single entity
-    routes.push({ path: `${basePath}/:id`, method: 'PUT' });  // Update entity
-    routes.push({ path: `${basePath}/:id`, method: 'DELETE' }); // Delete entity
-
-    return routes;
+    return [
+      { path: basePath, method: 'GET' },
+      { path: basePath, method: 'POST' },
+      { path: `${basePath}/:id`, method: 'GET' },
+      { path: `${basePath}/:id`, method: 'PUT' },
+      { path: `${basePath}/:id`, method: 'DELETE' },
+    ];
   }
 
-  /**
-   * Generate service layer based on domain.
-   */
   private generateServices(spec: Record<string, unknown>): Array<{ name: string; description: string }> {
     const domain = this.detectDomain(spec);
-    const serviceName = `${this.capitalize(domain)}Service`;
-
     return [
-      { name: serviceName, description: `Main service for ${domain} operations` },
+      { name: `${this.capitalize(domain)}Service`, description: `Main service for ${domain} operations` },
       { name: 'AuthService', description: 'Authentication and authorization' },
     ];
   }
 
-  /**
-   * Generate repository layer based on domain.
-   */
   private generateRepositories(spec: Record<string, unknown>): Array<{ entity: string }> {
     const domain = this.detectDomain(spec);
-
     return [
       { entity: `${this.capitalize(domain)}Repository` },
       { entity: 'BaseRepository' },
     ];
   }
 
-  /**
-   * Auto-detect domain from spec content.
-   */
   private detectDomain(spec: Record<string, unknown>): string {
-    const description = (spec.description as string) ?? '';
     const keywords = Object.values(spec).join(' ').toLowerCase();
-
-    if (keywords.includes('pcb') || keywords.includes('electronics')) {
-      return 'pcb';
-    } else if (keywords.includes('extrusion') || keywords.includes('aluminum')) {
-      return 'extrusion';
-    } else if (keywords.includes('quality') || keywords.includes('inspection')) {
-      return 'quality';
-    }
-
-    // Default to extrusion as the primary domain
+    if (keywords.includes('pcb') || keywords.includes('electronics')) return 'pcb';
+    if (keywords.includes('extrusion') || keywords.includes('aluminum')) return 'extrusion';
+    if (keywords.includes('quality') || keywords.includes('inspection')) return 'quality';
     return 'extrusion';
   }
 
-  /**
-   * Compute content hash for traceability.
-   */
   private async computeHash(content: string): Promise<string> {
     const encoder = new TextEncoder();
     const data = encoder.encode(content);

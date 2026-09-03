@@ -5,10 +5,13 @@
  */
 
 import type { GenerationStage, GenerationStageInput, GenerationStageOutput } from '../generation-pipeline.js';
+import type { PipelineContext } from '../pipeline-context.js';
 
 export class GenerateFixturesTestsStage implements GenerationStage {
   readonly name = 'generate-fixtures-tests' as const;
   readonly description = 'Generate fixtures/tests → seed data, unit/integration tests';
+
+  constructor(private readonly ctx?: PipelineContext) {}
 
   validateInput(input: GenerationStageInput): boolean {
     // Need spec to generate test cases

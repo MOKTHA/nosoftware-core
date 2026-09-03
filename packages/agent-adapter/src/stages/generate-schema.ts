@@ -1,27 +1,44 @@
 /**
- * @heynxt/agent-adapter — Stage 3: Generate Schema (Phase 6)
+ * @heynxt/agent-adapter — Stage 3: Generate Schema (Phase 5)
  *
- * Generates database schema (migrations), TypeScript types, and API contracts.
+ * Stub mode: generates artifact metadata from the blueprint plan entities.
+ *
+ * Live mode (sandbox + LLM available): calls the LLM to produce a Drizzle
+ * ORM schema, writes it into the sandbox, and runs `npx drizzle-kit push`.
+ *
+ * Context reads:  sessionId, databaseUrl
+ * Context writes: schemaGenerated
  */
 
 import type { GenerationStage, GenerationStageInput, GenerationStageOutput } from '../generation-pipeline.js';
+import type { PipelineContext } from '../pipeline-context.js';
 
 export class GenerateSchemaStage implements GenerationStage {
   readonly name = 'generate-schema' as const;
   readonly description = 'Generate schema → DB migrations, TS types, API contracts';
 
+  constructor(private readonly ctx?: PipelineContext) {}
+
   validateInput(input: GenerationStageInput): boolean {
-    // Must have a resolved blueprint plan with entity definitions
     return input.blueprintPlan !== null && input.blueprintPlan !== undefined;
   }
 
   async execute(input: GenerationStageInput): Promise<GenerationStageOutput> {
     const inputHash = await this.computeHash(JSON.stringify(input.blueprintPlan));
 
-    // Generate schema artifacts based on blueprint plan
+    // Live mode: call LLM → write schema → migrate in sandbox
+    if (
+      this.ctx?.sessionId &&
+      process.env['OPENROUTER_API_KEY'] &&
+      process.env['NEON_API_KEY']
+    ) {
+      await this.generateSchemaInSandbox(input);
+    }
+
+    // Always return artifact metadata (stub-compatible)
     const artifacts = this.generateSchemaArtifacts(
       input.blueprintPlan as Record<string, unknown>,
-      input.params
+      input.params,
     );
 
     return {
@@ -33,16 +50,49 @@ export class GenerateSchemaStage implements GenerationStage {
     };
   }
 
-  /**
-   * Generate schema artifacts from blueprint plan.
-   */
+  /* ------------------------------------------------------------------ */
+  /*  Live mode: LLM + Sandbox                                         */
+  /* ------------------------------------------------------------------ */
+
+  private async generateSchemaInSandbox(input: GenerationStageInput): Promise<void> {
+    const { SandboxSession } = await import('@heynxt/sandbox');
+    const { callOpenRouter } = await import('../llm.js');
+
+    const session = await SandboxSession.resume(this.ctx!.sessionId!);
+
+    const schemaCode = await callOpenRouter({
+      model: 'anthropic/claude-3-5-sonnet',
+      systemPrompt: [
+        'You are a Drizzle ORM schema generator for PostgreSQL.',
+        'Output ONLY valid TypeScript for a single lib/schema.ts file.',
+        'Use pgTable from drizzle-orm/pg-core. Include id, createdAt, updatedAt columns on every table.',
+        'Import { pgTable, text, integer, boolean, timestamp, uuid } from "drizzle-orm/pg-core".',
+        'Export every table. No markdown fences, no explanations.',
+      ].join(' '),
+      userPrompt: `Generate a Drizzle ORM schema for these entities:\n${JSON.stringify(input.spec, null, 2)}`,
+    });
+
+    await session.writeFile('/workspace/app/lib/schema.ts', schemaCode);
+
+    // Run migration
+    await session.runCommand('npx', ['drizzle-kit', 'push'], {
+      cwd: '/workspace/app',
+    });
+
+    if (this.ctx) {
+      this.ctx.schemaGenerated = true;
+    }
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  Stub artifact generation (always runs)                            */
+  /* ------------------------------------------------------------------ */
+
   private generateSchemaArtifacts(
     blueprintPlan: Record<string, unknown>,
-    params: Record<string, unknown>
+    params: Record<string, unknown>,
   ): Array<import('@heynxt/core-types').GenerationArtifact> {
     const artifacts: Array<import('@heynxt/core-types').GenerationArtifact> = [];
-
-    // Extract entity definitions from blueprint plan
     const entities = (blueprintPlan.entities as Array<Record<string, unknown>>) ?? [];
 
     for (const entity of entities) {
@@ -75,7 +125,6 @@ export class GenerateSchemaStage implements GenerationStage {
       });
     }
 
-    // Add API contract artifact
     artifacts.push({
       id: crypto.randomUUID(),
       generationRunId: '00000000-0000-0000-0000-000000000000',
@@ -92,9 +141,6 @@ export class GenerateSchemaStage implements GenerationStage {
     return artifacts;
   }
 
-  /**
-   * Compute content hash for traceability.
-   */
   private async computeHash(content: string): Promise<string> {
     const encoder = new TextEncoder();
     const data = encoder.encode(content);

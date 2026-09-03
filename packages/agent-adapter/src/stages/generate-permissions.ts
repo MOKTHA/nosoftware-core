@@ -5,10 +5,13 @@
  */
 
 import type { GenerationStage, GenerationStageInput, GenerationStageOutput } from '../generation-pipeline.js';
+import type { PipelineContext } from '../pipeline-context.js';
 
 export class GeneratePermissionsStage implements GenerationStage {
   readonly name = 'generate-permissions' as const;
   readonly description = 'Generate permissions and roles → RBAC definitions';
+
+  constructor(private readonly ctx?: PipelineContext) {}
 
   validateInput(input: GenerationStageInput): boolean {
     // Can generate default permissions even without blueprint plan

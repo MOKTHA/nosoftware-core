@@ -5,10 +5,13 @@
  */
 
 import type { GenerationStage, GenerationStageInput, GenerationStageOutput } from '../generation-pipeline.js';
+import type { PipelineContext } from '../pipeline-context.js';
 
 export class GenerateWorkflowsStage implements GenerationStage {
   readonly name = 'generate-workflows' as const;
   readonly description = 'Generate workflows → state machines, automations';
+
+  constructor(private readonly ctx?: PipelineContext) {}
 
   validateInput(input: GenerationStageInput): boolean {
     // Need spec to generate workflow definitions
