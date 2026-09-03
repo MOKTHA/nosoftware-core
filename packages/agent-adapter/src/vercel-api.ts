@@ -90,7 +90,8 @@ export async function createOrGetVercelProject(
 
 /**
  * Set environment variables on a Vercel project (encrypted, targeting
- * production + preview). Silently skips vars that already exist.
+ * production + preview). Uses upsert: updates existing vars, creates new ones.
+ * Each build provisions a fresh Neon DB, so DATABASE_URL must always be updated.
  */
 export async function setVercelProjectEnvVars(
   projectId: string,
@@ -98,27 +99,65 @@ export async function setVercelProjectEnvVars(
 ): Promise<void> {
   const config = getConfig();
 
-  const envEntries = Object.entries(vars).map(([key, value]) => ({
-    key,
-    value,
-    type: 'encrypted' as const,
-    target: ['production', 'preview'],
-  }));
-
-  const res = await fetch(
-    vercelUrl(`/v10/projects/${projectId}/env`, config),
-    {
-      method: 'POST',
-      headers: vercelHeaders(config),
-      body: JSON.stringify(envEntries),
-    },
+  // 1. Fetch existing env vars to find IDs for update
+  const listRes = await fetch(
+    vercelUrl(`/v9/projects/${projectId}/env`, config),
+    { headers: vercelHeaders(config) },
   );
 
-  if (!res.ok) {
-    const body = await res.text();
-    // 400 with "already exists" is acceptable on rebuilds — skip
-    if (!body.includes('already exists')) {
-      throw new Error(`Failed to set env vars: ${body}`);
+  const existingByKey = new Map<string, string>(); // key → env var id
+  if (listRes.ok) {
+    const data = (await listRes.json()) as {
+      envs: Array<{ id: string; key: string }>;
+    };
+    for (const env of data.envs) {
+      existingByKey.set(env.key, env.id);
+    }
+  }
+
+  // 2. For each var: PATCH if it exists, POST if new
+  for (const [key, value] of Object.entries(vars)) {
+    const envId = existingByKey.get(key);
+
+    if (envId) {
+      // Update existing env var
+      const patchRes = await fetch(
+        vercelUrl(`/v9/projects/${projectId}/env/${envId}`, config),
+        {
+          method: 'PATCH',
+          headers: vercelHeaders(config),
+          body: JSON.stringify({
+            value,
+            type: 'encrypted',
+            target: ['production', 'preview'],
+          }),
+        },
+      );
+      if (!patchRes.ok) {
+        const body = await patchRes.text();
+        throw new Error(`Failed to update env var ${key}: ${body}`);
+      }
+    } else {
+      // Create new env var
+      const postRes = await fetch(
+        vercelUrl(`/v10/projects/${projectId}/env`, config),
+        {
+          method: 'POST',
+          headers: vercelHeaders(config),
+          body: JSON.stringify([{
+            key,
+            value,
+            type: 'encrypted',
+            target: ['production', 'preview'],
+          }]),
+        },
+      );
+      if (!postRes.ok) {
+        const body = await postRes.text();
+        if (!body.includes('already exists')) {
+          throw new Error(`Failed to create env var ${key}: ${body}`);
+        }
+      }
     }
   }
 }

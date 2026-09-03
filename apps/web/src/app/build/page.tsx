@@ -1,34 +1,108 @@
 /**
- * /build — Build & deploy page for the Control Plane UI (Phase 6).
+ * /build — Prompt-driven build page.
  *
- * Renders a "Start build" button that POST /api/builds, then streams
- * real-time pipeline progress via the BuildTrace component. When the
- * deploy-to-vercel stage completes, the right panel loads the live
- * app in an iframe and the URL appears as a link in the top bar.
+ * UI modeled on vercel-labs/coding-agent-template:
+ *   - Centered rounded prompt form with textarea + circular submit
+ *   - Conversational thread with sticky user cards
+ *   - Split panel during build (trace left, preview right)
  */
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { BuildTrace } from '@/components/BuildTrace';
 
-export default function BuildPage() {
-  const [buildId, setBuildId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [deployedUrl, setDeployedUrl] = useState<string | null>(null);
+/* ------------------------------------------------------------------ */
+/*  Types                                                             */
+/* ------------------------------------------------------------------ */
 
-  async function startBuild() {
+interface QuestionOption {
+  label: string;
+  description: string;
+}
+
+interface ClarifyingQuestion {
+  id: string;
+  question: string;
+  options: QuestionOption[];
+}
+
+interface AnalysisResult {
+  score: number;
+  message: string;
+  questions: ClarifyingQuestion[];
+  readyToBuild: boolean;
+  appName: string;
+}
+
+interface Message {
+  role: 'user' | 'assistant';
+  content: string;
+  analysis?: AnalysisResult;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Component                                                         */
+/* ------------------------------------------------------------------ */
+
+export default function BuildPage() {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [prompt, setPrompt] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
+  const [answers, setAnswers] = useState<Array<{ question: string; answer: string }>>([]);
+  const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
+  const [customInputs, setCustomInputs] = useState<Record<string, string>>({});
+
+  // Build state
+  const [buildId, setBuildId] = useState<string | null>(null);
+  const [buildLoading, setBuildLoading] = useState(false);
+  const [deployedUrl, setDeployedUrl] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const threadRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    threadRef.current?.scrollTo({ top: threadRef.current.scrollHeight, behavior: 'smooth' });
+  }, [messages, analysis]);
+
+  useEffect(() => {
+    textareaRef.current?.focus();
+  }, []);
+
+  /* ---------------------------------------------------------------- */
+  /*  Submit initial prompt                                           */
+  /* ---------------------------------------------------------------- */
+
+  async function handleSubmitPrompt() {
+    if (!prompt.trim() || loading) return;
+
+    const userMsg = prompt.trim();
+    setPrompt('');
+    setMessages((prev) => [...prev, { role: 'user', content: userMsg }]);
     setLoading(true);
     setError(null);
-    setDeployedUrl(null);
+
     try {
-      const res = await fetch('/api/builds', { method: 'POST' });
+      const res = await fetch('/api/prompt/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: userMsg, answers }),
+      });
+
       if (!res.ok) {
         const body = await res.text();
-        throw new Error(`${res.status}: ${body}`);
+        throw new Error(body);
       }
-      const { buildId: id } = (await res.json()) as { buildId: string };
-      setBuildId(id);
+
+      const result = (await res.json()) as AnalysisResult;
+      setAnalysis(result);
+      setMessages((prev) => [
+        ...prev,
+        { role: 'assistant', content: result.message, analysis: result },
+      ]);
+      setSelectedOptions({});
+      setCustomInputs({});
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -36,122 +110,627 @@ export default function BuildPage() {
     }
   }
 
+  /* ---------------------------------------------------------------- */
+  /*  Submit answers to clarifying questions                          */
+  /* ---------------------------------------------------------------- */
+
+  async function handleSubmitAnswers() {
+    if (!analysis || loading) return;
+
+    const newAnswers: Array<{ question: string; answer: string }> = [];
+    for (const q of analysis.questions) {
+      const selected = selectedOptions[q.id];
+      const custom = customInputs[q.id]?.trim();
+      const answer = custom || selected;
+      if (answer) {
+        newAnswers.push({ question: q.question, answer });
+      }
+    }
+
+    if (newAnswers.length === 0) return;
+
+    const allAnswers = [...answers, ...newAnswers];
+    setAnswers(allAnswers);
+
+    const answerText = newAnswers.map((a) => a.answer).join(', ');
+    setMessages((prev) => [...prev, { role: 'user', content: answerText }]);
+    setLoading(true);
+
+    try {
+      const originalPrompt = messages.find((m) => m.role === 'user')?.content ?? '';
+
+      const res = await fetch('/api/prompt/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: originalPrompt, answers: allAnswers }),
+      });
+
+      if (!res.ok) throw new Error(await res.text());
+
+      const result = (await res.json()) as AnalysisResult;
+      setAnalysis(result);
+      setMessages((prev) => [
+        ...prev,
+        { role: 'assistant', content: result.message, analysis: result },
+      ]);
+      setSelectedOptions({});
+      setCustomInputs({});
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  /* ---------------------------------------------------------------- */
+  /*  Start build                                                     */
+  /* ---------------------------------------------------------------- */
+
+  async function handleStartBuild() {
+    if (buildLoading || buildId) return;
+    setBuildLoading(true);
+    setError(null);
+
+    try {
+      const originalPrompt = messages.find((m) => m.role === 'user')?.content ?? '';
+      const fullPrompt = answers.length
+        ? `${originalPrompt}\n\nAdditional details:\n${answers.map((a) => `- ${a.question}: ${a.answer}`).join('\n')}`
+        : originalPrompt;
+
+      const res = await fetch('/api/builds', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: fullPrompt,
+          appName: analysis?.appName ?? 'My App',
+        }),
+      });
+
+      if (!res.ok) throw new Error(await res.text());
+
+      const { buildId: id } = (await res.json()) as { buildId: string };
+      setBuildId(id);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setBuildLoading(false);
+    }
+  }
+
+  /* ---------------------------------------------------------------- */
+  /*  Keyboard handler                                                */
+  /* ---------------------------------------------------------------- */
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmitPrompt();
+    }
+  }
+
+  /* ---------------------------------------------------------------- */
+  /*  Render                                                          */
+  /* ---------------------------------------------------------------- */
+
+  const showPromptInput = !buildId;
+  const showBuildButton = analysis?.readyToBuild && !buildId;
+  const showQuestions =
+    analysis && !analysis.readyToBuild && !buildId && analysis.questions.length > 0;
+  const isInitial = messages.length === 0 && !buildId;
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 0, height: 'calc(100vh - 8rem)' }}>
-      {/* Top bar — URL display */}
+    <div
+      style={{
+        display: 'flex',
+        height: 'calc(100vh - 5rem)',
+        gap: 0,
+        fontFamily:
+          'var(--font-geist-sans, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif)',
+      }}
+    >
+      {/* ── Left panel: conversation ─────────────────────────────── */}
       <div
         style={{
+          flex: buildId ? '0 0 400px' : '1',
           display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '0.5rem 0',
-          marginBottom: '0.75rem',
-          borderBottom: '1px solid #eaeaea',
-          minHeight: '2rem',
+          flexDirection: 'column',
+          maxWidth: buildId ? '400px' : '672px',
+          margin: buildId ? '0' : '0 auto',
+          transition: 'all 0.3s ease',
+          padding: buildId ? '0 1rem 0 0' : '0 1rem',
         }}
       >
-        <span style={{ fontWeight: 600, fontSize: '0.875rem', color: '#666' }}>
-          NoSoftware.ai
-        </span>
-        {deployedUrl && (
-          <a
-            href={deployedUrl}
-            target="_blank"
-            rel="noopener noreferrer"
+        {/* ── Hero (initial state) ── */}
+        {isInitial && (
+          <div
             style={{
-              fontSize: '0.8125rem',
-              color: '#0070f3',
-              textDecoration: 'none',
-              fontFamily: 'monospace',
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              paddingBottom: '6rem',
             }}
           >
-            {deployedUrl} ↗
-          </a>
+            <h1
+              style={{
+                fontSize: '2.5rem',
+                fontWeight: 700,
+                letterSpacing: '-0.03em',
+                margin: '0 0 1rem',
+                color: '#0a0a0a',
+              }}
+            >
+              NoSoftware
+            </h1>
+            <p
+              style={{
+                color: '#737373',
+                fontSize: '1.125rem',
+                margin: 0,
+                lineHeight: 1.5,
+              }}
+            >
+              Describe what you want to build — AI does the rest.
+            </p>
+          </div>
+        )}
+
+        {/* ── Message thread ── */}
+        {messages.length > 0 && (
+          <div
+            ref={threadRef}
+            style={{
+              flex: 1,
+              overflowY: 'auto',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.375rem',
+              paddingTop: '1rem',
+              paddingBottom: '0.75rem',
+            }}
+          >
+            {messages.map((msg, i) => (
+              <div key={i}>
+                {msg.role === 'user' ? (
+                  /* ── User message (sticky card — matches task-chat.tsx Card pattern) ── */
+                  <div
+                    style={{
+                      position: 'sticky',
+                      top: 0,
+                      zIndex: 10,
+                      background: '#ffffff',
+                      border: '1px solid #e5e5e5',
+                      borderRadius: '0.75rem',
+                      padding: '0.75rem 1rem',
+                      fontSize: '0.875rem',
+                      lineHeight: 1.7,
+                      color: '#0a0a0a',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                    }}
+                  >
+                    {msg.content}
+                  </div>
+                ) : (
+                  /* ── Assistant message ── */
+                  <div
+                    style={{
+                      padding: '0.75rem 1rem',
+                      fontSize: '0.875rem',
+                      lineHeight: 1.7,
+                      color: '#525252',
+                    }}
+                  >
+                    {msg.analysis && (
+                      <div
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
+                          marginBottom: '0.5rem',
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            padding: '0.125rem 0.625rem',
+                            borderRadius: '9999px',
+                            background:
+                              msg.analysis.score >= 60 ? '#dcfce7' : '#fef3c7',
+                            color:
+                              msg.analysis.score >= 60 ? '#166534' : '#92400e',
+                          }}
+                        >
+                          {msg.analysis.score}%
+                          {msg.analysis.score >= 60 ? ' Ready' : ''}
+                        </span>
+                      </div>
+                    )}
+                    <div>{msg.content}</div>
+                  </div>
+                )}
+              </div>
+            ))}
+
+            {loading && (
+              <div
+                style={{
+                  padding: '0.75rem 1rem',
+                  fontSize: '0.875rem',
+                  color: '#a3a3a3',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                }}
+              >
+                <Spinner /> Analyzing…
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Clarifying questions ── */}
+        {showQuestions && (
+          <div
+            style={{
+              background: '#ffffff',
+              border: '1px solid #e5e5e5',
+              borderRadius: '0.75rem',
+              padding: '1rem',
+              marginBottom: '0.75rem',
+            }}
+          >
+            {analysis!.questions.map((q) => (
+              <div key={q.id} style={{ marginBottom: '1rem' }}>
+                <p
+                  style={{
+                    fontWeight: 500,
+                    fontSize: '0.875rem',
+                    margin: '0 0 0.5rem',
+                    color: '#0a0a0a',
+                  }}
+                >
+                  {q.question}
+                </p>
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.375rem',
+                  }}
+                >
+                  {q.options.map((opt) => {
+                    const isSelected = selectedOptions[q.id] === opt.label;
+                    return (
+                      <label
+                        key={opt.label}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          gap: '0.5rem',
+                          padding: '0.5rem 0.75rem',
+                          borderRadius: '0.625rem',
+                          cursor: 'pointer',
+                          border: `1px solid ${isSelected ? '#0a0a0a' : '#e5e5e5'}`,
+                          background: isSelected ? '#f5f5f5' : 'transparent',
+                          transition: 'all 0.15s',
+                        }}
+                      >
+                        <input
+                          type="radio"
+                          name={q.id}
+                          checked={isSelected}
+                          onChange={() => {
+                            setSelectedOptions((prev) => ({
+                              ...prev,
+                              [q.id]: opt.label,
+                            }));
+                            setCustomInputs((prev) => ({ ...prev, [q.id]: '' }));
+                          }}
+                          style={{ marginTop: '0.15rem', accentColor: '#0a0a0a' }}
+                        />
+                        <div>
+                          <span
+                            style={{
+                              fontSize: '0.8125rem',
+                              fontWeight: 500,
+                              color: '#0a0a0a',
+                            }}
+                          >
+                            {opt.label}
+                          </span>
+                          <span
+                            style={{
+                              fontSize: '0.75rem',
+                              color: '#737373',
+                              marginLeft: '0.5rem',
+                            }}
+                          >
+                            {opt.description}
+                          </span>
+                        </div>
+                      </label>
+                    );
+                  })}
+                  <input
+                    type="text"
+                    placeholder="Other…"
+                    value={customInputs[q.id] ?? ''}
+                    onChange={(e) => {
+                      setCustomInputs((prev) => ({
+                        ...prev,
+                        [q.id]: e.target.value,
+                      }));
+                      if (e.target.value) {
+                        setSelectedOptions((prev) => ({ ...prev, [q.id]: '' }));
+                      }
+                    }}
+                    style={{
+                      padding: '0.5rem 0.75rem',
+                      borderRadius: '0.625rem',
+                      border: '1px solid #e5e5e5',
+                      fontSize: '0.8125rem',
+                      outline: 'none',
+                      fontFamily: 'inherit',
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+            <button
+              onClick={handleSubmitAnswers}
+              disabled={loading}
+              style={{
+                padding: '0.5rem 1.25rem',
+                background: '#0a0a0a',
+                color: '#fafafa',
+                border: 'none',
+                borderRadius: '9999px',
+                fontSize: '0.8125rem',
+                fontWeight: 500,
+                cursor: loading ? 'default' : 'pointer',
+                opacity: loading ? 0.5 : 1,
+                fontFamily: 'inherit',
+              }}
+            >
+              Submit
+            </button>
+          </div>
+        )}
+
+        {/* ── Build button ── */}
+        {showBuildButton && (
+          <div style={{ marginBottom: '0.75rem', textAlign: 'center' }}>
+            <button
+              onClick={handleStartBuild}
+              disabled={buildLoading}
+              style={{
+                padding: '0.625rem 1.5rem',
+                background: buildLoading ? '#a3a3a3' : '#0a0a0a',
+                color: '#fafafa',
+                border: 'none',
+                borderRadius: '9999px',
+                fontSize: '0.875rem',
+                fontWeight: 500,
+                cursor: buildLoading ? 'default' : 'pointer',
+                fontFamily: 'inherit',
+                letterSpacing: '-0.01em',
+              }}
+            >
+              {buildLoading ? (
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Spinner /> Starting…
+                </span>
+              ) : (
+                `Build "${analysis?.appName}"`
+              )}
+            </button>
+          </div>
+        )}
+
+        {/* ── Build trace ── */}
+        {buildId && (
+          <div style={{ marginBottom: '0.75rem' }}>
+            <BuildTrace buildId={buildId} onDeployed={(url) => setDeployedUrl(url)} />
+          </div>
+        )}
+
+        {/* ── Prompt input (coding-agent-template style) ── */}
+        {showPromptInput && (
+          <div
+            style={{
+              border: '1px solid #e5e5e5',
+              borderRadius: '1rem',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+              overflow: 'hidden',
+              background: 'rgba(245,245,245,0.3)',
+            }}
+          >
+            <textarea
+              ref={textareaRef}
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Describe what you want to build…"
+              rows={4}
+              style={{
+                width: '100%',
+                border: 'none',
+                outline: 'none',
+                resize: 'none',
+                padding: '1rem',
+                fontSize: '1rem',
+                lineHeight: 1.6,
+                fontFamily: 'inherit',
+                background: 'transparent',
+                color: '#0a0a0a',
+                boxSizing: 'border-box',
+              }}
+            />
+            <div
+              style={{
+                padding: '0.75rem 1rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'flex-end',
+              }}
+            >
+              <button
+                onClick={handleSubmitPrompt}
+                disabled={!prompt.trim() || loading}
+                aria-label="Submit"
+                style={{
+                  width: '2rem',
+                  height: '2rem',
+                  borderRadius: '9999px',
+                  border: 'none',
+                  background:
+                    !prompt.trim() || loading ? '#e5e5e5' : '#0a0a0a',
+                  color: '#fafafa',
+                  cursor: !prompt.trim() || loading ? 'default' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'background 0.15s',
+                  padding: 0,
+                }}
+              >
+                {loading ? (
+                  <Spinner />
+                ) : (
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <line x1="12" y1="19" x2="12" y2="5" />
+                    <polyline points="5 12 12 5 19 12" />
+                  </svg>
+                )}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {error && (
+          <p
+            style={{
+              color: '#dc2626',
+              fontSize: '0.8125rem',
+              marginTop: '0.5rem',
+            }}
+          >
+            {error}
+          </p>
         )}
       </div>
 
-      {/* Main content — left panel + right panel */}
-      <div style={{ display: 'flex', gap: '1.5rem', flex: 1, minHeight: 0 }}>
-        {/* Left panel — build controls and trace (w-72 = 18rem) */}
-        <div
-          style={{
-            width: '18rem',
-            flexShrink: 0,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '1rem',
-            overflowY: 'auto',
-          }}
-        >
-          <h2 style={{ fontSize: '1.25rem', margin: 0 }}>Build</h2>
-          <p style={{ color: '#666', fontSize: '0.875rem', lineHeight: 1.5 }}>
-            Trigger a pipeline build from the helpdesk ticketing fixture. Real-time
-            stage progress streams via SSE below.
-          </p>
-
-          <button
-            onClick={startBuild}
-            disabled={loading || buildId !== null}
-            style={{
-              padding: '0.5rem 1rem',
-              background: loading || buildId ? '#ccc' : '#0070f3',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '0.375rem',
-              fontSize: '0.875rem',
-              cursor: loading || buildId ? 'default' : 'pointer',
-            }}
-          >
-            {loading
-              ? 'Starting…'
-              : buildId
-                ? 'Building…'
-                : 'Build helpdesk app'}
-          </button>
-
-          {error && (
-            <p style={{ color: '#ef4444', fontSize: '0.875rem' }}>{error}</p>
-          )}
-
-          {buildId && (
-            <BuildTrace
-              buildId={buildId}
-              onDeployed={(url) => setDeployedUrl(url)}
-            />
-          )}
-        </div>
-
-        {/* Right panel — iframe preview or placeholder */}
+      {/* ── Right panel: preview iframe ──────────────────────────── */}
+      {buildId && (
         <div
           style={{
             flex: 1,
             background: '#f5f5f5',
-            borderRadius: '0.5rem',
+            borderRadius: '0.75rem',
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            minHeight: '24rem',
+            flexDirection: 'column',
             overflow: 'hidden',
+            border: '1px solid #e5e5e5',
           }}
         >
-          {deployedUrl ? (
-            <iframe
-              src={deployedUrl}
+          {deployedUrl && (
+            <div
               style={{
-                width: '100%',
-                height: '100%',
-                border: 'none',
-                borderRadius: '0.5rem',
+                padding: '0.5rem 0.75rem',
+                borderBottom: '1px solid #e5e5e5',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                background: '#ffffff',
+                borderRadius: '0.75rem 0.75rem 0 0',
               }}
-              title="Generated app preview"
-            />
-          ) : (
-            <p style={{ color: '#999', fontSize: '0.875rem' }}>
-              {buildId ? 'Building your app...' : 'App preview loads here after build'}
-            </p>
+            >
+              <span
+                style={{
+                  fontSize: '0.75rem',
+                  color: '#737373',
+                  fontFamily: 'monospace',
+                }}
+              >
+                {deployedUrl}
+              </span>
+              <a
+                href={deployedUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  fontSize: '0.75rem',
+                  color: '#0a0a0a',
+                  textDecoration: 'none',
+                  fontWeight: 500,
+                }}
+              >
+                Open ↗
+              </a>
+            </div>
           )}
+          <div
+            style={{
+              flex: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            {deployedUrl ? (
+              <iframe
+                src={deployedUrl}
+                style={{ width: '100%', height: '100%', border: 'none' }}
+                title="Generated app preview"
+              />
+            ) : (
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '0.75rem',
+                  color: '#a3a3a3',
+                }}
+              >
+                <Spinner />
+                <span style={{ fontSize: '0.875rem' }}>Building your app…</span>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Spinner                                                           */
+/* ------------------------------------------------------------------ */
+
+function Spinner() {
+  return (
+    <span
+      style={{
+        display: 'inline-block',
+        width: '0.875rem',
+        height: '0.875rem',
+        border: '1.5px solid currentColor',
+        borderTopColor: 'transparent',
+        borderRadius: '50%',
+        animation: 'spin 0.6s linear infinite',
+      }}
+    />
   );
 }

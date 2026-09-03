@@ -1,14 +1,11 @@
 /**
- * /api/builds/[buildId]/stream — SSE build progress (Phase 5).
+ * /api/builds/[buildId]/stream — SSE build progress.
  *
  *   GET /api/builds/:buildId/stream
- *     Opens an SSE connection and starts the pipeline. Streams structured
- *     BuildEvent objects as `data: {...}\n\n` lines until the build
- *     completes or fails, then closes.
- *
- *     409 if the build is already running.
- *     410 if the build already completed.
- *     404 if the buildId is unknown.
+ *     Opens an SSE connection and starts the pipeline. Reads the spec
+ *     from the builds table (specJson column) or falls back to the
+ *     helpdesk fixture. Streams structured BuildEvent objects until
+ *     the build completes or fails.
  */
 import { eq } from 'drizzle-orm';
 
@@ -44,7 +41,7 @@ export async function GET(
   const stream = emitter.toReadableStream();
 
   // Run the pipeline without awaiting — the response streams concurrently
-  runPipeline(buildId, emitter).catch((err: unknown) => {
+  runPipeline(buildId, build.specJson, emitter).catch((err: unknown) => {
     const message = err instanceof Error ? err.message : String(err);
     emitter.emit('pipeline', 'error', message);
     emitter.close();
@@ -62,9 +59,21 @@ export async function GET(
 
 async function runPipeline(
   buildId: string,
+  specJson: string | null,
   emitter: BuildEventEmitter,
 ): Promise<void> {
-  const spec = helpdeskTicketingFixture; // will come from DB in a later phase
+  // Read spec from DB column, or fall back to fixture
+  let spec;
+  if (specJson) {
+    try {
+      spec = JSON.parse(specJson);
+    } catch {
+      spec = helpdeskTicketingFixture;
+    }
+  } else {
+    spec = helpdeskTicketingFixture;
+  }
+
   const pipeline = buildPipelineFromSpec(spec, buildId, emitter);
 
   try {
