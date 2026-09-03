@@ -80,6 +80,9 @@ export * from './schemas/blueprint.js';
 // Prompt-to-spec engine (Phase 4)
 export * from './schemas/prompt-spec.js';
 
+// App spec schemas (LLM-generated application specification)
+export * from './schemas/app-spec.js';
+
 // Generation pipeline orchestration (Phase 6 + Phase 7 validation types)
 export {
   GenerationStageName,
