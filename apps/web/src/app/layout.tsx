@@ -43,6 +43,14 @@ export default async function RootLayout({
 
   return (
     <html lang="en">
+      <head>
+        {/* Keyframe animation for the BuildTrace spinner component */}
+        <style
+          dangerouslySetInnerHTML={{
+            __html: '@keyframes spin{to{transform:rotate(360deg)}}',
+          }}
+        />
+      </head>
       <body
         style={{
           fontFamily:
@@ -85,6 +93,9 @@ export default async function RootLayout({
               </a>
               <a href="/tasks" style={{ color: '#0070f3' }}>
                 Tasks
+              </a>
+              <a href="/build" style={{ color: '#0070f3' }}>
+                Build
               </a>
             </nav>
             <UserMenu user={user} />
