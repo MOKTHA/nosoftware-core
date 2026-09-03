@@ -74,9 +74,11 @@ export class GenerateFrontendStage implements GenerationStage {
         'IMPORTANT: Every page that queries the database MUST export `export const dynamic = "force-dynamic";` at the top of the file so Next.js does not try to statically pre-render it at build time.',
         'Create list, detail, and create pages for each entity.',
         'Separate each file with "// FILE: <path>" on its own line.',
-        'Paths are relative to the project root, e.g. app/(dashboard)/tickets/page.tsx.',
+        'Paths are relative to the project root, e.g. app/tickets/page.tsx, app/tickets/[id]/page.tsx.',
+        'Do NOT use route groups like (dashboard) or (auth) — put pages directly under app/.',
         'Do NOT use a src/ directory — there is no src/ folder in this project.',
         'Do NOT generate app/layout.tsx or app/globals.css — they already exist.',
+        'Do NOT generate app/page.tsx — the home page already exists.',
         'Output ONLY TypeScript/TSX. No markdown fences, no explanations, no ```typescript blocks.',
       ].join(' '),
       userPrompt: `Schema:\n${schemaContent}\n\nSpec:\n${JSON.stringify(input.spec, null, 2)}`,
@@ -115,8 +117,12 @@ export class GenerateFrontendStage implements GenerationStage {
         path = path.slice(4);
       }
 
-      // Guard: skip layout/globals that already exist from the scaffold
-      if (path === 'app/layout.tsx' || path === 'app/globals.css') {
+      // Guard: strip route groups like (dashboard), (auth), etc.
+      // These cause Next.js build failures when the group doesn't have its own layout.
+      path = path.replace(/\([^)]+\)\//g, '');
+
+      // Guard: skip layout/globals/home page that already exist from the scaffold
+      if (path === 'app/layout.tsx' || path === 'app/globals.css' || path === 'app/page.tsx') {
         continue;
       }
 

@@ -125,6 +125,14 @@ export class GenerateBackendStage implements GenerationStage {
         path = path.slice(4);
       }
 
+      // Guard: strip route groups like (dashboard), (auth), etc.
+      path = path.replace(/\([^)]+\)\//g, '');
+
+      // Guard: skip scaffold files
+      if (path === 'app/layout.tsx' || path === 'app/globals.css' || path === 'app/page.tsx') {
+        continue;
+      }
+
       if (path && content) {
         // Ensure every API route is force-dynamic so Next.js doesn't
         // try to pre-render routes that query the database at build time.
