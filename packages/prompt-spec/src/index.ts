@@ -2,14 +2,35 @@
  * @heynxt/prompt-spec
  *
  * Prompt-to-spec transformation layer.
- * Defines how natural-language prompts are translated into structured
- * application specifications that agents can execute.
+ * Translates natural-language prompts into structured application
+ * specifications that the generation pipeline can execute.
  *
- * TODO: Define:
- *   - PromptSpec schema (input prompt + context)
- *   - SpecTemplate types (structured output contracts)
- *   - Validation rules for generated specs
- *   - Integration points with blueprint registry
+ * Exports:
+ *   generateSpecTemplate  — LLM-backed spec generator (OpenRouter)
+ *   GenerateSpecInput     — input type for generateSpecTemplate
+ *   helpdeskTicketingFixture — hardcoded fixture for testing
+ *
+ * Re-exports from @heynxt/core-types:
+ *   AppSpec, AppSpecTemplate, AppBlueprintPlan,
+ *   FieldType, EntityField, Entity,
+ *   BusinessRule, UiRequirements
  */
 
-export {};
+// Spec generator
+export { generateSpecTemplate } from './generate.js';
+export type { GenerateSpecInput } from './generate.js';
+
+// Fixtures
+export { helpdeskTicketingFixture } from './fixtures/helpdesk-ticketing.js';
+
+// Re-export app-spec types from core-types for convenience
+export {
+  FieldType,
+  EntityField,
+  Entity,
+  BusinessRule,
+  UiRequirements,
+  AppSpec,
+  AppBlueprintPlan,
+  AppSpecTemplate,
+} from '@heynxt/core-types';
