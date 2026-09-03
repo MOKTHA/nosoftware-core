@@ -102,7 +102,6 @@ export class ResolveBlueprintPlanStage implements GenerationStage {
    * Auto-detect domain from spec content.
    */
   private detectDomain(spec: Record<string, unknown>): string {
-    const description = (spec.description as string) ?? '';
     const keywords = Object.values(spec).join(' ').toLowerCase();
 
     if (keywords.includes('pcb') || keywords.includes('electronics')) {
@@ -113,10 +112,19 @@ export class ResolveBlueprintPlanStage implements GenerationStage {
       return 'quality';
     } else if (keywords.includes('analytics') || keywords.includes('oee')) {
       return 'analytics';
+    } else if (keywords.includes('task') || keywords.includes('project')) {
+      return 'tasks';
+    } else if (keywords.includes('user') || keywords.includes('customer')) {
+      return 'users';
+    } else if (keywords.includes('order') || keywords.includes('booking')) {
+      return 'orders';
+    } else if (keywords.includes('product') || keywords.includes('inventory')) {
+      return 'products';
     }
 
-    // Default to extrusion as the primary domain
-    return 'extrusion';
+    const appName = (spec['appName'] as string) ?? '';
+    if (appName) return appName.toLowerCase().replace(/[^a-z]+/g, '-').replace(/^-|-$/g, '') || 'general';
+    return 'general';
   }
 
   /**

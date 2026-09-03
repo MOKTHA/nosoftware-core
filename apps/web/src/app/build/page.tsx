@@ -2,7 +2,7 @@
  * /build — Prompt-driven build page.
  *
  * UI modeled on vercel-labs/coding-agent-template:
- *   - "Hey NXT, build MES" hero with rotating industry words
+ *   - "Hey NXT, build anything" hero prompt
  *   - "+ Start Building" and "View Projects" CTA buttons
  *   - Centered rounded prompt form with textarea + circular submit
  *   - Conversational thread with sticky user cards

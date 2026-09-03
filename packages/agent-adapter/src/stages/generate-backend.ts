@@ -322,10 +322,22 @@ export class GenerateBackendStage implements GenerationStage {
 
   private detectDomain(spec: Record<string, unknown>): string {
     const keywords = Object.values(spec).join(' ').toLowerCase();
+    // Industrial domains
     if (keywords.includes('pcb') || keywords.includes('electronics')) return 'pcb';
     if (keywords.includes('extrusion') || keywords.includes('aluminum')) return 'extrusion';
     if (keywords.includes('quality') || keywords.includes('inspection')) return 'quality';
-    return 'extrusion';
+    // Generic domains
+    if (keywords.includes('task') || keywords.includes('project')) return 'tasks';
+    if (keywords.includes('user') || keywords.includes('customer')) return 'users';
+    if (keywords.includes('order') || keywords.includes('booking')) return 'orders';
+    if (keywords.includes('product') || keywords.includes('inventory')) return 'products';
+    // Fallback: extract from appName or spec
+    const appName = (spec['appName'] as string) ?? '';
+    if (appName) {
+      const slug = appName.toLowerCase().replace(/[^a-z]+/g, '-').replace(/^-|-$/g, '');
+      return slug || 'items';
+    }
+    return 'items';
   }
 
   private async computeHash(content: string): Promise<string> {

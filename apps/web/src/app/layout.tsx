@@ -20,9 +20,9 @@ import { UserMenu } from '@/components/UserMenu';
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'NoSoftware — Industrial AI App Builder',
+  title: 'NoSoftware — AI App Builder',
   description:
-    'Control plane for NoSoftware: blueprints, generation runs, and industrial applications.',
+    'Build production-ready web apps from a single prompt. NoSoftware generates, deploys, and manages your application.',
 };
 
 export default async function RootLayout({

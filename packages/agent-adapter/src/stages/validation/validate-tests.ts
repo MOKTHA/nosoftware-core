@@ -261,7 +261,6 @@ export class ValidateTestsStage implements ValidationStage {
    * Auto-detect domain from spec content.
    */
   private detectDomain(spec: Record<string, unknown>): string {
-    const description = (spec.description as string) ?? '';
     const keywords = Object.values(spec).join(' ').toLowerCase();
 
     if (keywords.includes('pcb') || keywords.includes('electronics')) {
@@ -270,10 +269,19 @@ export class ValidateTestsStage implements ValidationStage {
       return 'Extrusion';
     } else if (keywords.includes('quality') || keywords.includes('inspection')) {
       return 'Quality';
+    } else if (keywords.includes('task') || keywords.includes('project')) {
+      return 'Tasks';
+    } else if (keywords.includes('user') || keywords.includes('customer')) {
+      return 'Users';
+    } else if (keywords.includes('order') || keywords.includes('booking')) {
+      return 'Orders';
+    } else if (keywords.includes('product') || keywords.includes('inventory')) {
+      return 'Products';
     }
 
-    // Default to extrusion as the primary domain
-    return 'Extrusion';
+    const appName = (spec['appName'] as string) ?? '';
+    if (appName) return appName.charAt(0).toUpperCase() + appName.slice(1).toLowerCase();
+    return 'App';
   }
 
   /**

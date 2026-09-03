@@ -248,7 +248,7 @@ export function CreateTaskForm() {
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           required
-          placeholder="e.g. Draft extrusion routing builder"
+          placeholder="e.g. Build a booking dashboard"
           style={inputStyle}
         />
         {fieldErrors.title && (
