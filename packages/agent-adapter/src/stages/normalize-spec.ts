@@ -79,7 +79,9 @@ export class NormalizeSpecStage implements GenerationStage {
         DATABASE_URL: databaseUrl,
         NEXTAUTH_SECRET: nextauthSecret,
         OPENROUTER_API_KEY: process.env['OPENROUTER_API_KEY'] ?? '',
-        NODE_ENV: 'production',
+        // Don't set NODE_ENV=production here — it causes `npm install` to
+        // skip devDependencies (drizzle-kit, tailwindcss, typescript, etc.).
+        // `next build` sets NODE_ENV=production internally when it runs.
       },
     });
 

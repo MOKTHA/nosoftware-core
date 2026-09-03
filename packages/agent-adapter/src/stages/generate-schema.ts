@@ -60,24 +60,33 @@ export class GenerateSchemaStage implements GenerationStage {
 
     const session = await SandboxSession.resume(this.ctx!.sessionId!);
 
-    const schemaCode = await callOpenRouter({
+    const rawSchema = await callOpenRouter({
       model: 'anthropic/claude-sonnet-4',
       systemPrompt: [
         'You are a Drizzle ORM schema generator for PostgreSQL.',
         'Output ONLY valid TypeScript for a single lib/schema.ts file.',
         'Use pgTable from drizzle-orm/pg-core. Include id, createdAt, updatedAt columns on every table.',
         'Import { pgTable, text, integer, boolean, timestamp, uuid } from "drizzle-orm/pg-core".',
-        'Export every table. No markdown fences, no explanations.',
+        'Export every table. No markdown fences, no explanations, no ```typescript blocks.',
       ].join(' '),
       userPrompt: `Generate a Drizzle ORM schema for these entities:\n${JSON.stringify(input.spec, null, 2)}`,
     });
 
+    // Strip markdown fences the LLM may wrap output in
+    const schemaCode = rawSchema.replace(/^```[a-z]*\n?/gm, '').replace(/```$/gm, '').trim();
+
     await session.writeFile('/workspace/app/lib/schema.ts', schemaCode);
 
-    // Run migration
-    await session.runCommand('npx', ['drizzle-kit', 'push'], {
+    // Run migration — fail loudly if it doesn't work
+    const pushResult = await session.runCommand('npx', ['drizzle-kit', 'push'], {
       cwd: '/workspace/app',
     });
+
+    if (pushResult.exitCode !== 0) {
+      throw new Error(
+        `drizzle-kit push failed (exit ${pushResult.exitCode}):\n${pushResult.stderr || pushResult.stdout}`,
+      );
+    }
 
     if (this.ctx) {
       this.ctx.schemaGenerated = true;

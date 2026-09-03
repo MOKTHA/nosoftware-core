@@ -69,14 +69,39 @@ export class GenerateDeploymentStage implements GenerationStage {
 
     const session = await SandboxSession.resume(this.ctx!.sessionId!);
 
+    // Detect project root: find the package.json that has "next" as a dep
+    const findResult = await session.runCommand(
+      'find',
+      ['/workspace/app', '-maxdepth', '3', '-name', 'package.json', '-not', '-path', '*/node_modules/*'],
+      {},
+    );
+    const pkgPaths = findResult.stdout.trim().split('\n').filter(Boolean).sort((a, b) => a.length - b.length);
+    let projectRoot = '/workspace/app';
+    for (const pkgPath of pkgPaths) {
+      try {
+        const content = await session.readFile(pkgPath);
+        const pkg = JSON.parse(content) as Record<string, unknown>;
+        const deps = {
+          ...(pkg['dependencies'] as Record<string, string> ?? {}),
+          ...(pkg['devDependencies'] as Record<string, string> ?? {}),
+        };
+        if ('next' in deps) {
+          projectRoot = pkgPath.replace(/\/package\.json$/, '');
+          break;
+        }
+      } catch {
+        // skip
+      }
+    }
+
     const result = await session.runCommand('npm', ['run', 'build'], {
-      cwd: '/workspace/app',
+      cwd: projectRoot,
     });
 
     if (result.exitCode !== 0) {
       return {
         success: false,
-        error: result.stderr || `Build exited with code ${result.exitCode}`,
+        error: result.stderr || result.stdout.slice(-500) || `Build exited with code ${result.exitCode}`,
       };
     }
 

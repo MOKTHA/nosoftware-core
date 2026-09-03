@@ -71,10 +71,13 @@ export class GenerateFrontendStage implements GenerationStage {
         'You are a Next.js 15 App Router page generator using React Server Components.',
         'Generate pages using Tailwind CSS for styling.',
         'Import db from "@/lib/db" and tables from "@/lib/schema" for server-side queries.',
+        'IMPORTANT: Every page that queries the database MUST export `export const dynamic = "force-dynamic";` at the top of the file so Next.js does not try to statically pre-render it at build time.',
         'Create list, detail, and create pages for each entity.',
         'Separate each file with "// FILE: <path>" on its own line.',
-        'Paths are relative to the app directory, e.g. app/(dashboard)/tickets/page.tsx.',
-        'Output ONLY TypeScript/TSX. No markdown fences, no explanations.',
+        'Paths are relative to the project root, e.g. app/(dashboard)/tickets/page.tsx.',
+        'Do NOT use a src/ directory — there is no src/ folder in this project.',
+        'Do NOT generate app/layout.tsx or app/globals.css — they already exist.',
+        'Output ONLY TypeScript/TSX. No markdown fences, no explanations, no ```typescript blocks.',
       ].join(' '),
       userPrompt: `Schema:\n${schemaContent}\n\nSpec:\n${JSON.stringify(input.spec, null, 2)}`,
     });
@@ -89,7 +92,14 @@ export class GenerateFrontendStage implements GenerationStage {
     }
   }
 
-  private parseMultiFileOutput(output: string): Map<string, string> {
+  /**
+   * Parse LLM output that uses "// FILE: <path>" separators.
+   * Strips markdown fences and normalises paths (removes leading src/).
+   */
+  private parseMultiFileOutput(raw: string): Map<string, string> {
+    // Strip markdown fences the LLM may wrap output in
+    const output = raw.replace(/^```[a-z]*\n?/gm, '').replace(/```$/gm, '');
+
     const files = new Map<string, string>();
     const parts = output.split(/^\/\/\s*FILE:\s*/m);
 
@@ -97,10 +107,27 @@ export class GenerateFrontendStage implements GenerationStage {
       if (!part.trim()) continue;
       const newlineIdx = part.indexOf('\n');
       if (newlineIdx === -1) continue;
-      const path = part.slice(0, newlineIdx).trim();
+      let path = part.slice(0, newlineIdx).trim();
       const content = part.slice(newlineIdx + 1).trim();
+
+      // Guard: strip leading src/ if the LLM used it despite instructions
+      if (path.startsWith('src/')) {
+        path = path.slice(4);
+      }
+
+      // Guard: skip layout/globals that already exist from the scaffold
+      if (path === 'app/layout.tsx' || path === 'app/globals.css') {
+        continue;
+      }
+
       if (path && content) {
-        files.set(path, content);
+        // Ensure every page is force-dynamic so Next.js doesn't try to
+        // statically pre-render pages that query the database at build time.
+        const dynamicExport = 'export const dynamic = "force-dynamic";';
+        const finalContent = content.includes('force-dynamic')
+          ? content
+          : `${dynamicExport}\n\n${content}`;
+        files.set(path, finalContent);
       }
     }
     return files;
