@@ -332,7 +332,7 @@ export class DefaultGenerationPipeline implements GenerationPipeline {
   }
 
   async collect(): Promise<GenerationPipelineExecution> {
-    while (!['succeeded', 'failed', 'partial'].includes(this._status)) {
+    while (!['succeeded', 'failed', 'partial', 'cancelled'].includes(this._status)) {
       await new Promise(resolve => setTimeout(resolve, 100));
     }
 

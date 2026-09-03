@@ -65,3 +65,15 @@ export type { SpecValidationResult } from './spec-validator.js';
 
 // Pipeline factory
 export { buildPipelineFromSpec } from './pipeline-factory.js';
+
+// Pipeline context (Phase 5) — shared mutable state between stages
+export { createPipelineContext } from './pipeline-context.js';
+export type { PipelineContext } from './pipeline-context.js';
+
+// OpenRouter LLM helper (Phase 5)
+export { callOpenRouter } from './llm.js';
+export type { OpenRouterCallOptions } from './llm.js';
+
+// SSE build event streaming (Phase 5)
+export { BuildEventEmitter } from './sse.js';
+export type { BuildEvent } from './sse.js';

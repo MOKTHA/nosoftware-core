@@ -1,32 +1,54 @@
 /**
- * @heynxt/agent-adapter — Stage 9: Generate Deployment (Phase 6)
+ * @heynxt/agent-adapter — Stage 9: Generate Deployment / Verify Build (Phase 5)
  *
- * Generates deployment metadata: Dockerfile, env config, health checks.
+ * Stub mode: generates deployment artifact metadata (Dockerfile, env, etc.).
+ *
+ * Live mode (sandbox available): runs `npm run build` inside the sandbox
+ * and stops the sandbox session on completion.
+ *
+ * Context reads:  sessionId
+ * Context writes: buildVerified
  */
 
 import type { GenerationStage, GenerationStageInput, GenerationStageOutput } from '../generation-pipeline.js';
+import type { PipelineContext } from '../pipeline-context.js';
 
 export class GenerateDeploymentStage implements GenerationStage {
   readonly name = 'generate-deployment' as const;
   readonly description = 'Generate deployment metadata → Dockerfile, env config, health checks';
 
+  constructor(private readonly ctx?: PipelineContext) {}
+
   validateInput(input: GenerationStageInput): boolean {
-    // Need spec and generated artifacts to create deployment config
     return input.spec !== undefined && Object.keys(input.spec).length > 0;
   }
 
   async execute(input: GenerationStageInput): Promise<GenerationStageOutput> {
-    const inputHash = await this.computeHash(JSON.stringify({
-      spec: input.spec,
-      blueprintPlan: input.blueprintPlan ?? null,
-      params: input.params,
-    }));
+    const inputHash = await this.computeHash(
+      JSON.stringify({
+        spec: input.spec,
+        blueprintPlan: input.blueprintPlan ?? null,
+        params: input.params,
+      }),
+    );
 
-    // Generate deployment artifacts based on domain requirements
+    const warnings: string[] = [];
+
+    // Live mode: run production build in sandbox, then stop
+    if (
+      this.ctx?.sessionId &&
+      process.env['NEON_API_KEY']
+    ) {
+      const buildResult = await this.verifyBuildInSandbox();
+      if (!buildResult.success) {
+        warnings.push(`Build verification failed: ${buildResult.error}`);
+      }
+    }
+
     const artifacts = this.generateDeploymentArtifacts(
       input.spec,
       input.blueprintPlan ?? null,
-      input.params
+      input.params,
     );
 
     return {
@@ -34,21 +56,53 @@ export class GenerateDeploymentStage implements GenerationStage {
       outputHash: inputHash,
       artifacts,
       summary: `Generated ${artifacts.length} deployment configuration files`,
-      warnings: [],
+      warnings,
     };
   }
 
-  /**
-   * Generate deployment artifacts.
-   */
+  /* ------------------------------------------------------------------ */
+  /*  Live mode: build verification + cleanup                          */
+  /* ------------------------------------------------------------------ */
+
+  private async verifyBuildInSandbox(): Promise<{ success: boolean; error?: string }> {
+    const { SandboxSession } = await import('@heynxt/sandbox');
+
+    const session = await SandboxSession.resume(this.ctx!.sessionId!);
+
+    try {
+      const result = await session.runCommand('npm', ['run', 'build'], {
+        cwd: '/workspace/app',
+      });
+
+      if (result.exitCode !== 0) {
+        return {
+          success: false,
+          error: result.stderr || `Build exited with code ${result.exitCode}`,
+        };
+      }
+
+      if (this.ctx) {
+        this.ctx.buildVerified = true;
+      }
+
+      return { success: true };
+    } finally {
+      // Always stop the sandbox when the pipeline is done
+      await session.stop();
+    }
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  Stub artifact generation (always runs)                            */
+  /* ------------------------------------------------------------------ */
+
   private generateDeploymentArtifacts(
     spec: Record<string, unknown>,
     blueprintPlan: Record<string, unknown> | null,
-    params: Record<string, unknown>
+    params: Record<string, unknown>,
   ): Array<import('@heynxt/core-types').GenerationArtifact> {
     const artifacts: Array<import('@heynxt/core-types').GenerationArtifact> = [];
 
-    // Generate Dockerfile based on domain requirements
     const dockerConfig = this.generateDockerFile(spec);
     artifacts.push({
       id: crypto.randomUUID(),
@@ -63,7 +117,6 @@ export class GenerateDeploymentStage implements GenerationStage {
       createdAt: new Date(),
     });
 
-    // Generate environment configuration
     const envConfigs = this.generateEnvConfig(spec);
     for (const config of envConfigs) {
       artifacts.push({
@@ -80,8 +133,7 @@ export class GenerateDeploymentStage implements GenerationStage {
       });
     }
 
-    // Generate health check configuration
-    const healthConfig = this.generateHealthCheck(spec);
+    const healthConfig = this.generateHealthCheck();
     artifacts.push({
       id: crypto.randomUUID(),
       generationRunId: '00000000-0000-0000-0000-000000000000',
@@ -95,7 +147,6 @@ export class GenerateDeploymentStage implements GenerationStage {
       createdAt: new Date(),
     });
 
-    // Generate docker-compose for development
     const composeConfig = this.generateDockerCompose(spec);
     artifacts.push({
       id: crypto.randomUUID(),
@@ -110,7 +161,6 @@ export class GenerateDeploymentStage implements GenerationStage {
       createdAt: new Date(),
     });
 
-    // Generate deployment manifest for cloud platforms
     const deploymentManifest = this.generateDeploymentManifest(spec);
     artifacts.push({
       id: crypto.randomUUID(),
@@ -128,98 +178,50 @@ export class GenerateDeploymentStage implements GenerationStage {
     return artifacts;
   }
 
-  /**
-   * Generate Dockerfile based on domain.
-   */
   private generateDockerFile(spec: Record<string, unknown>): { path: string; description: string } {
     const domain = this.detectDomain(spec);
     const isProduction = (spec.productionMode as boolean) ?? false;
-
     return {
       path: isProduction ? 'Dockerfile.prod' : 'Dockerfile',
       description: `Multi-stage Docker build for ${domain} application`,
     };
   }
 
-  /**
-   * Generate environment configuration files.
-   */
   private generateEnvConfig(spec: Record<string, unknown>): Array<{ path: string; description: string }> {
     const domain = this.detectDomain(spec);
-
     return [
-      {
-        path: `.env.example`,
-        description: `Example environment variables for ${domain} app`,
-      },
-      {
-        path: '.env.local',
-        description: 'Local development environment configuration',
-      },
-      {
-        path: 'config/database.json',
-        description: 'Database connection configuration',
-      },
+      { path: '.env.example', description: `Example environment variables for ${domain} app` },
+      { path: '.env.local', description: 'Local development environment configuration' },
+      { path: 'config/database.json', description: 'Database connection configuration' },
     ];
   }
 
-  /**
-   * Generate health check configuration.
-   */
-  private generateHealthCheck(spec: Record<string, unknown>): { path: string; description: string } {
-    return {
-      path: 'healthcheck.sh',
-      description: 'Container health check script',
-    };
+  private generateHealthCheck(): { path: string; description: string } {
+    return { path: 'healthcheck.sh', description: 'Container health check script' };
   }
 
-  /**
-   * Generate docker-compose for development.
-   */
   private generateDockerCompose(spec: Record<string, unknown>): { path: string; description: string } {
     const domain = this.detectDomain(spec);
-
-    return {
-      path: 'docker-compose.dev.yml',
-      description: `Development environment with ${domain} app and database`,
-    };
+    return { path: 'docker-compose.dev.yml', description: `Development environment with ${domain} app and database` };
   }
 
-  /**
-   * Generate deployment manifest for cloud platforms.
-   */
   private generateDeploymentManifest(spec: Record<string, unknown>): { path: string; description: string } {
     const domain = this.detectDomain(spec);
     const targetPlatform = (spec.deploymentTarget as string) ?? 'vercel';
-
     return {
       path: `deployment/${targetPlatform}-manifest.json`,
       description: `${this.capitalize(targetPlatform)} deployment configuration for ${domain}`,
     };
   }
 
-  /**
-   * Auto-detect domain from spec content.
-   */
   private detectDomain(spec: Record<string, unknown>): string {
-    const description = (spec.description as string) ?? '';
     const keywords = Object.values(spec).join(' ').toLowerCase();
-
-    if (keywords.includes('pcb') || keywords.includes('electronics')) {
-      return 'pcb';
-    } else if (keywords.includes('extrusion') || keywords.includes('aluminum')) {
-      return 'extrusion';
-    } else if (keywords.includes('quality') || keywords.includes('inspection')) {
-      return 'quality';
-    }
-
-    // Default to extrusion as the primary domain
+    if (keywords.includes('pcb') || keywords.includes('electronics')) return 'pcb';
+    if (keywords.includes('extrusion') || keywords.includes('aluminum')) return 'extrusion';
+    if (keywords.includes('quality') || keywords.includes('inspection')) return 'quality';
     return 'extrusion';
   }
 
-  /**
-   * Compute content hash for traceability.
-   */
   private async computeHash(content: string): Promise<string> {
     const encoder = new TextEncoder();
     const data = encoder.encode(content);

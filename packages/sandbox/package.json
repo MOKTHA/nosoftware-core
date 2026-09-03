@@ -1,5 +1,5 @@
 {
-  "name": "@heynxt/agent-adapter",
+  "name": "@heynxt/sandbox",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -14,24 +14,14 @@
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
-    "test:watch": "vitest",
     "lint": "echo 'TODO: add linter'",
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@heynxt/core-types": "workspace:*",
-    "@heynxt/prompt-spec": "workspace:*",
-    "@heynxt/sandbox": "workspace:*",
-    "@octokit/rest": "^21.1.1",
-    "@octokit/types": "^16.0.0",
-    "@octokit/webhooks-types": "^7.0.0",
-    "zod": "^3.23.0"
+    "@vercel/sandbox": "^3.2.1"
   },
   "devDependencies": {
     "@types/node": "^20.19.43",
-    "execa": "^9.6.1",
-    "typescript": "^5.5.0",
-    "vitest": "^2.0.0"
+    "typescript": "^5.5.0"
   }
 }

@@ -1,36 +1,45 @@
 /**
- * @heynxt/agent-adapter — Stage 1: Normalize Spec (Phase 6)
+ * @heynxt/agent-adapter — Stage 1: Normalize Spec / Setup Sandbox (Phase 6)
  *
- * Transforms input spec into canonical form with resolved references.
+ * In stub mode (no sandbox dependency): normalizes the input spec into
+ * canonical form with resolved references — the original Phase 6 behaviour.
+ *
+ * In live mode (sandbox + Neon available): provisions a Neon database,
+ * creates a Vercel Sandbox, and writes the Next.js scaffold into it.
+ *
+ * Context keys written: sessionId, databaseUrl, databaseId
  */
 
 import type { GenerationStage, GenerationStageInput, GenerationStageOutput } from '../generation-pipeline.js';
+import type { PipelineContext } from '../pipeline-context.js';
 
 export class NormalizeSpecStage implements GenerationStage {
   readonly name = 'normalize-spec' as const;
   readonly description = 'Normalize spec → canonical form, resolved references';
 
+  constructor(private readonly ctx?: PipelineContext) {}
+
   validateInput(input: GenerationStageInput): boolean {
-    // Must have a spec to normalize
     return input.spec !== undefined && Object.keys(input.spec).length > 0;
   }
 
   async execute(input: GenerationStageInput): Promise<GenerationStageOutput> {
-    const startTime = Date.now();
-
-    // Normalize the spec into canonical form
     const normalizedSpec = this.normalizeSpec(input.spec);
-
-    // Compute input hash for traceability
     const inputHash = await this.computeHash(JSON.stringify(normalizedSpec));
+
+    // If sandbox dependencies are available and context is provided,
+    // provision infrastructure. Otherwise fall back to stub behaviour.
+    if (this.ctx && process.env['NEON_API_KEY'] && process.env['OPENROUTER_API_KEY']) {
+      await this.provisionSandbox(input);
+    }
 
     return {
       inputHash,
-      outputHash: inputHash, // Same hash since we're normalizing in place
+      outputHash: inputHash,
       artifacts: [
         {
           id: crypto.randomUUID(),
-          generationRunId: '00000000-0000-0000-0000-000000000000', // Set by caller
+          generationRunId: '00000000-0000-0000-0000-000000000000',
           stageName: this.name,
           kind: 'summary' as const,
           relativePath: 'canonical/spec.json',
@@ -47,46 +56,55 @@ export class NormalizeSpecStage implements GenerationStage {
   }
 
   /**
-   * Normalize a spec into canonical form.
-   * - Resolves references to external resources (blueprints, templates)
-   * - Fills in defaults for missing required fields
-   * - Validates structure against expected schema
+   * Provision a Neon database and Vercel Sandbox, then write the scaffold.
+   * Writes sessionId, databaseUrl, databaseId to the shared pipeline context.
    */
+  private async provisionSandbox(input: GenerationStageInput): Promise<void> {
+    // Dynamic imports to avoid hard dependency on @heynxt/sandbox
+    const { provisionDatabase, SandboxSession, writeNextJsScaffold } =
+      await import('@heynxt/sandbox');
+
+    const appId = (input.spec['appId'] as string) ?? crypto.randomUUID();
+    const appName = (input.spec['appName'] as string) ?? 'heynxt-app';
+    const sessionId = `build-${appId}`;
+
+    const { databaseUrl, databaseId } = await provisionDatabase(appId);
+
+    const session = await SandboxSession.create({
+      sessionId,
+      env: {
+        DATABASE_URL: databaseUrl,
+        NEXTAUTH_SECRET: crypto.randomUUID(),
+        OPENROUTER_API_KEY: process.env['OPENROUTER_API_KEY'] ?? '',
+        NODE_ENV: 'production',
+      },
+    });
+
+    await writeNextJsScaffold(session, appName);
+
+    // Write to shared context for downstream stages
+    if (this.ctx) {
+      this.ctx.sessionId = sessionId;
+      this.ctx.databaseUrl = databaseUrl;
+      this.ctx.databaseId = databaseId;
+    }
+  }
+
   private normalizeSpec(spec: Record<string, unknown>): Record<string, unknown> {
     const normalized = { ...spec };
-
-    // Ensure timestamp is present
-    if (!normalized.metadata) {
-      normalized.metadata = {};
+    if (!normalized['metadata']) {
+      normalized['metadata'] = {};
     }
-
-    const meta = normalized.metadata as Record<string, unknown>;
-    if (!meta.normalizedAt) {
-      meta.normalizedAt = new Date().toISOString();
+    const meta = normalized['metadata'] as Record<string, unknown>;
+    if (!meta['normalizedAt']) {
+      meta['normalizedAt'] = new Date().toISOString();
     }
-
-    // Resolve any external references (e.g., blueprint IDs to full objects)
-    if (normalized.references) {
-      normalized.resolvedReferences = this.resolveReferences(
-        normalized.references as Record<string, unknown>
-      );
+    if (normalized['references']) {
+      normalized['resolvedReferences'] = { ...(normalized['references'] as Record<string, unknown>) };
     }
-
     return normalized;
   }
 
-  /**
-   * Resolve external references in the spec.
-   */
-  private resolveReferences(references: Record<string, unknown>): Record<string, unknown> {
-    // In a full implementation, this would fetch referenced blueprints/templates
-    // For now, we just mark them as resolved
-    return { ...references };
-  }
-
-  /**
-   * Compute content hash for traceability.
-   */
   private async computeHash(content: string): Promise<string> {
     const encoder = new TextEncoder();
     const data = encoder.encode(content);

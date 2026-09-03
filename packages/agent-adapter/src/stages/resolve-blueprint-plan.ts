@@ -5,10 +5,13 @@
  */
 
 import type { GenerationStage, GenerationStageInput, GenerationStageOutput } from '../generation-pipeline.js';
+import type { PipelineContext } from '../pipeline-context.js';
 
 export class ResolveBlueprintPlanStage implements GenerationStage {
   readonly name = 'resolve-blueprint-plan' as const;
   readonly description = 'Resolve blueprint composition → final snapshot';
+
+  constructor(private readonly ctx?: PipelineContext) {}
 
   validateInput(input: GenerationStageInput): boolean {
     // Must have a normalized spec and optionally an existing plan to resolve
