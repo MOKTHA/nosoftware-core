@@ -227,7 +227,7 @@ export async function pollDeployment(
 ): Promise<string> {
   const config = getConfig();
   const intervalMs = opts.intervalMs ?? 5000;
-  const maxAttempts = opts.maxAttempts ?? 36; // 3 minutes max
+  const maxAttempts = opts.maxAttempts ?? 72; // 6 minutes max (first builds include npm install)
 
   for (let i = 0; i < maxAttempts; i++) {
     const res = await fetch(
@@ -239,13 +239,22 @@ export async function pollDeployment(
       throw new Error(`Failed to poll deployment: ${await res.text()}`);
     }
 
-    const data = (await res.json()) as { readyState: string; url: string };
+    const data = (await res.json()) as {
+      readyState: string;
+      url: string;
+      errorMessage?: string;
+      errorCode?: string;
+    };
 
     if (data.readyState === 'READY') return `https://${data.url}`;
-    if (data.readyState === 'ERROR') throw new Error('Vercel deployment failed');
+    if (data.readyState === 'ERROR') {
+      const msg = data.errorMessage ?? 'unknown error';
+      const code = data.errorCode ? ` [${data.errorCode}]` : '';
+      throw new Error(`Vercel deployment failed${code}: ${msg}`);
+    }
 
     await new Promise((resolve) => setTimeout(resolve, intervalMs));
   }
 
-  throw new Error('Deployment timed out after 3 minutes');
+  throw new Error('Deployment timed out after 6 minutes');
 }

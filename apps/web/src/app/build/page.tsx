@@ -143,11 +143,11 @@ export default function BuildPage() {
                 border: 'none',
                 borderRadius: '0.5rem',
               }}
-              title="Deployed app preview"
+              title="Generated app preview"
             />
           ) : (
             <p style={{ color: '#999', fontSize: '0.875rem' }}>
-              App preview loads here after build
+              {buildId ? 'Building your app...' : 'App preview loads here after build'}
             </p>
           )}
         </div>

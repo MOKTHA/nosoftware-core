@@ -108,13 +108,20 @@ export class DeployToVercelStage implements GenerationStage {
     const fileRefs = await uploadProjectFiles(projectFiles);
 
     // 5. Create the deployment
+    this.emitter?.emit('deploy-to-vercel', 'running', `Creating Vercel deployment (${fileRefs.length} files)...`);
     const deployment = await createVercelDeployment(project.id, project.name, fileRefs);
 
     // 6. Poll until the deployment is live
-    this.emitter?.emit('deploy-to-vercel', 'running', 'Waiting for deployment to go live...');
-    const deployedUrl = await pollDeployment(deployment.id);
+    this.emitter?.emit('deploy-to-vercel', 'running', 'Waiting for Vercel build to complete...');
+    let deployedUrl: string;
+    try {
+      deployedUrl = await pollDeployment(deployment.id);
+    } catch (pollError) {
+      // Don't delete sandbox on deploy failure — aids debugging
+      throw pollError;
+    }
 
-    // 7. Delete the sandbox — no longer needed
+    // 7. Delete the sandbox — no longer needed (deployment succeeded)
     await session.delete();
 
     // 8. Write to shared context for downstream consumers

@@ -81,9 +81,12 @@ export class GenerateBackendStage implements GenerationStage {
         'Output ONLY TypeScript. Create one file per entity with GET (list+single), POST, PATCH, DELETE.',
         'Import db from "@/lib/db" and tables from "@/lib/schema".',
         'Use NextRequest/NextResponse from "next/server".',
+        'IMPORTANT: Every route file MUST export `export const dynamic = "force-dynamic";` at the top so Next.js does not cache or pre-render it.',
         'Separate each file with "// FILE: <path>" on its own line.',
-        'Paths are relative to the app directory, e.g. app/api/tickets/route.ts.',
-        'No markdown fences, no explanations.',
+        'Paths are relative to the project root, e.g. app/api/tickets/route.ts.',
+        'Do NOT use a src/ directory — there is no src/ folder in this project.',
+        'Do NOT generate app/layout.tsx — it already exists.',
+        'No markdown fences, no explanations, no ```typescript blocks.',
       ].join(' '),
       userPrompt: `Schema:\n${schemaContent}\n\nSpec:\n${JSON.stringify(input.spec, null, 2)}`,
     });
@@ -101,8 +104,12 @@ export class GenerateBackendStage implements GenerationStage {
 
   /**
    * Parse LLM output that uses "// FILE: <path>" separators.
+   * Strips markdown fences and normalises paths (removes leading src/).
    */
-  private parseMultiFileOutput(output: string): Map<string, string> {
+  private parseMultiFileOutput(raw: string): Map<string, string> {
+    // Strip markdown fences the LLM may wrap output in
+    const output = raw.replace(/^```[a-z]*\n?/gm, '').replace(/```$/gm, '');
+
     const files = new Map<string, string>();
     const parts = output.split(/^\/\/\s*FILE:\s*/m);
 
@@ -110,10 +117,22 @@ export class GenerateBackendStage implements GenerationStage {
       if (!part.trim()) continue;
       const newlineIdx = part.indexOf('\n');
       if (newlineIdx === -1) continue;
-      const path = part.slice(0, newlineIdx).trim();
+      let path = part.slice(0, newlineIdx).trim();
       const content = part.slice(newlineIdx + 1).trim();
+
+      // Guard: strip leading src/ if the LLM used it despite instructions
+      if (path.startsWith('src/')) {
+        path = path.slice(4);
+      }
+
       if (path && content) {
-        files.set(path, content);
+        // Ensure every API route is force-dynamic so Next.js doesn't
+        // try to pre-render routes that query the database at build time.
+        const dynamicExport = 'export const dynamic = "force-dynamic";';
+        const finalContent = content.includes('force-dynamic')
+          ? content
+          : `${dynamicExport}\n\n${content}`;
+        files.set(path, finalContent);
       }
     }
     return files;
