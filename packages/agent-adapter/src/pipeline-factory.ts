@@ -81,7 +81,10 @@ export function buildPipelineFromSpec(
     .addRequiredStage('normalize-spec')
     .addRequiredStage('resolve-blueprint-plan')
     .addRequiredStage('generate-schema')
-    .addRequiredStage('generate-permissions');
+    .addRequiredStage('generate-permissions')
+    .addRequiredStage('generate-backend')
+    .addRequiredStage('generate-frontend')
+    .addRequiredStage('generate-deployment');
 
   // 5. Build and return (pending, not started)
   const pipeline = builder.build({ generationRunId, initialInput });
