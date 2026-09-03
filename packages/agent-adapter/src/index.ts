@@ -51,6 +51,7 @@ export {
   GenerateWorkflowsStage,
   GenerateFixturesTestsStage,
   GenerateDeploymentStage,
+  DeployToVercelStage,
 } from './stages/index.js';
 
 // Re-export core types for stage implementations
@@ -77,3 +78,12 @@ export type { OpenRouterCallOptions } from './llm.js';
 // SSE build event streaming (Phase 5)
 export { BuildEventEmitter } from './sse.js';
 export type { BuildEvent } from './sse.js';
+
+// Vercel deployment API helpers (Phase 6)
+export {
+  createOrGetVercelProject,
+  setVercelProjectEnvVars,
+  uploadProjectFiles,
+  createVercelDeployment,
+  pollDeployment,
+} from './vercel-api.js';

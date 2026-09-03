@@ -27,14 +27,29 @@ import { db } from '@heynxt/persistence';
 
 import { authConfig } from './auth.config';
 
-const nextAuth = NextAuth({
-  ...authConfig,
+/**
+ * Lazy-init the NextAuth instance so that the `DrizzleAdapter(db)`
+ * call (which accesses the `db` proxy and throws when DATABASE_URL
+ * is missing) only runs on the first actual auth call, not at
+ * module-evaluation time. This prevents `next build` and dev-server
+ * startup from crashing when the DB is unreachable.
+ *
+ * The `db` import itself is fine — `@heynxt/persistence` exports a
+ * lazy `Proxy` that doesn't resolve the connection until a property
+ * is accessed. However, `DrizzleAdapter(db)` eagerly reads from it,
+ * so we defer that call into `getNextAuth()`.
+ */
+let _nextAuth: NextAuthResult | null = null;
 
-  // Use our own Drizzle client as the adapter. The Drizzle adapter expects
-  // a client (the PgDatabase instance); we pass it directly so Auth.js
-  // queries go through the same singleton everyone else uses.
-  adapter: DrizzleAdapter(db),
-});
+function getNextAuth(): NextAuthResult {
+  if (!_nextAuth) {
+    _nextAuth = NextAuth({
+      ...authConfig,
+      adapter: DrizzleAdapter(db),
+    });
+  }
+  return _nextAuth;
+}
 
 /**
  * Export auth helpers with explicit NextAuthResult property-type
@@ -49,7 +64,13 @@ const nextAuth = NextAuth({
  * break the inference chain so TS never needs to name the internal
  * type. Do not simplify this without confirming the fix still works.
  */
-export const handlers: NextAuthResult['handlers'] = nextAuth.handlers;
-export const auth: NextAuthResult['auth'] = nextAuth.auth;
-export const signIn: NextAuthResult['signIn'] = nextAuth.signIn;
-export const signOut: NextAuthResult['signOut'] = nextAuth.signOut;
+export const handlers: NextAuthResult['handlers'] = {
+  GET: (...args: Parameters<NextAuthResult['handlers']['GET']>) => getNextAuth().handlers.GET(...args),
+  POST: (...args: Parameters<NextAuthResult['handlers']['POST']>) => getNextAuth().handlers.POST(...args),
+};
+export const auth: NextAuthResult['auth'] = ((...args: Parameters<NextAuthResult['auth']>) =>
+  getNextAuth().auth(...args)) as NextAuthResult['auth'];
+export const signIn: NextAuthResult['signIn'] = (...args: Parameters<NextAuthResult['signIn']>) =>
+  getNextAuth().signIn(...args);
+export const signOut: NextAuthResult['signOut'] = (...args: Parameters<NextAuthResult['signOut']>) =>
+  getNextAuth().signOut(...args);

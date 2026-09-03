@@ -26,7 +26,12 @@ interface StepState {
   expanded: boolean;
 }
 
-export function BuildTrace({ buildId }: { buildId: string }) {
+interface BuildTraceProps {
+  buildId: string;
+  onDeployed?: (url: string) => void;
+}
+
+export function BuildTrace({ buildId, onDeployed }: BuildTraceProps) {
   const [steps, setSteps] = useState<StepState[]>([]);
   const [connected, setConnected] = useState(false);
   const [done, setDone] = useState(false);
@@ -51,6 +56,15 @@ export function BuildTrace({ buildId }: { buildId: string }) {
         updated[idx] = next;
         return updated;
       });
+
+      // Notify parent when a deployed URL is received
+      if (
+        event.step === 'pipeline' &&
+        event.status === 'done' &&
+        event.detail.startsWith('https://')
+      ) {
+        onDeployed?.(event.detail);
+      }
 
       if (
         event.step === 'pipeline' &&

@@ -18,6 +18,8 @@ export interface PipelineContext {
   databaseUrl?: string;
   /** Neon project ID (set by normalize-spec stage). */
   databaseId?: string;
+  /** NEXTAUTH_SECRET injected into the sandbox env (set by normalize-spec stage). */
+  nextauthSecret?: string;
   /** Whether the schema has been generated and migrated. */
   schemaGenerated?: boolean;
   /** Whether backend API routes have been generated. */
@@ -26,6 +28,8 @@ export interface PipelineContext {
   frontendGenerated?: boolean;
   /** Whether the production build passed. */
   buildVerified?: boolean;
+  /** Deployed URL from the deploy-to-vercel stage. */
+  deployedUrl?: string;
   /** Arbitrary extra state. */
   [key: string]: unknown;
 }

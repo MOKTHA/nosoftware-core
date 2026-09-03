@@ -8,8 +8,8 @@
  *   1. Validate the spec via validateSpecTemplate.
  *   2. Construct a CreatePipelineInput.
  *   3. Create a shared PipelineContext (mutable state between stages).
- *   4. Register all 9 generation stages with the context injected.
- *   5. Mark the 4 core stages as required.
+ *   4. Register all 10 generation stages with the context injected.
+ *   5. Mark the 8 core stages as required.
  *   6. Build and return the pipeline (not started).
  */
 
@@ -29,6 +29,7 @@ import {
   GenerateWorkflowsStage,
   GenerateFixturesTestsStage,
   GenerateDeploymentStage,
+  DeployToVercelStage,
 } from './stages/index.js';
 
 /**
@@ -65,7 +66,7 @@ export function buildPipelineFromSpec(
   // 3. Create shared mutable context for inter-stage communication
   const ctx = createPipelineContext();
 
-  // 4. Register all 9 stages with the shared context injected
+  // 4. Register all 10 stages with the shared context injected
   const builder = new DefaultPipelineBuilder();
 
   builder
@@ -78,13 +79,15 @@ export function buildPipelineFromSpec(
     .addStage(new GenerateWorkflowsStage(ctx))
     .addStage(new GenerateFixturesTestsStage(ctx))
     .addStage(new GenerateDeploymentStage(ctx))
+    .addStage(new DeployToVercelStage(ctx, emitter))
     .addRequiredStage('normalize-spec')
     .addRequiredStage('resolve-blueprint-plan')
     .addRequiredStage('generate-schema')
     .addRequiredStage('generate-permissions')
     .addRequiredStage('generate-backend')
     .addRequiredStage('generate-frontend')
-    .addRequiredStage('generate-deployment');
+    .addRequiredStage('generate-deployment')
+    .addRequiredStage('deploy-to-vercel');
 
   // 5. Build and return (pending, not started)
   const pipeline = builder.build({ generationRunId, initialInput });

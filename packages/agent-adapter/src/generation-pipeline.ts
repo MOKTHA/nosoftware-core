@@ -193,7 +193,7 @@ export class DefaultGenerationPipeline implements GenerationPipeline {
     const stageOrderMap = new Map(
       (['normalize-spec', 'resolve-blueprint-plan', 'generate-schema', 'generate-permissions',
         'generate-backend', 'generate-frontend', 'generate-workflows',
-        'generate-fixtures-tests', 'generate-deployment'] as GenerationStageName[]).map((name, idx) => [name, idx])
+        'generate-fixtures-tests', 'generate-deployment', 'deploy-to-vercel'] as GenerationStageName[]).map((name, idx) => [name, idx])
     );
 
     // Run ALL registered stages, not just required ones.

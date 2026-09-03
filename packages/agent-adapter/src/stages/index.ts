@@ -15,6 +15,7 @@ export { GenerateFrontendStage } from './generate-frontend.js';
 export { GenerateWorkflowsStage } from './generate-workflows.js';
 export { GenerateFixturesTestsStage } from './generate-fixtures-tests.js';
 export { GenerateDeploymentStage } from './generate-deployment.js';
+export { DeployToVercelStage } from './deploy-to-vercel.js';
 
 // Phase 7: Validation stage classes - implement GenerationStage interface for validation checks
 export * as ValidationStages from './validation/index.js';

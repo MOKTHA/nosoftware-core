@@ -69,27 +69,24 @@ export class GenerateDeploymentStage implements GenerationStage {
 
     const session = await SandboxSession.resume(this.ctx!.sessionId!);
 
-    try {
-      const result = await session.runCommand('npm', ['run', 'build'], {
-        cwd: '/workspace/app',
-      });
+    const result = await session.runCommand('npm', ['run', 'build'], {
+      cwd: '/workspace/app',
+    });
 
-      if (result.exitCode !== 0) {
-        return {
-          success: false,
-          error: result.stderr || `Build exited with code ${result.exitCode}`,
-        };
-      }
-
-      if (this.ctx) {
-        this.ctx.buildVerified = true;
-      }
-
-      return { success: true };
-    } finally {
-      // Always stop the sandbox when the pipeline is done
-      await session.stop();
+    if (result.exitCode !== 0) {
+      return {
+        success: false,
+        error: result.stderr || `Build exited with code ${result.exitCode}`,
+      };
     }
+
+    if (this.ctx) {
+      this.ctx.buildVerified = true;
+    }
+
+    // Sandbox is NOT stopped here — the deploy-to-vercel stage needs it
+    // to collect project files. It will be deleted after deployment.
+    return { success: true };
   }
 
   /* ------------------------------------------------------------------ */
