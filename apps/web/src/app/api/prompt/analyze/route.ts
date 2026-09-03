@@ -5,6 +5,9 @@
  * calls an LLM to score completeness, and returns clarifying questions
  * if the score is below the threshold.
  *
+ * Hard cap: at most 6 total questions across all rounds. After 6 answered
+ * questions the API forces readyToBuild regardless of score.
+ *
  * Response shape:
  *   { score, message, questions?, readyToBuild, appName }
  */
@@ -13,6 +16,9 @@ import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
+
+/** Hard cap — after this many answered questions, skip straight to build. */
+const MAX_TOTAL_QUESTIONS = 6;
 
 interface AnalyzeRequest {
   prompt: string;
@@ -38,32 +44,46 @@ interface AnalyzeResponse {
   appName: string;
 }
 
-const SYSTEM_PROMPT = `You are a product requirements analyst for an AI app builder platform.
-Your job is to evaluate a user's app description and determine if it has enough detail to generate a working application.
+const SYSTEM_PROMPT = `You are a product requirements analyst for an AI app builder platform that generates industrial applications (MES, ERP, SCADA, CMMS, QMS, WMS, etc.).
 
-Score the prompt from 0-100 based on:
-- 20 pts: Clear app type/purpose
+Your job: evaluate the user's app description and determine if it has enough detail to generate a working application.
+
+## Scoring (0–100)
+- 20 pts: Clear app type / purpose
 - 20 pts: Target users / roles defined
 - 20 pts: Core features / entities described
 - 20 pts: Key workflows or business rules
-- 20 pts: Data relationships or integrations
+- 20 pts: Data model or integrations
 
-If the score is below 60, generate 1-3 clarifying questions with 3-4 options each.
-Questions should be specific and actionable — not generic.
+IMPORTANT SCORING RULES:
+- If the user has answered clarifying questions, give FULL CREDIT for the areas those answers cover. Do NOT keep asking about things the user already answered.
+- A score of 60+ means "enough to build". You do NOT need every detail — the builder will make sensible defaults for anything unspecified.
+- Be generous: if the user described the app type and a few features, that's already 40-60 points.
 
-Respond with ONLY this JSON (no markdown fences):
+## Questions (only if score < 60)
+Generate exactly 2-3 focused, CLOSED-ENDED questions with 3-4 concrete options each.
+
+Rules for questions:
+1. Each question MUST be answerable by picking one option — never open-ended ("describe", "explain", "what else").
+2. Options must be specific, concrete choices — not vague categories.
+3. Never repeat a topic the user already answered.
+4. Focus on the BIGGEST gaps only — don't nitpick.
+5. Each question should cover a different scoring dimension.
+
+## Response format
+Respond with ONLY this JSON (no markdown fences, no extra text):
 {
   "score": <number 0-100>,
-  "appName": "<short app name derived from the description>",
-  "message": "<one sentence about what's good and what's missing>",
+  "appName": "<short 2-3 word app name>",
+  "message": "<one sentence: what you understood + what's missing, if anything>",
   "questions": [
     {
       "id": "q1",
-      "question": "<specific clarifying question>",
+      "question": "<closed-ended question>",
       "options": [
-        { "label": "<short choice>", "description": "<one-line explanation>" },
-        { "label": "<short choice>", "description": "<one-line explanation>" },
-        { "label": "<short choice>", "description": "<one-line explanation>" }
+        { "label": "<2-4 word choice>", "description": "<one line>" },
+        { "label": "<2-4 word choice>", "description": "<one line>" },
+        { "label": "<2-4 word choice>", "description": "<one line>" }
       ]
     }
   ]
@@ -86,13 +106,30 @@ export async function POST(req: Request) {
       );
     }
 
-    // Build user prompt with any previous answers
+    const answeredCount = body.answers?.length ?? 0;
+
+    // If the user already answered MAX_TOTAL_QUESTIONS, skip LLM — force build.
+    if (answeredCount >= MAX_TOTAL_QUESTIONS) {
+      return NextResponse.json({
+        score: 75,
+        appName: extractAppName(body.prompt),
+        message: 'You\'ve provided enough detail — ready to build!',
+        questions: [],
+        readyToBuild: true,
+      } satisfies AnalyzeResponse);
+    }
+
+    // How many more questions we're allowed to ask
+    const remainingBudget = MAX_TOTAL_QUESTIONS - answeredCount;
+
+    // Build user prompt with previous answers
     let userPrompt = `User's app description:\n"${body.prompt}"`;
     if (body.answers?.length) {
-      userPrompt += '\n\nPrevious clarifications:';
+      userPrompt += '\n\nUser has already answered these clarifications (DO NOT re-ask):';
       for (const a of body.answers) {
         userPrompt += `\n- Q: ${a.question}\n  A: ${a.answer}`;
       }
+      userPrompt += `\n\nThe user has answered ${answeredCount} questions so far. You may ask at most ${Math.min(remainingBudget, 3)} more. If you have enough context, score >= 60 and return no questions.`;
     }
 
     const res = await fetch(OPENROUTER_URL, {
@@ -140,7 +177,18 @@ export async function POST(req: Request) {
       );
     }
 
-    analysis.readyToBuild = analysis.score >= 60;
+    // Enforce question budget — trim excess questions
+    if (analysis.questions.length > remainingBudget) {
+      analysis.questions = analysis.questions.slice(0, remainingBudget);
+    }
+
+    // If no questions left in budget, force ready
+    if (remainingBudget <= 0) {
+      analysis.readyToBuild = true;
+      analysis.questions = [];
+    } else {
+      analysis.readyToBuild = analysis.score >= 60;
+    }
 
     return NextResponse.json(analysis);
   } catch (err) {
@@ -149,4 +197,10 @@ export async function POST(req: Request) {
       { status: 500 },
     );
   }
+}
+
+/** Extract a short app name from the prompt when skipping the LLM. */
+function extractAppName(prompt: string): string {
+  const words = prompt.trim().split(/\s+/).slice(0, 4);
+  return words.join(' ').replace(/[.!?,;:]+$/, '') || 'My App';
 }
