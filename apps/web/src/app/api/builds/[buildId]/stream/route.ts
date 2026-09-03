@@ -82,10 +82,15 @@ async function runPipeline(
       })
       .where(eq(builds.id, buildId));
 
+    const failedDetails = results
+      .filter((r) => r.execution.status === 'failed')
+      .map((r) => `${r.execution.stageName}: ${r.execution.errorDetails ?? 'unknown'}`)
+      .join('; ');
+
     emitter.emit(
       'pipeline',
       allSucceeded ? 'done' : 'error',
-      allSucceeded ? 'Build complete' : 'One or more stages failed',
+      allSucceeded ? 'Build complete' : failedDetails || 'One or more stages failed',
     );
   } finally {
     emitter.close();

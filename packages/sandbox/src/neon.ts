@@ -4,7 +4,7 @@
  * Creates a Neon Postgres project via the Neon API and returns
  * the connection URI for the default database.
  *
- * Requires `NEON_API_KEY` in `process.env`.
+ * Requires `NEON_API_KEY` and `NEON_ORG_ID` in `process.env`.
  */
 
 /** Result of provisioning a Neon database. */
@@ -26,6 +26,9 @@ export async function provisionDatabase(
   const apiKey = process.env['NEON_API_KEY'];
   if (!apiKey) throw new Error('NEON_API_KEY is not set');
 
+  const orgId = process.env['NEON_ORG_ID'];
+  if (!orgId) throw new Error('NEON_ORG_ID is not set — find it at https://console.neon.tech → Organization settings');
+
   const projectName = `heynxt-${appId.slice(0, 8)}`;
 
   const res = await fetch('https://console.neon.tech/api/v2/projects', {
@@ -34,7 +37,7 @@ export async function provisionDatabase(
       Authorization: `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ project: { name: projectName } }),
+    body: JSON.stringify({ project: { name: projectName, org_id: orgId } }),
   });
 
   if (!res.ok) {

@@ -61,7 +61,7 @@ export class GenerateSchemaStage implements GenerationStage {
     const session = await SandboxSession.resume(this.ctx!.sessionId!);
 
     const schemaCode = await callOpenRouter({
-      model: 'anthropic/claude-3-5-sonnet',
+      model: 'anthropic/claude-sonnet-4',
       systemPrompt: [
         'You are a Drizzle ORM schema generator for PostgreSQL.',
         'Output ONLY valid TypeScript for a single lib/schema.ts file.',
