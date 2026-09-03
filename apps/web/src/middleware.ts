@@ -23,7 +23,26 @@
  *
  * See docs/adr/0008-auth-library-and-provider.md for background.
  */
-export { auth as middleware } from './auth';
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { auth } from './auth';
+
+/**
+ * Wrap the Auth.js middleware so that errors (e.g. DATABASE_URL not
+ * set) don't crash the entire app — the request proceeds as
+ * unauthenticated and the layout renders a null session.
+ */
+export async function middleware(request: NextRequest) {
+  try {
+    // Auth.js middleware overload: auth(request) invokes the authorized callback
+    const handler = auth as unknown as (request: NextRequest) => Promise<NextResponse>;
+    return await handler(request);
+  } catch {
+    // Auth unavailable (missing DATABASE_URL, DB down, etc.).
+    // Let the request through; layout/pages treat session as null.
+    return NextResponse.next();
+  }
+}
 
 export const config = {
   matcher: [
