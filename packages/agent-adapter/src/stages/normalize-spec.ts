@@ -66,7 +66,8 @@ export class NormalizeSpecStage implements GenerationStage {
 
     const appId = (input.spec['appId'] as string) ?? crypto.randomUUID();
     const appName = (input.spec['appName'] as string) ?? 'heynxt-app';
-    const sessionId = `build-${appId}`;
+    const runSuffix = crypto.randomUUID().slice(0, 8);
+    const sessionId = `build-${appId.slice(0, 8)}-${runSuffix}`;
 
     const { databaseUrl, databaseId } = await provisionDatabase(appId);
 
