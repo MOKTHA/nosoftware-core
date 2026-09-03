@@ -16,3 +16,6 @@ export { writeNextJsScaffold } from './scaffold.js';
 
 export { provisionDatabase } from './neon.js';
 export type { NeonProvisionResult } from './neon.js';
+
+export { collectProjectFiles } from './collect.js';
+export type { ProjectFile } from './collect.js';

@@ -74,10 +74,19 @@ async function runPipeline(
       (r) => r.execution.status === 'succeeded',
     );
 
+    // Extract the deployed URL from the deploy-to-vercel stage result
+    const deployStageResult = results.find(
+      (r) => r.execution.stageName === 'deploy-to-vercel',
+    );
+    const deployedUrl = deployStageResult?.output?.summary?.startsWith('https://')
+      ? deployStageResult.output.summary
+      : null;
+
     await db
       .update(builds)
       .set({
         status: allSucceeded ? 'succeeded' : 'failed',
+        deployedUrl,
         updatedAt: new Date(),
       })
       .where(eq(builds.id, buildId));
@@ -87,10 +96,16 @@ async function runPipeline(
       .map((r) => `${r.execution.stageName}: ${r.execution.errorDetails ?? 'unknown'}`)
       .join('; ');
 
+    const finalDetail = allSucceeded && deployedUrl
+      ? deployedUrl
+      : allSucceeded
+        ? 'Build complete'
+        : failedDetails || 'One or more stages failed';
+
     emitter.emit(
       'pipeline',
       allSucceeded ? 'done' : 'error',
-      allSucceeded ? 'Build complete' : failedDetails || 'One or more stages failed',
+      finalDetail,
     );
   } finally {
     emitter.close();

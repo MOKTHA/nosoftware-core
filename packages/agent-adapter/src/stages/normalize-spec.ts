@@ -71,11 +71,13 @@ export class NormalizeSpecStage implements GenerationStage {
 
     const { databaseUrl, databaseId } = await provisionDatabase(appId);
 
+    const nextauthSecret = crypto.randomUUID();
+
     const session = await SandboxSession.create({
       sessionId,
       env: {
         DATABASE_URL: databaseUrl,
-        NEXTAUTH_SECRET: crypto.randomUUID(),
+        NEXTAUTH_SECRET: nextauthSecret,
         OPENROUTER_API_KEY: process.env['OPENROUTER_API_KEY'] ?? '',
         NODE_ENV: 'production',
       },
@@ -88,6 +90,7 @@ export class NormalizeSpecStage implements GenerationStage {
       this.ctx.sessionId = sessionId;
       this.ctx.databaseUrl = databaseUrl;
       this.ctx.databaseId = databaseId;
+      this.ctx.nextauthSecret = nextauthSecret;
     }
   }
 

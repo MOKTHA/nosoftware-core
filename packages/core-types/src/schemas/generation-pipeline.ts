@@ -26,6 +26,7 @@ export const GenerationStageName = z.enum([
   'generate-workflows',       // Stage 7: Generate workflows → state machines, automations
   'generate-fixtures-tests',  // Stage 8: Generate fixtures/tests → seed data, unit/integration tests
   'generate-deployment',      // Stage 9: Generate deployment metadata → Dockerfile, env config, health checks
+  'deploy-to-vercel',         // Stage 10: Deploy to Vercel → collect files, upload, deploy, return live URL
 ]);
 
 export type GenerationStageName = z.infer<typeof GenerationStageName>;
@@ -239,7 +240,8 @@ export const StageExecutionOrder: GenerationStageName[] = [
   'generate-frontend',        // 6. Depends on backend contracts
   'generate-workflows',       // 7. Can run in parallel with frontend/backend
   'generate-fixtures-tests',  // 8. Depends on all generated code
-  'generate-deployment',      // 9. Final stage, depends on everything
+  'generate-deployment',      // 9. Verify build stage, depends on everything
+  'deploy-to-vercel',         // 10. Deploy to Vercel, depends on verified build
 ];
 
 /** Stage dependencies (which stages must complete before this one). */
@@ -261,6 +263,7 @@ export const StageDependencies: Record<GenerationStageName, GenerationStageName[
     'generate-frontend',
     'generate-fixtures-tests',
   ],
+  'deploy-to-vercel': ['generate-deployment'],
 };
 
 /** ------------------------------------------------------------------ */

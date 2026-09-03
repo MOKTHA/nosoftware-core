@@ -17,6 +17,8 @@ import { UserMenu } from '@/components/UserMenu';
  * See docs/adr/0008-auth-library-and-provider.md for background.
  */
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'HeyNXT — Industrial AI App Builder',
   description:
