@@ -604,12 +604,7 @@ export default function BuildPage() {
           </div>
         )}
 
-        {/* ── Build trace ── */}
-        {buildId && (
-          <div style={{ marginBottom: '0.75rem' }}>
-            <BuildTrace buildId={buildId} onDeployed={(url) => setDeployedUrl(url)} />
-          </div>
-        )}
+        {/* Build trace is now in the right panel */}
 
         {/* ── Prompt input (coding-agent-template style) ── */}
         {showPromptInput && (
@@ -792,84 +787,69 @@ export default function BuildPage() {
         )}
       </div>
 
-      {/* ── Right panel: preview iframe ──────────────────────────── */}
+      {/* ── Right panel: build trace → preview ─────────────────── */}
       {buildId && (
         <div
           style={{
             flex: 1,
-            background: '#f5f5f5',
             borderRadius: '0.75rem',
             display: 'flex',
             flexDirection: 'column',
             overflow: 'hidden',
             border: '1px solid #e5e5e5',
+            background: deployedUrl ? '#f5f5f5' : '#ffffff',
           }}
         >
-          {deployedUrl && (
-            <div
-              style={{
-                padding: '0.5rem 0.75rem',
-                borderBottom: '1px solid #e5e5e5',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                background: '#ffffff',
-                borderRadius: '0.75rem 0.75rem 0 0',
-              }}
-            >
-              <span
-                style={{
-                  fontSize: '0.75rem',
-                  color: '#737373',
-                  fontFamily: 'monospace',
-                }}
-              >
-                {deployedUrl}
-              </span>
-              <a
-                href={deployedUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  fontSize: '0.75rem',
-                  color: '#0a0a0a',
-                  textDecoration: 'none',
-                  fontWeight: 500,
-                }}
-              >
-                Open ↗
-              </a>
-            </div>
-          )}
-          <div
-            style={{
-              flex: 1,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            {deployedUrl ? (
-              <iframe
-                src={deployedUrl}
-                style={{ width: '100%', height: '100%', border: 'none' }}
-                title="Generated app preview"
-              />
-            ) : (
+          {deployedUrl ? (
+            /* ── Preview mode (app is deployed) ── */
+            <>
               <div
                 style={{
+                  padding: '0.5rem 0.75rem',
+                  borderBottom: '1px solid #e5e5e5',
                   display: 'flex',
-                  flexDirection: 'column',
                   alignItems: 'center',
-                  gap: '0.75rem',
-                  color: '#a3a3a3',
+                  justifyContent: 'space-between',
+                  background: '#ffffff',
+                  borderRadius: '0.75rem 0.75rem 0 0',
                 }}
               >
-                <Spinner />
-                <span style={{ fontSize: '0.875rem' }}>Building your app…</span>
+                <span
+                  style={{
+                    fontSize: '0.75rem',
+                    color: '#737373',
+                    fontFamily:
+                      'ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace',
+                  }}
+                >
+                  {deployedUrl}
+                </span>
+                <a
+                  href={deployedUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    fontSize: '0.75rem',
+                    color: '#0a0a0a',
+                    textDecoration: 'none',
+                    fontWeight: 500,
+                  }}
+                >
+                  Open ↗
+                </a>
               </div>
-            )}
-          </div>
+              <div style={{ flex: 1 }}>
+                <iframe
+                  src={deployedUrl}
+                  style={{ width: '100%', height: '100%', border: 'none' }}
+                  title="Generated app preview"
+                />
+              </div>
+            </>
+          ) : (
+            /* ── Build mode (steps + terminal logs) ── */
+            <BuildTrace buildId={buildId} onDeployed={(url) => setDeployedUrl(url)} />
+          )}
         </div>
       )}
     </div>

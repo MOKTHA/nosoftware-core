@@ -47,6 +47,8 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               @keyframes spin { to { transform: rotate(360deg) } }
+              @keyframes blink { 50% { opacity: 0 } }
+              @keyframes pulse { 0%,100% { opacity: 1 } 50% { opacity: 0.5 } }
               *, *::before, *::after { box-sizing: border-box; }
               a { color: inherit; text-decoration: none; }
               a:hover { opacity: 0.8; }
