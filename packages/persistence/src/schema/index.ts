@@ -62,6 +62,14 @@ export { verificationTokens } from './verification-tokens.js';
 // Invitation flow (Phase 1.8 — Task 23)
 export { invitations, invitationStatusEnum } from './invitations.js';
 
+// Pipeline builds (Phase 5)
+export {
+  builds,
+  buildStatusEnum,
+  type Build,
+  type InsertBuild,
+} from './builds.js';
+
 // Agent execution (Phase 2)
 export {
   agentSpecs,
