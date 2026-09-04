@@ -484,4 +484,60 @@ export const INSTALLED_SKILLS = {
     description: 'API test generation — integration tests, contract tests, REST endpoint coverage',
     references: ['example-test-files.md'],
   },
+  /* ---- QA / Testing / Security skills ---- */
+  'senior-qa': {
+    path: '.claude/skills/senior-qa',
+    command: '/senior-qa',
+    description: 'QA strategy, test planning, risk analysis, defect triage, regression suites',
+    references: [
+      'automation_patterns.md', 'composition_map.md',
+      'forcing_questions.md', 'qa_methodology_guide.md', 'test_strategy_templates.md',
+    ],
+    scripts: [
+      'qa_decision_engine.py', 'regression_suite_builder.py',
+      'test_coverage_analyzer.py', 'test_plan_generator.py',
+    ],
+    profiles: ['web-app-testing.json', 'api-only-testing.json', 'mobile-testing.json', 'enterprise-qa.json'],
+  },
+  'a11y-audit': {
+    path: '.claude/skills/a11y-audit',
+    command: '/a11y-audit',
+    description: 'Accessibility audit — WCAG conformance, ARIA, screen reader, keyboard nav',
+    references: [
+      'aria-patterns.md', 'audit-methodology.md', 'remediation-patterns.md', 'wcag-checklist.md',
+    ],
+    scripts: ['a11y_audit.py', 'a11y_report_generator.py'],
+  },
+  'tdd-guide': {
+    path: '.claude/skills/tdd-guide',
+    command: '/tdd-guide',
+    description: 'Test-driven development — red-green-refactor cycles, test doubles, coverage',
+    references: ['tdd-patterns.md', 'testing-best-practices.md'],
+  },
+  'performance-profiler': {
+    path: '.claude/skills/performance-profiler',
+    command: '/performance-profiler',
+    description: 'Performance profiling — flame graphs, memory leaks, bundle size, Core Web Vitals',
+    references: [
+      'bottleneck-patterns.md', 'bundle-optimization.md',
+      'memory-leak-guide.md', 'profiling-methodology.md',
+    ],
+    scripts: ['bundle_analyzer.py', 'memory_profiler.py', 'performance_profiler.py'],
+  },
+  'chaos-engineering': {
+    path: '.claude/skills/chaos-engineering',
+    command: '/chaos-engineering',
+    description: 'Chaos engineering — failure injection, resilience testing, blast radius analysis',
+    references: ['chaos-patterns.md', 'experiment-design.md', 'resilience-patterns.md'],
+    scripts: ['chaos_experiment_runner.py', 'failure_injector.py'],
+  },
+  'security-pen-testing': {
+    path: '.claude/skills/security-pen-testing',
+    command: '/security-pen-testing',
+    description: 'Security pen testing — OWASP Top 10, auth bypass, injection, XSS, CSRF',
+    references: [
+      'owasp-testing-guide.md', 'remediation-playbook.md', 'vulnerability-patterns.md',
+    ],
+    scripts: ['pentest_scanner.py', 'vulnerability_reporter.py'],
+  },
 } as const;
