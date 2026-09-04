@@ -1,12 +1,25 @@
 /**
  * @heynxt/agent-adapter — OpenRouter LLM Helper
  *
- * Thin wrapper around the OpenRouter chat completions API.
- * Used by generation stages that need LLM output (schema,
- * backend routes, frontend pages).
+ * Two modes:
+ *
+ * 1. `callOpenRouter()` — Thin wrapper around the OpenRouter chat completions API.
+ *    Used by generation stages that need simple LLM text output.
+ *
+ * 2. `callModelWithSkills()` — Uses the @openrouter/agent SDK with the
+ *    skills-loader pattern (tool + nextTurnParams) for dynamic context
+ *    injection. See: https://openrouter.ai/docs/agent-sdk/call-model/examples/skills-loader
  *
  * Requires `OPENROUTER_API_KEY` in `process.env`.
  */
+
+import { OpenRouter, callModel, stepCountIs } from '@openrouter/agent';
+import {
+  skillLoaderTool,
+  multiSkillLoaderTool,
+  skillDiscoveryTool,
+  listAvailableSkills,
+} from './skills-loader.js';
 
 /** ------------------------------------------------------------------ */
 /*  Types                                                             */
@@ -18,6 +31,21 @@ export interface OpenRouterCallOptions {
   userPrompt: string;
 }
 
+export interface SkillModelCallOptions {
+  /** Model to use (e.g. 'anthropic/claude-sonnet-4') */
+  model: string;
+  /** User prompt / task description */
+  input: string;
+  /** Skills to preload before the LLM runs (e.g. ['senior-frontend', 'ui-design-system']) */
+  skills?: string[];
+  /** Also load reference docs for preloaded skills */
+  includeReferences?: boolean;
+  /** System prompt to prepend */
+  systemPrompt?: string;
+  /** Max agent turns (default 5) */
+  maxSteps?: number;
+}
+
 /** ------------------------------------------------------------------ */
 /*  Constants                                                         */
 /** ------------------------------------------------------------------ */
@@ -25,7 +53,7 @@ export interface OpenRouterCallOptions {
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
 /** ------------------------------------------------------------------ */
-/*  Main function                                                     */
+/*  Mode 1: Raw API (backward compatible)                             */
 /** ------------------------------------------------------------------ */
 
 /**
@@ -68,3 +96,125 @@ export async function callOpenRouter(
   };
   return json.choices[0]?.message?.content ?? '';
 }
+
+/** ------------------------------------------------------------------ */
+/*  Mode 2: Agent SDK with Skills (nextTurnParams pattern)            */
+/** ------------------------------------------------------------------ */
+
+let _openrouter: OpenRouter | null = null;
+
+/** Lazy-init singleton OpenRouter instance */
+function getOpenRouterClient(): OpenRouter {
+  if (!_openrouter) {
+    const apiKey = process.env['OPENROUTER_API_KEY'];
+    if (!apiKey) throw new Error('OPENROUTER_API_KEY is not set');
+    _openrouter = new OpenRouter({ apiKey });
+  }
+  return _openrouter;
+}
+
+/**
+ * Build an EasyInputMessage-compatible object that satisfies InputsUnion.
+ * The SDK uses ClosedEnum branded types for role — structurally equivalent
+ * to plain strings at runtime but TypeScript won't narrow automatically.
+ */
+function makeMsg(
+  role: 'user' | 'system' | 'developer' | 'assistant',
+  content: string,
+): { role: typeof role; content: string; type: 'message' } {
+  return { role, content, type: 'message' };
+}
+
+/**
+ * Call the OpenRouter Agent SDK with skills loaded via nextTurnParams.
+ *
+ * This follows the official skills-loader pattern:
+ * - Skills are loaded dynamically via the `tool()` + `nextTurnParams` mechanism
+ * - The LLM can discover and load additional skills via the skill discovery tool
+ * - Preloaded skills are injected before the first turn
+ * - Context is preserved and appended (never replaced)
+ * - Duplicate skill loading is prevented via markers
+ *
+ * @param opts - Model, input prompt, skills to preload, options
+ * @returns The final text output from the model
+ */
+export async function callModelWithSkills(
+  opts: SkillModelCallOptions,
+): Promise<string> {
+  const client = getOpenRouterClient();
+
+  // Build input messages
+  const messages: Array<{ role: string; content: string; type: 'message' }> = [];
+
+  // Add system prompt if provided
+  if (opts.systemPrompt) {
+    messages.push(makeMsg('developer', opts.systemPrompt));
+  }
+
+  // Preload requested skills by injecting their content as user messages
+  // (follows the nextTurnParams context-injection pattern)
+  if (opts.skills && opts.skills.length > 0) {
+    const { readFileSync, existsSync } = await import('fs');
+    const pathMod = await import('path');
+
+    const skillsDir = pathMod.resolve(process.cwd(), '.claude', 'skills');
+
+    for (const skillName of opts.skills) {
+      const skillMarker = `[Skill: ${skillName}]`;
+      const skillPath = pathMod.join(skillsDir, skillName, 'SKILL.md');
+
+      if (existsSync(skillPath)) {
+        let content = readFileSync(skillPath, 'utf-8');
+
+        // Optionally load references
+        if (opts.includeReferences) {
+          const refsDir = pathMod.join(skillsDir, skillName, 'references');
+          if (existsSync(refsDir)) {
+            const { readdirSync } = await import('fs');
+            const refs = readdirSync(refsDir)
+              .filter((f: string) => f.endsWith('.md'))
+              .map((f: string) => {
+                const refContent = readFileSync(
+                  pathMod.join(refsDir, f),
+                  'utf-8',
+                );
+                return `\n---\n## Reference: ${f}\n${refContent}`;
+              });
+            content += refs.join('\n');
+          }
+        }
+
+        messages.push(
+          makeMsg(
+            'user',
+            `${skillMarker}\nBase directory: ${pathMod.join(skillsDir, skillName)}\n\n${content}`,
+          ),
+        );
+      }
+    }
+  }
+
+  // Add the actual user prompt
+  messages.push(makeMsg('user', opts.input));
+
+  // Cast the messages array to the SDK's InputsUnion — ClosedEnum branded
+  // role types are structurally identical to string literals at runtime
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const input = messages as any;
+
+  // Call model with skill tools available for dynamic loading
+  const result = client.callModel({
+    model: opts.model,
+    input,
+    tools: [skillLoaderTool, multiSkillLoaderTool, skillDiscoveryTool],
+    stopWhen: stepCountIs(opts.maxSteps ?? 5),
+  });
+
+  const text = await result.getText();
+  return text;
+}
+
+/**
+ * Get the list of available skills (for logging/debugging).
+ */
+export { listAvailableSkills };

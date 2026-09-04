@@ -1,7 +1,7 @@
 import { execa } from 'execa';
 import type { ValidationStage, ValidationStageInput, ValidationStageOutput } from '../../generation-pipeline.js';
 import type { ValidationEvidence } from '@heynxt/core-types';
-import { z } from 'zod';
+import { z } from 'zod/v3';
 
 /** Schema for build validation result metadata. */
 export const BuildValidationResult = z.object({

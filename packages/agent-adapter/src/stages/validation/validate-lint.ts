@@ -7,7 +7,7 @@
 import { execa } from 'execa';
 import type { ValidationStage, ValidationStageInput, ValidationStageOutput } from '../../generation-pipeline.js';
 import type { ValidationResult, ValidationEvidence } from '@heynxt/core-types';
-import { z } from 'zod';
+import { z } from 'zod/v3';
 
 /** Schema for lint validation result metadata. */
 export const LintValidationResult = z.object({

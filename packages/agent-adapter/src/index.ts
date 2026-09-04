@@ -71,9 +71,16 @@ export { buildPipelineFromSpec } from './pipeline-factory.js';
 export { createPipelineContext } from './pipeline-context.js';
 export type { PipelineContext } from './pipeline-context.js';
 
-// OpenRouter LLM helper (Phase 5)
-export { callOpenRouter } from './llm.js';
-export type { OpenRouterCallOptions } from './llm.js';
+// OpenRouter LLM helper (Phase 5) + Agent SDK skills loader (Phase 6)
+export { callOpenRouter, callModelWithSkills, listAvailableSkills } from './llm.js';
+export type { OpenRouterCallOptions, SkillModelCallOptions } from './llm.js';
+
+// OpenRouter Agent SDK skill tools (nextTurnParams pattern)
+export {
+  skillLoaderTool,
+  multiSkillLoaderTool,
+  skillDiscoveryTool,
+} from './skills-loader.js';
 
 // SSE build event streaming (Phase 5)
 export { BuildEventEmitter } from './sse.js';
