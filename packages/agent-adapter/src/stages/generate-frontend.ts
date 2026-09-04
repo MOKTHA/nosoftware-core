@@ -54,7 +54,7 @@ export class GenerateFrontendStage implements GenerationStage {
 
   private async generateFrontendInSandbox(input: GenerationStageInput): Promise<void> {
     const { SandboxSession } = await import('@heynxt/sandbox');
-    const { callOpenRouter } = await import('../llm.js');
+    const { callModelWithSkills } = await import('../llm.js');
 
     const session = await SandboxSession.resume(this.ctx!.sessionId!);
 
@@ -66,8 +66,12 @@ export class GenerateFrontendStage implements GenerationStage {
       // Tolerate missing schema in stub mode
     }
 
-    const pageCode = await callOpenRouter({
+    const pageCode = await callModelWithSkills({
       model: 'anthropic/claude-sonnet-4',
+      // Preload UI/UX skills via the Agent SDK nextTurnParams pattern
+      skills: ['senior-frontend', 'ui-design-system'],
+      includeReferences: false,
+      input: `Schema:\n${schemaContent}\n\nSpec:\n${JSON.stringify(input.spec, null, 2)}`,
       systemPrompt: [
         // Inject the full design system from design-system.ts
         DESIGN_SYSTEM_PROMPT,
@@ -201,7 +205,7 @@ export class GenerateFrontendStage implements GenerationStage {
         '',
         'Output ONLY TypeScript/TSX. No markdown fences, no explanations.',
       ].join('\n'),
-      userPrompt: `Schema:\n${schemaContent}\n\nSpec:\n${JSON.stringify(input.spec, null, 2)}`,
+      maxSteps: 3,
     });
 
     const files = this.parseMultiFileOutput(pageCode);

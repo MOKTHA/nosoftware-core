@@ -61,7 +61,7 @@ export class GenerateBackendStage implements GenerationStage {
 
   private async generateBackendInSandbox(input: GenerationStageInput): Promise<void> {
     const { SandboxSession } = await import('@heynxt/sandbox');
-    const { callOpenRouter } = await import('../llm.js');
+    const { callModelWithSkills } = await import('../llm.js');
 
     const session = await SandboxSession.resume(this.ctx!.sessionId!);
 
@@ -73,8 +73,12 @@ export class GenerateBackendStage implements GenerationStage {
       // Schema may not exist in stub mode — that's fine
     }
 
-    const routeCode = await callOpenRouter({
+    const routeCode = await callModelWithSkills({
       model: 'anthropic/claude-sonnet-4',
+      // Preload backend/API skills via the Agent SDK nextTurnParams pattern
+      skills: ['senior-backend', 'api-design-reviewer'],
+      includeReferences: false,
+      input: `Schema:\n${schemaContent}\n\nSpec:\n${JSON.stringify(input.spec, null, 2)}`,
       systemPrompt: [
         'You are a Next.js 15 App Router API route generator producing PRODUCTION-READY code.',
         '',
@@ -148,7 +152,7 @@ export class GenerateBackendStage implements GenerationStage {
         '',
         'Output ONLY TypeScript. No markdown fences, no explanations.',
       ].join('\n'),
-      userPrompt: `Schema:\n${schemaContent}\n\nSpec:\n${JSON.stringify(input.spec, null, 2)}`,
+      maxSteps: 3,
     });
 
     // Parse multi-file output, post-process, and write each file

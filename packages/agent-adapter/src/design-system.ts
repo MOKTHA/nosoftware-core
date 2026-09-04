@@ -428,4 +428,60 @@ export const INSTALLED_SKILLS = {
     scripts: ['persona_generator.py'],
     assets: ['research_plan_template.md'],
   },
+  /* ---- Backend / API / Database skills ---- */
+  'senior-backend': {
+    path: '.claude/skills/senior-backend',
+    command: '/senior-backend',
+    description: 'REST APIs, microservices, database architectures, auth, security hardening',
+    references: [
+      'api_design_patterns.md', 'backend_security_practices.md',
+      'composition_map.md', 'database_optimization_guide.md', 'forcing_questions.md',
+    ],
+    scripts: [
+      'api_load_tester.py', 'api_scaffolder.py',
+      'backend_decision_engine.py', 'database_migration_tool.py',
+    ],
+    profiles: ['node-express.json', 'fastapi-python.json', 'django-monolith.json', 'go-or-rust-microservice.json'],
+  },
+  'api-design-reviewer': {
+    path: '.claude/skills/api-design-reviewer',
+    command: '/api-design-reviewer',
+    description: 'REST API design review — linting, breaking-change detection, design scorecards',
+    references: ['api_antipatterns.md', 'rest_design_rules.md'],
+    scripts: ['api_linter.py', 'api_scorecard.py', 'breaking_change_detector.py'],
+  },
+  'database-designer': {
+    path: '.claude/skills/database-designer',
+    command: '/database-designer',
+    description: 'Database schema design, query optimization, migration planning, index strategies',
+    references: [
+      'database-design-reference.md', 'database_selection_decision_tree.md',
+      'index_strategy_patterns.md', 'normalization_guide.md',
+    ],
+    scripts: ['index_optimizer.py', 'migration_generator.py', 'schema_analyzer.py'],
+    assets: ['sample_schema.json', 'sample_query_patterns.json'],
+  },
+  'database-schema-designer': {
+    path: '.claude/skills/database-schema-designer',
+    command: '/database-schema-designer',
+    description: 'ERD diagrams, schema normalization, table relationships, schema migrations',
+    references: ['full-schema-examples.md'],
+  },
+  'senior-fullstack': {
+    path: '.claude/skills/senior-fullstack',
+    command: '/senior-fullstack',
+    description: 'Fullstack dev toolkit — Next.js/FastAPI/MERN scaffolding, code quality, stack selection',
+    references: [
+      'architecture_patterns.md', 'composition_map.md',
+      'development_workflows.md', 'forcing_questions.md', 'tech_stack_guide.md',
+    ],
+    scripts: ['code_quality_analyzer.py', 'fullstack_decision_engine.py', 'project_scaffolder.py'],
+    profiles: ['saas-startup.json', 'enterprise-scale.json', 'internal-tool.json', 'marketing-site.json'],
+  },
+  'api-test-suite-builder': {
+    path: '.claude/skills/api-test-suite-builder',
+    command: '/api-test-suite-builder',
+    description: 'API test generation — integration tests, contract tests, REST endpoint coverage',
+    references: ['example-test-files.md'],
+  },
 } as const;

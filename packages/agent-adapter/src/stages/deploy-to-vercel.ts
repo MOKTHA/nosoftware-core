@@ -509,7 +509,7 @@ export class DeployToVercelStage implements GenerationStage {
     buildErrors: string,
   ): Promise<boolean> {
     try {
-      const { callOpenRouter } = await import('../llm.js');
+      const { callModelWithSkills } = await import('../llm.js');
 
       // Extract file paths from build errors
       // Next.js formats: ./app/path/file.tsx or .next/types/app/path/file.ts
@@ -582,9 +582,10 @@ export class DeployToVercelStage implements GenerationStage {
         // Schema may not exist
       }
 
-      // Ask LLM to fix
-      const fixedCode = await callOpenRouter({
+      // Ask LLM to fix — load senior-frontend skill for TSX error context
+      const fixedCode = await callModelWithSkills({
         model: 'anthropic/claude-sonnet-4',
+        skills: ['senior-frontend'],
         systemPrompt: [
           'You are a Next.js 15 build error fixer.',
           'Given files with build errors, output the FIXED versions.',
@@ -605,7 +606,8 @@ export class DeployToVercelStage implements GenerationStage {
           'Separate each file with "// FILE: <path>" on its own line.',
           'Output ONLY TypeScript/TSX. No markdown fences, no explanations.',
         ].join('\n'),
-        userPrompt: `Build errors:\n${buildErrors.slice(0, 3000)}\n\n${schemaContent ? `Schema:\n${schemaContent}\n\n` : ''}Files with errors:\n${fileContents.join('\n\n')}`,
+        input: `Build errors:\n${buildErrors.slice(0, 3000)}\n\n${schemaContent ? `Schema:\n${schemaContent}\n\n` : ''}Files with errors:\n${fileContents.join('\n\n')}`,
+        maxSteps: 2,
       });
 
       // Parse and write fixed files
@@ -654,7 +656,7 @@ export class DeployToVercelStage implements GenerationStage {
     input: GenerationStageInput,
   ): Promise<boolean> {
     try {
-      const { callOpenRouter } = await import('../llm.js');
+      const { callModelWithSkills } = await import('../llm.js');
 
       // Read schema for context
       let schemaContent = '';
@@ -691,8 +693,10 @@ export class DeployToVercelStage implements GenerationStage {
 
       if (fileContents.length === 0) return false;
 
-      const fixedCode = await callOpenRouter({
+      // Load senior-backend skill for API route error fixing context
+      const fixedCode = await callModelWithSkills({
         model: 'anthropic/claude-sonnet-4',
+        skills: ['senior-backend'],
         systemPrompt: [
           'You are a Next.js 15 runtime error fixer.',
           'Given API route files that fail at runtime, output FIXED versions.',
@@ -714,7 +718,8 @@ export class DeployToVercelStage implements GenerationStage {
           'Separate each file with "// FILE: <path>" on its own line.',
           'Output ONLY TypeScript. No markdown fences, no explanations.',
         ].join('\n'),
-        userPrompt: `Smoke test failures:\n${errorContext}\n\n${schemaContent ? `Schema:\n${schemaContent}\n\n` : ''}Failing files:\n${fileContents.join('\n\n')}`,
+        input: `Smoke test failures:\n${errorContext}\n\n${schemaContent ? `Schema:\n${schemaContent}\n\n` : ''}Failing files:\n${fileContents.join('\n\n')}`,
+        maxSteps: 2,
       });
 
       // Parse and write fixed files
