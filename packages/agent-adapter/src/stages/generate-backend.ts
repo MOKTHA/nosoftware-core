@@ -61,7 +61,7 @@ export class GenerateBackendStage implements GenerationStage {
 
   private async generateBackendInSandbox(input: GenerationStageInput): Promise<void> {
     const { SandboxSession } = await import('@heynxt/sandbox');
-    const { callModelWithSkills } = await import('../llm.js');
+    const { callOpenRouter } = await import('../llm.js');
 
     const session = await SandboxSession.resume(this.ctx!.sessionId!);
 
@@ -73,14 +73,15 @@ export class GenerateBackendStage implements GenerationStage {
       // Schema may not exist in stub mode — that's fine
     }
 
-    const routeCode = await callModelWithSkills({
+    const routeCode = await callOpenRouter({
       model: 'anthropic/claude-sonnet-4',
-      // Preload backend/API skills via the Agent SDK nextTurnParams pattern
-      skills: ['senior-backend', 'api-design-reviewer'],
-      includeReferences: false,
-      input: `Schema:\n${schemaContent}\n\nSpec:\n${JSON.stringify(input.spec, null, 2)}`,
+      userPrompt: `Schema:\n${schemaContent}\n\nSpec:\n${JSON.stringify(input.spec, null, 2)}`,
       systemPrompt: [
         'You are a Next.js 15 App Router API route generator producing PRODUCTION-READY code.',
+        '',
+        '###Output rules (CRITICAL)',
+        'Output ONLY TypeScript. No markdown fences, no explanations.',
+
         '',
         '## Imports',
         'import { db } from "@/lib/db";',
@@ -88,6 +89,7 @@ export class GenerateBackendStage implements GenerationStage {
         'import { NextRequest, NextResponse } from "next/server";',
         'import { eq } from "drizzle-orm";',
         'Do NOT import from libraries not in package.json.',
+        
         '',
         '## Error handling (CRITICAL)',
         'EVERY catch block MUST return the ACTUAL error message:',
@@ -150,9 +152,8 @@ export class GenerateBackendStage implements GenerationStage {
         'Do NOT use a src/ directory.',
         'Do NOT generate app/layout.tsx or any app/api/auth/* routes — they already exist.',
         '',
-        'Output ONLY TypeScript. No markdown fences, no explanations.',
+        
       ].join('\n'),
-      maxSteps: 3,
     });
 
     // Parse multi-file output, post-process, and write each file

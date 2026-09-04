@@ -62,7 +62,7 @@ export class GenerateFixturesTestsStage implements GenerationStage {
 
   private async generateTestsInSandbox(input: GenerationStageInput): Promise<void> {
     const { SandboxSession } = await import('@heynxt/sandbox');
-    const { callModelWithSkills } = await import('../llm.js');
+    const { callOpenRouter } = await import('../llm.js');
 
     const session = await SandboxSession.resume(this.ctx!.sessionId!);
 
@@ -90,13 +90,10 @@ export class GenerateFixturesTestsStage implements GenerationStage {
       }
     } catch { /* skip */ }
 
-    // Generate test files with QA skills
-    const testCode = await callModelWithSkills({
+    // Generate test files
+    const testCode = await callOpenRouter({
       model: 'anthropic/claude-sonnet-4',
-      // Preload QA skills via the Agent SDK nextTurnParams pattern
-      skills: ['senior-qa', 'tdd-guide', 'api-test-suite-builder'],
-      includeReferences: false,
-      input: [
+      userPrompt: [
         `Schema:\n${schemaContent}`,
         '',
         `API Routes:\n${apiRoutes}`,
@@ -148,7 +145,6 @@ export class GenerateFixturesTestsStage implements GenerationStage {
         '- Export const dynamic = "force-dynamic" is NOT needed in test files.',
         '- Output ONLY TypeScript. No markdown fences, no explanations.',
       ].join('\n'),
-      maxSteps: 3,
     });
 
     // Parse and write test files

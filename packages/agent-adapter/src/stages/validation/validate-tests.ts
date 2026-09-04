@@ -367,7 +367,7 @@ export class ValidateTestsStage implements ValidationStage {
     errorOutput: string,
   ): Promise<boolean> {
     try {
-      const { callModelWithSkills } = await import('../../llm.js');
+      const { callOpenRouter } = await import('../../llm.js');
       const fs = await import('fs');
       const pathModule = await import('path');
 
@@ -409,10 +409,9 @@ export class ValidateTestsStage implements ValidationStage {
         schemaContent = fs.readFileSync(schemaPath, 'utf-8');
       }
 
-      // Ask LLM with QA skills to fix
-      const fixedCode = await callModelWithSkills({
+      // Ask LLM to fix failing tests
+      const fixedCode = await callOpenRouter({
         model: 'anthropic/claude-sonnet-4',
-        skills: ['senior-qa', 'tdd-guide'],
         systemPrompt: [
           'You are a QA engineer fixing failing test files.',
           'Given test files with failures, output the FIXED versions.',
@@ -422,13 +421,12 @@ export class ValidateTestsStage implements ValidationStage {
           'Separate each file with "// FILE: <path>" on its own line.',
           'Output ONLY TypeScript. No markdown fences, no explanations.',
         ].join('\n'),
-        input: [
+        userPrompt: [
           `Test errors:\n${errorOutput.slice(0, 3000)}`,
           '',
           schemaContent ? `Schema:\n${schemaContent}\n` : '',
           `Failing test files:\n${fileContents.join('\n\n')}`,
         ].join('\n'),
-        maxSteps: 2,
       });
 
       // Parse and write fixed files

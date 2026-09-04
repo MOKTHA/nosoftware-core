@@ -56,16 +56,13 @@ export class GenerateSchemaStage implements GenerationStage {
 
   private async generateSchemaInSandbox(input: GenerationStageInput): Promise<void> {
     const { SandboxSession } = await import('@heynxt/sandbox');
-    const { callModelWithSkills } = await import('../llm.js');
+    const { callOpenRouter } = await import('../llm.js');
 
     const session = await SandboxSession.resume(this.ctx!.sessionId!);
 
-    const rawSchema = await callModelWithSkills({
+    const rawSchema = await callOpenRouter({
       model: 'anthropic/claude-sonnet-4',
-      // Preload database design skills via the Agent SDK nextTurnParams pattern
-      skills: ['database-designer', 'database-schema-designer'],
-      includeReferences: false,
-      input: `Generate a Drizzle ORM schema for these entities:\n${JSON.stringify(input.spec, null, 2)}`,
+      userPrompt: `Generate a Drizzle ORM schema for these entities:\n${JSON.stringify(input.spec, null, 2)}`,
       systemPrompt: [
         'You are a Drizzle ORM schema generator for PostgreSQL (Neon serverless).',
         'Output ONLY valid TypeScript for a single lib/schema.ts file.',
@@ -93,7 +90,7 @@ export class GenerateSchemaStage implements GenerationStage {
         '- Use camelCase for the JS property: userId: uuid("user_id").notNull()',
         '- The frontend will use the column name to show a dropdown of related records',
         '',
-        '## General rules:',
+        '## General rules(Critical):',
         '- Use snake_case for DB column names in the string arg: text("first_name")',
         '- Use camelCase for the JS property: firstName: text("first_name")',
         '- Export every table with `export const`',
@@ -102,7 +99,6 @@ export class GenerateSchemaStage implements GenerationStage {
         '- Do NOT generate an adminUsers table — it is provided by the scaffold',
         '- No markdown fences, no explanations, no ```typescript blocks',
       ].join('\n'),
-      maxSteps: 3,
     });
 
     // Strip markdown fences the LLM may wrap output in
