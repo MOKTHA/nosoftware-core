@@ -94,12 +94,12 @@ export const DESIGN_TOKENS = {
     stat: 'text-3xl font-bold text-gray-900',
   },
   spacing: {
-    section: 'p-6',
-    card: 'p-5',
-    betweenSections: 'space-y-6',
-    betweenFields: 'space-y-4',
+    section: 'p-4',
+    card: 'p-4',
+    betweenSections: 'space-y-4',
+    betweenFields: 'space-y-3',
     inlineGap: 'gap-2',
-    headerMargin: 'mb-8',
+    headerMargin: 'mb-4',
   },
   radius: {
     sm: 'rounded-md',
@@ -166,7 +166,7 @@ export const DESIGN_SYSTEM_PROMPT = `
 
 You are a SENIOR UI/UX ENGINEER. Every page must look like a premium, modern SaaS product
 with Moktha’s visual DNA: clean surfaces, strong indigo primary, vivid indigo accent,
-crisp typography, generous whitespace, and modern flat icons using Lucide React.
+crisp typography, compact layout, and modern flat icons using Lucide React.
 DO NOT use emoji for UI icons.
 
 
@@ -259,13 +259,14 @@ configure it globally and reference here.
 - Stats: text-3xl font-bold text-gray-900
 
 
-### Spacing (8pt grid)
-- Sections: p-6
-- Cards: p-5 or p-6
-- Between sections: space-y-6
-- Between fields: space-y-4
+### Spacing (8pt grid — compact, NOT generous)
+- Sections: p-4 or p-5
+- Cards: p-4 or p-5
+- Between sections: space-y-4
+- Between fields: space-y-3
 - Inline gaps: gap-2 or gap-3
-- Page header: mb-8
+- Page header: mb-4
+- IMPORTANT: Do NOT add extra padding or margin. The scaffold layout already provides px-6 py-4 on <main>. Pages should NOT wrap content in additional padding containers.
 
 
 ### Component Patterns
@@ -276,7 +277,7 @@ PAGE HEADER (every page):
 import Link from "next/link";
 import { Plus } from "lucide-react";
 
-<div className="flex items-center justify-between mb-8">
+<div className="flex items-center justify-between mb-4">
   <div>
     <h1 className="text-2xl font-bold text-gray-900">Title</h1>
     <p className="mt-1 text-sm text-gray-500">Description</p>
@@ -563,7 +564,7 @@ components/Sidebar.tsx — SIDEBAR (client): NAMED EXPORT. Nav links with Lucide
 
 app/page.tsx — DASHBOARD (server):
   - Page header with app name and welcome
-  - Stat cards: grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6
+  - Stat cards: grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4
   - Each card: Lucide icon inside colored rounded square + label + count from db.select()
     - Example icons: LayoutDashboard, BarChart3, Users, FolderKanban, Activity
   - Quick action links using Moktha-style primary/accent buttons with Lucide icons
@@ -586,7 +587,7 @@ app/<entity>/[id]/page.tsx — DETAIL (server):
 
 app/<entity>/new/page.tsx — CREATE (client):
   - Page header
-  - Form: bg-white rounded-xl shadow-sm border p-6 max-w-2xl
+  - Form: bg-white rounded-xl shadow-sm border p-5 max-w-2xl
   - Labels + styled inputs for every field (focus ring indigo-900)
   - <select> dropdowns for FK fields (fetch related)
   - Submit: bg-indigo-900 text-white (primary) or bg-indigo-600 (accent) with Save icon

@@ -345,7 +345,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <h1 className="text-sm font-medium text-gray-700">${appName}</h1>
                 <div id="header-user" />
               </header>
-              <main className="flex-1 p-6">
+              <main className="flex-1 px-6 py-4">
                 {children}
               </main>
               <footer className="border-t border-gray-200 bg-white px-6 py-3 text-xs text-gray-400 flex items-center justify-between">
