@@ -97,11 +97,12 @@ const config: NextConfig = {
   typescript: { ignoreBuildErrors: true },
   eslint: { ignoreDuringBuilds: true },
   // Allow embedding in iframes (the control plane previews deployed apps).
+  // We unset X-Frame-Options (Vercel defaults to SAMEORIGIN which blocks iframes)
+  // and use the modern Content-Security-Policy frame-ancestors directive instead.
   async headers() {
     return [{
       source: '/:path*',
       headers: [
-        { key: 'X-Frame-Options', value: 'ALLOWALL' },
         { key: 'Content-Security-Policy', value: 'frame-ancestors *' },
       ],
     }];
@@ -109,6 +110,26 @@ const config: NextConfig = {
 };
 export default config;
 `;
+
+// vercel.json overrides Vercel's platform-level X-Frame-Options: SAMEORIGIN
+// which blocks iframe embedding. The "override: true" flag replaces the
+// default header entirely. CSP frame-ancestors takes precedence in modern
+// browsers, but removing X-Frame-Options avoids conflicts.
+const VERCEL_JSON = JSON.stringify(
+  {
+    headers: [
+      {
+        source: '/(.*)',
+        headers: [
+          { key: 'X-Frame-Options', value: '' },
+          { key: 'Content-Security-Policy', value: 'frame-ancestors *' },
+        ],
+      },
+    ],
+  },
+  null,
+  2,
+);
 
 const POSTCSS_CONFIG = `module.exports = { plugins: { '@tailwindcss/postcss': {} } };
 `;
@@ -573,6 +594,7 @@ export async function writeNextJsScaffold(
     [`${base}/app/api/auth/seed/route.ts`, SEED_ROUTE],
     [`${base}/components/Sidebar.tsx`, SIDEBAR_COMPONENT],
     [`${base}/components/AuthProvider.tsx`, AUTH_PROVIDER],
+    [`${base}/vercel.json`, VERCEL_JSON],
   ];
 
   for (const [path, content] of files) {
