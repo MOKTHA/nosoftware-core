@@ -22,9 +22,9 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(
   _req: Request,
-  { params }: { params: { buildId: string } },
+  props: { params: Promise<{ buildId: string }> },
 ) {
-  const { buildId } = params;
+  const { buildId } = await props.params;
 
   const [build] = await db.select().from(builds).where(eq(builds.id, buildId));
   if (!build) {
@@ -190,12 +190,13 @@ async function runPipeline(
       finalDetail,
     );
 
-    // Final DB update: status, URL, and ALL events
+    // Final DB update: status, URL, error message, and ALL events
     await db
       .update(builds)
       .set({
         status: allSucceeded ? 'succeeded' : 'failed',
         deployedUrl,
+        errorMessage: allSucceeded ? null : (failedDetails || 'One or more stages failed'),
         eventsJson: JSON.stringify(emitter.buffer),
         updatedAt: new Date(),
       })

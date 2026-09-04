@@ -14,9 +14,9 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(
   _req: Request,
-  { params }: { params: { buildId: string } },
+  props: { params: Promise<{ buildId: string }> },
 ) {
-  const { buildId } = params;
+  const { buildId } = await props.params;
 
   const [build] = await db.select().from(builds).where(eq(builds.id, buildId));
   if (!build) {

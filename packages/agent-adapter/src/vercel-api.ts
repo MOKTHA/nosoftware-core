@@ -289,7 +289,34 @@ export async function pollDeployment(
     if (data.readyState === 'ERROR') {
       const msg = data.errorMessage ?? 'unknown error';
       const code = data.errorCode ? ` [${data.errorCode}]` : '';
-      throw new Error(`Vercel deployment failed${code}: ${msg}`);
+
+      // Fetch build logs for actionable error details
+      let buildLogs = '';
+      try {
+        const logsRes = await fetch(
+          vercelUrl(`/v7/deployments/${deploymentId}/events`, config),
+          { headers: vercelHeaders(config) },
+        );
+        if (logsRes.ok) {
+          const events = (await logsRes.json()) as Array<{
+            type: string;
+            payload?: { text?: string };
+          }>;
+          // Extract the last 30 log lines for error context
+          const logLines = events
+            .filter(e => e.payload?.text)
+            .map(e => e.payload!.text!)
+            .slice(-30);
+          buildLogs = logLines.join('\n');
+        }
+      } catch {
+        // Non-critical — continue with the basic error message
+      }
+
+      const detail = buildLogs
+        ? `Vercel deployment failed${code}: ${msg}\n\nBuild logs (last 30 lines):\n${buildLogs}`
+        : `Vercel deployment failed${code}: ${msg}`;
+      throw new Error(detail);
     }
 
     await new Promise((resolve) => setTimeout(resolve, intervalMs));

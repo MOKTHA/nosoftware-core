@@ -259,19 +259,25 @@ export class DeployToVercelStage implements GenerationStage {
     this.emitter?.emit('deploy-to-vercel', 'running', 'QA: TypeScript type check...');
     let tscPassed = false;
     {
-      const tscResult = await session.runCommand('npx', ['tsc', '--noEmit'], {
+      let lastTscResult = await session.runCommand('npx', ['tsc', '--noEmit'], {
         cwd: '/workspace/app',
       });
-      if (tscResult.exitCode === 0) {
+      if (lastTscResult.exitCode === 0) {
         tscPassed = true;
         this.emitter?.emit('deploy-to-vercel', 'running', '✓ TypeScript check passed');
       } else {
         for (let attempt = 1; attempt <= MAX_FIX_ATTEMPTS; attempt++) {
           this.emitter?.emit('deploy-to-vercel', 'warning', `TypeScript errors — auto-fix attempt ${attempt}/${MAX_FIX_ATTEMPTS}...`);
-          const retryTsc = await session.runCommand('npx', ['tsc', '--noEmit'], { cwd: '/workspace/app' });
-          const errors = retryTsc.stderr || retryTsc.stdout || tscResult.stderr || tscResult.stdout;
+          const errors = lastTscResult.stderr || lastTscResult.stdout;
           const fixed = await this.attemptBuildFix(session, errors);
           if (fixed) {
+            tscPassed = true;
+            this.emitter?.emit('deploy-to-vercel', 'running', `✓ TypeScript errors fixed (attempt ${attempt})`);
+            break;
+          }
+          // Get fresh errors for next attempt (fix may have partially succeeded)
+          lastTscResult = await session.runCommand('npx', ['tsc', '--noEmit'], { cwd: '/workspace/app' });
+          if (lastTscResult.exitCode === 0) {
             tscPassed = true;
             this.emitter?.emit('deploy-to-vercel', 'running', `✓ TypeScript errors fixed (attempt ${attempt})`);
             break;
@@ -287,20 +293,25 @@ export class DeployToVercelStage implements GenerationStage {
     this.emitter?.emit('deploy-to-vercel', 'running', 'QA: Production build...');
     let buildPassed = false;
     {
-      const buildResult = await session.runCommand('npm', ['run', 'build'], {
+      let lastBuildResult = await session.runCommand('npm', ['run', 'build'], {
         cwd: '/workspace/app',
       });
-      if (buildResult.exitCode === 0) {
+      if (lastBuildResult.exitCode === 0) {
         buildPassed = true;
         this.emitter?.emit('deploy-to-vercel', 'running', '✓ Production build passed');
       } else {
         for (let attempt = 1; attempt <= MAX_FIX_ATTEMPTS; attempt++) {
           this.emitter?.emit('deploy-to-vercel', 'warning', `Build failed — auto-fix attempt ${attempt}/${MAX_FIX_ATTEMPTS}...`);
-          // Re-run build to get fresh errors after fix
-          const retryBuild = await session.runCommand('npm', ['run', 'build'], { cwd: '/workspace/app' });
-          const errors = retryBuild.stderr || retryBuild.stdout || buildResult.stderr || buildResult.stdout;
+          const errors = lastBuildResult.stderr || lastBuildResult.stdout;
           const fixed = await this.attemptBuildFix(session, errors);
           if (fixed) {
+            buildPassed = true;
+            this.emitter?.emit('deploy-to-vercel', 'running', `✓ Build errors fixed (attempt ${attempt})`);
+            break;
+          }
+          // Get fresh errors for next attempt (fix may have partially succeeded)
+          lastBuildResult = await session.runCommand('npm', ['run', 'build'], { cwd: '/workspace/app' });
+          if (lastBuildResult.exitCode === 0) {
             buildPassed = true;
             this.emitter?.emit('deploy-to-vercel', 'running', `✓ Build errors fixed (attempt ${attempt})`);
             break;
@@ -376,7 +387,11 @@ export class DeployToVercelStage implements GenerationStage {
     try {
       deployedUrl = await pollDeployment(deployment.id);
     } catch (pollError) {
-      throw pollError;
+      const fullMsg = pollError instanceof Error ? pollError.message : String(pollError);
+      // Emit a truncated version for SSE (first line only), throw full for DB storage
+      const firstLine = fullMsg.split('\n')[0] ?? fullMsg;
+      this.emitter?.emit('deploy-to-vercel', 'error', firstLine);
+      throw new Error(fullMsg);
     }
 
     /* ── POST-DEPLOY VERIFICATION ───────────────────────────── */
