@@ -28,6 +28,8 @@ import type { PipelineContext } from '../pipeline-context.js';
 import type { BuildEventEmitter } from '../sse.js';
 import {
   createOrGetVercelProject,
+  setProjectPublicAccess,
+  addCustomDomain,
   setVercelProjectEnvVars,
   uploadProjectFiles,
   createVercelDeployment,
@@ -371,11 +373,18 @@ export class DeployToVercelStage implements GenerationStage {
     const slug = toProjectSlug(appName);
     const project = await createOrGetVercelProject(slug);
 
+    // Make project publicly accessible (disable Vercel Auth protection)
+    await setProjectPublicAccess(project.id);
+
+    // Add custom domain (<slug>.nosoftware.app)
+    const customDomain = await addCustomDomain(project.id, slug);
+    const primaryUrl = `https://${customDomain}`;
+
     // Set environment variables on the Vercel project
     await setVercelProjectEnvVars(project.id, {
       DATABASE_URL: databaseUrl ?? '',
       NEXTAUTH_SECRET: nextauthSecret ?? crypto.randomUUID(),
-      NEXTAUTH_URL: `https://${project.name}.vercel.app`,
+      NEXTAUTH_URL: primaryUrl,
     });
 
     // Upload files to Vercel
@@ -435,26 +444,29 @@ export class DeployToVercelStage implements GenerationStage {
     // Delete the sandbox — no longer needed
     await session.delete();
 
+    // Prefer the custom domain URL; fall back to Vercel URL
+    const finalUrl = primaryUrl || deployedUrl;
+
     if (this.ctx) {
-      this.ctx.deployedUrl = deployedUrl;
+      this.ctx.deployedUrl = finalUrl;
     }
 
     return {
       inputHash,
-      outputHash: await this.computeHash(deployedUrl),
+      outputHash: await this.computeHash(finalUrl),
       artifacts: [{
         id: crypto.randomUUID(),
         generationRunId: '00000000-0000-0000-0000-000000000000',
         stageName: this.name,
         kind: 'deployment-config' as const,
         relativePath: 'deployment/vercel-deployment.json',
-        contentHash: (await this.computeHash(deployedUrl)).slice(-64),
-        fileSizeBytes: Buffer.byteLength(deployedUrl),
+        contentHash: (await this.computeHash(finalUrl)).slice(-64),
+        fileSizeBytes: Buffer.byteLength(finalUrl),
         isNew: true,
-        description: `Deployed to ${deployedUrl}`,
+        description: `Deployed to ${finalUrl}`,
         createdAt: new Date(),
       }],
-      summary: deployedUrl,
+      summary: finalUrl,
       warnings: [],
     };
   }
