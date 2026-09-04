@@ -49,6 +49,8 @@ export default async function RootLayout({
               @keyframes spin { to { transform: rotate(360deg) } }
               @keyframes blink { 50% { opacity: 0 } }
               @keyframes pulse { 0%,100% { opacity: 1 } 50% { opacity: 0.5 } }
+              @keyframes pulse-text { 0%,100% { opacity: 1 } 50% { opacity: 0.4 } }
+              @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
               *, *::before, *::after { box-sizing: border-box; }
               a { color: inherit; text-decoration: none; }
               a:hover { opacity: 0.8; }

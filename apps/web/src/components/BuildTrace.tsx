@@ -220,18 +220,51 @@ export function BuildTrace({ buildId, onDeployed }: BuildTraceProps) {
   if (!connected && steps.length === 0) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+        {/* Minimal progress header */}
+        <div
+          style={{
+            padding: '1rem 1.25rem 0.75rem',
+            borderBottom: '1px solid #e5e5e5',
+            background: '#ffffff',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Spinner />
+            <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#0a0a0a' }}>
+              Connecting to build…
+            </span>
+          </div>
+        </div>
+        {/* Placeholder terminal */}
         <div
           style={{
             flex: 1,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
+            background: '#0a0a0a',
+            padding: '1rem',
+            fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace',
+            fontSize: '0.75rem',
+            lineHeight: 1.8,
             color: '#a3a3a3',
-            gap: '0.5rem',
-            fontSize: '0.875rem',
           }}
         >
-          <Spinner /> Connecting to build…
+          <div style={{ color: '#525252', marginBottom: '0.5rem', userSelect: 'none' }}>
+            $ nosoftware build --id {buildId.slice(0, 8)}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span style={{ color: '#a3a3a3', animation: 'pulse-text 2s ease-in-out infinite' }}>
+              Establishing connection…
+            </span>
+            <span
+              style={{
+                display: 'inline-block',
+                width: '0.5rem',
+                height: '1rem',
+                background: '#737373',
+                animation: 'blink 1s step-end infinite',
+                verticalAlign: 'bottom',
+              }}
+            />
+          </div>
         </div>
       </div>
     );
@@ -473,19 +506,44 @@ export function BuildTrace({ buildId, onDeployed }: BuildTraceProps) {
           </div>
         )}
 
-        {/* Blinking cursor */}
+        {/* Active step indicator + blinking cursor */}
         {!done && (
-          <span
-            style={{
-              display: 'inline-block',
-              width: '0.5rem',
-              height: '1rem',
-              background: '#737373',
-              animation: 'blink 1s step-end infinite',
-              verticalAlign: 'bottom',
-              marginTop: '0.25rem',
-            }}
-          />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.25rem' }}>
+            {/* Show what's currently happening */}
+            {currentStepIndex >= 0 ? (
+              <>
+                <span style={{ color: '#3b82f6' }}>▸</span>
+                <span style={{ color: '#3b82f6', animation: 'pulse-text 2s ease-in-out infinite' }}>
+                  {getStepVerb(pipelineSteps[currentStepIndex]!.step)}
+                </span>
+              </>
+            ) : pollRef.current ? (
+              <>
+                <span style={{ color: '#eab308' }}>◦</span>
+                <span style={{ color: '#eab308', animation: 'pulse-text 2s ease-in-out infinite' }}>
+                  Build running on server — waiting for update…
+                </span>
+              </>
+            ) : logs.length === 0 ? (
+              <>
+                <span style={{ color: '#a3a3a3' }}>◦</span>
+                <span style={{ color: '#a3a3a3', animation: 'pulse-text 2s ease-in-out infinite' }}>
+                  Initializing pipeline…
+                </span>
+              </>
+            ) : null}
+            <span
+              style={{
+                display: 'inline-block',
+                width: '0.5rem',
+                height: '1rem',
+                background: '#737373',
+                animation: 'blink 1s step-end infinite',
+                verticalAlign: 'bottom',
+                flexShrink: 0,
+              }}
+            />
+          </div>
         )}
 
         <div ref={logEndRef} />

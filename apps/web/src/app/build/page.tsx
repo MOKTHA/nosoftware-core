@@ -227,6 +227,79 @@ export default function BuildPage() {
     analysis && !analysis.readyToBuild && !buildLoading && analysis.questions.length > 0;
   const isInitial = messages.length === 0;
 
+  /* ── Full-screen transition when build is starting ── */
+  if (buildLoading) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: 'calc(100vh - 5rem)',
+          gap: '1.25rem',
+          fontFamily:
+            'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif',
+          animation: 'fadeIn 0.3s ease-out',
+        }}
+      >
+        {/* Animated rings */}
+        <div style={{ position: 'relative', width: 64, height: 64 }}>
+          <span
+            style={{
+              position: 'absolute',
+              inset: 0,
+              border: '2px solid #e5e5e5',
+              borderTopColor: '#0a0a0a',
+              borderRadius: '50%',
+              animation: 'spin 0.8s linear infinite',
+            }}
+          />
+          <span
+            style={{
+              position: 'absolute',
+              inset: 8,
+              border: '2px solid #e5e5e5',
+              borderBottomColor: '#0a0a0a',
+              borderRadius: '50%',
+              animation: 'spin 1.2s linear infinite reverse',
+            }}
+          />
+          <span
+            style={{
+              position: 'absolute',
+              inset: 16,
+              border: '2px solid #e5e5e5',
+              borderTopColor: '#0a0a0a',
+              borderRadius: '50%',
+              animation: 'spin 1.6s linear infinite',
+            }}
+          />
+        </div>
+        <div style={{ textAlign: 'center' }}>
+          <p
+            style={{
+              fontSize: '1.125rem',
+              fontWeight: 600,
+              color: '#0a0a0a',
+              margin: '0 0 0.375rem',
+            }}
+          >
+            Creating &ldquo;{analysis?.appName ?? 'your app'}&rdquo;
+          </p>
+          <p style={{ fontSize: '0.8125rem', color: '#737373', margin: 0 }}>
+            Setting up the build pipeline…
+          </p>
+        </div>
+        {error && (
+          <p style={{ color: '#dc2626', fontSize: '0.8125rem', marginTop: '0.5rem' }}>
+            {error}
+          </p>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div
       style={{
