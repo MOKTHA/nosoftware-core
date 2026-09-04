@@ -80,6 +80,7 @@ export {
   skillLoaderTool,
   multiSkillLoaderTool,
   skillDiscoveryTool,
+  resolveSkillsDirectory,
 } from './skills-loader.js';
 
 // SSE build event streaming (Phase 5)

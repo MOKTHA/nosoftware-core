@@ -56,13 +56,18 @@ function getSkillsDir(): string {
 
 /** Lazily resolved and cached skills directory */
 let _skillsDir: string | null = null;
-function getSkillsDirCached(): string {
+
+/**
+ * Return the resolved skills directory (cached after first call).
+ * Exported so other modules (e.g. llm.ts) share the same resolution.
+ */
+export function resolveSkillsDirectory(): string {
   if (!_skillsDir) _skillsDir = getSkillsDir();
   return _skillsDir;
 }
 
-// Alias for backward compatibility within this module
-const SKILLS_DIR_GETTER = getSkillsDirCached;
+// Internal alias used throughout this module
+const SKILLS_DIR_GETTER = resolveSkillsDirectory;
 
 /* ------------------------------------------------------------------ */
 /*  Skill Discovery                                                   */
