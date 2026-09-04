@@ -20,9 +20,9 @@ import { UserMenu } from '@/components/UserMenu';
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'HeyNXT — Industrial AI App Builder',
+  title: 'NoSoftware — AI App Builder',
   description:
-    'Control plane for HeyNXT: blueprints, generation runs, and industrial applications.',
+    'Build production-ready web apps from a single prompt. NoSoftware generates, deploys, and manages your application.',
 };
 
 export default async function RootLayout({
@@ -31,9 +31,6 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const session = await getSession();
-  // Extract only the user fields we want to expose to the client.
-  // Sending the whole session object would cross the server/client
-  // boundary with internal Auth.js fields we don't need in the UI.
   const user = session?.user
     ? {
         id: session.user.id,
@@ -46,64 +43,77 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <head>
-        {/* Keyframe animation for the BuildTrace spinner component */}
         <style
           dangerouslySetInnerHTML={{
-            __html: '@keyframes spin{to{transform:rotate(360deg)}}',
+            __html: `
+              @keyframes spin { to { transform: rotate(360deg) } }
+              @keyframes blink { 50% { opacity: 0 } }
+              @keyframes pulse { 0%,100% { opacity: 1 } 50% { opacity: 0.5 } }
+              @keyframes pulse-text { 0%,100% { opacity: 1 } 50% { opacity: 0.4 } }
+              @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+              *, *::before, *::after { box-sizing: border-box; }
+              a { color: inherit; text-decoration: none; }
+              a:hover { opacity: 0.8; }
+            `,
           }}
         />
       </head>
       <body
         style={{
           fontFamily:
-            'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
+            'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif',
           margin: 0,
-          padding: '2rem',
-          background: '#fafafa',
-          color: '#111',
+          padding: 0,
+          background: '#ffffff',
+          color: '#0a0a0a',
+          WebkitFontSmoothing: 'antialiased',
         }}
       >
         <header
           style={{
-            borderBottom: '1px solid #eaeaea',
-            paddingBottom: '1rem',
-            marginBottom: '2rem',
+            borderBottom: '1px solid #e5e5e5',
+            padding: '0 1.5rem',
+            height: '3.5rem',
             display: 'flex',
-            alignItems: 'baseline',
+            alignItems: 'center',
             justifyContent: 'space-between',
+            background: '#ffffff',
           }}
         >
-          <h1 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 600 }}>
-            <a href="/" style={{ color: 'inherit', textDecoration: 'none' }}>
-              HeyNXT
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+            <a
+              href="/"
+              style={{
+                fontSize: '1rem',
+                fontWeight: 600,
+                letterSpacing: '-0.02em',
+                color: '#0a0a0a',
+              }}
+            >
+              NoSoftware
             </a>
-          </h1>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '1rem',
-              fontSize: '0.875rem',
-            }}
-          >
-            <nav style={{ display: 'flex', gap: '1rem' }}>
-              <a href="/workspaces" style={{ color: '#0070f3' }}>
-                Workspaces
-              </a>
-              <a href="/projects" style={{ color: '#0070f3' }}>
-                Projects
-              </a>
-              <a href="/tasks" style={{ color: '#0070f3' }}>
-                Tasks
-              </a>
-              <a href="/build" style={{ color: '#0070f3' }}>
+            <nav
+              style={{
+                display: 'flex',
+                gap: '1rem',
+                fontSize: '0.875rem',
+                color: '#737373',
+              }}
+            >
+              <a href="/workspaces">Workspaces</a>
+              <a href="/projects">Projects</a>
+              <a href="/tasks">Tasks</a>
+              <a
+                href="/build"
+                style={{ fontWeight: 500, color: '#0a0a0a' }}
+              >
                 Build
               </a>
             </nav>
-            <UserMenu user={user} />
           </div>
+          <UserMenu user={user} />
         </header>
-        <main>{children}</main>
+        <main style={{ padding: '0.75rem 1.5rem' }}>{children}</main>
       </body>
     </html>
   );

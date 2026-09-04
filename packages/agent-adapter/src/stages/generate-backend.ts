@@ -76,25 +76,86 @@ export class GenerateBackendStage implements GenerationStage {
     const routeCode = await callOpenRouter({
       model: 'anthropic/claude-sonnet-4',
       systemPrompt: [
-        'You are a Next.js 15 App Router API route generator.',
-        'Given a Drizzle schema, generate CRUD route handlers.',
-        'Output ONLY TypeScript. Create one file per entity with GET (list+single), POST, PATCH, DELETE.',
-        'Import db from "@/lib/db" and tables from "@/lib/schema".',
-        'Use NextRequest/NextResponse from "next/server".',
-        'IMPORTANT: Every route file MUST export `export const dynamic = "force-dynamic";` at the top so Next.js does not cache or pre-render it.',
+        'You are a Next.js 15 App Router API route generator producing PRODUCTION-READY code.',
+        '',
+        '## Imports',
+        'import { db } from "@/lib/db";',
+        'import { myTable } from "@/lib/schema";  // use the actual exported table names from the schema',
+        'import { NextRequest, NextResponse } from "next/server";',
+        'import { eq } from "drizzle-orm";',
+        'Do NOT import from libraries not in package.json.',
+        '',
+        '## Error handling (CRITICAL)',
+        'EVERY catch block MUST return the ACTUAL error message:',
+        '  catch (err) { return NextResponse.json({ error: (err as Error).message }, { status: 500 }); }',
+        'NEVER return a generic message like "Failed to create user" — always use (err as Error).message.',
+        '',
+        '## POST handler pattern:',
+        'export async function POST(req: NextRequest) {',
+        '  try {',
+        '    const body = await req.json();',
+        '    // Only pass user-provided fields — id/createdAt/updatedAt have DB defaults',
+        '    const [record] = await db.insert(myTable).values({',
+        '      name: body.name,  // only the fields the user sends',
+        '    }).returning();',
+        '    return NextResponse.json(record, { status: 201 });',
+        '  } catch (err) {',
+        '    return NextResponse.json({ error: (err as Error).message }, { status: 500 });',
+        '  }',
+        '}',
+        '',
+        '## IMPORTANT insert rules:',
+        '- Do NOT pass id, createdAt, or updatedAt in .values() — they have database defaults.',
+        '- Only pass the user-supplied fields from req.json().',
+        '- Always use .returning() to get the created record back.',
+        '',
+        '## GET handler (IMPORTANT for dropdown support):',
+        'The GET handler MUST return a plain JSON array of records.',
+        'The frontend uses GET /api/<entity> to populate <select> dropdowns for FK fields.',
+        'Pattern:',
+        'export async function GET() {',
+        '  try {',
+        '    const records = await db.select().from(myTable);',
+        '    return NextResponse.json(records);',
+        '  } catch (err) {',
+        '    return NextResponse.json({ error: (err as Error).message }, { status: 500 });',
+        '  }',
+        '}',
+        '',
+        '## Dynamic route params (CRITICAL — Next.js 15 breaking change):',
+        'In Next.js 15, route params are ASYNC. You MUST use this pattern for [id] routes:',
+        '',
+        'export async function GET(req: NextRequest, props: { params: Promise<{ id: string }> }) {',
+        '  const { id } = await props.params;',
+        '  // Now use `id` directly, NOT `params.id`',
+        '}',
+        '',
+        'NEVER use `{ params }: { params: { id: string } }` — that is the old Next.js 14 pattern.',
+        'ALWAYS destructure params with `await props.params` inside the function body.',
+        'This applies to GET, PATCH, PUT, DELETE in [id] routes.',
+        '',
+        '## Other handlers:',
+        'EVERY file MUST start with: export const dynamic = "force-dynamic";',
+        'PATCH/PUT: parse body, use eq(table.id, id) for WHERE.',
+        'DELETE: use eq(table.id, id), return { success: true }.',
+        '',
+        '## File format',
+        'Create one file per entity: app/api/<entity>/route.ts',
+        'For single-item routes with dynamic [id]: app/api/<entity>/[id]/route.ts',
         'Separate each file with "// FILE: <path>" on its own line.',
-        'Paths are relative to the project root, e.g. app/api/tickets/route.ts.',
-        'Do NOT use a src/ directory — there is no src/ folder in this project.',
-        'Do NOT generate app/layout.tsx — it already exists.',
-        'No markdown fences, no explanations, no ```typescript blocks.',
-      ].join(' '),
+        'Do NOT use a src/ directory.',
+        'Do NOT generate app/layout.tsx or any app/api/auth/* routes — they already exist.',
+        '',
+        'Output ONLY TypeScript. No markdown fences, no explanations.',
+      ].join('\n'),
       userPrompt: `Schema:\n${schemaContent}\n\nSpec:\n${JSON.stringify(input.spec, null, 2)}`,
     });
 
-    // Parse multi-file output and write each file
+    // Parse multi-file output, post-process, and write each file
     const files = this.parseMultiFileOutput(routeCode);
     for (const [filePath, content] of files) {
-      await session.writeFile(`/workspace/app/${filePath}`, content);
+      const fixed = this.postProcessBackendCode(content);
+      await session.writeFile(`/workspace/app/${filePath}`, fixed);
     }
 
     if (this.ctx) {
@@ -125,6 +186,19 @@ export class GenerateBackendStage implements GenerationStage {
         path = path.slice(4);
       }
 
+      // Guard: strip route groups like (dashboard), (auth), etc.
+      path = path.replace(/\([^)]+\)\//g, '');
+
+      // Guard: skip scaffold files and auth routes
+      if (
+        path === 'app/layout.tsx' ||
+        path === 'app/globals.css' ||
+        path === 'app/page.tsx' ||
+        path.startsWith('app/api/auth/')
+      ) {
+        continue;
+      }
+
       if (path && content) {
         // Ensure every API route is force-dynamic so Next.js doesn't
         // try to pre-render routes that query the database at build time.
@@ -136,6 +210,69 @@ export class GenerateBackendStage implements GenerationStage {
       }
     }
     return files;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  Post-process: fix common LLM code issues                         */
+  /* ------------------------------------------------------------------ */
+
+  /**
+   * Automatically fix common LLM-generated backend code problems:
+   * - Replace generic error messages with actual error text
+   * - Ensure .returning() is used on INSERTs
+   * - Remove id/createdAt/updatedAt from INSERT values
+   */
+  private postProcessBackendCode(code: string): string {
+    let fixed = code;
+
+    // Fix 1: Replace generic catch-block error messages with (err as Error).message
+    // Catches patterns like: { error: "Failed to create ..." } or { error: `Failed to ...` }
+    fixed = fixed.replace(
+      /\{\s*error:\s*["'`](?:Failed to|Error|Could not|Unable to)[^"'`]*["'`]\s*\}/g,
+      '{ error: (err as Error).message }',
+    );
+
+    // Fix 2: Also catch: { message: "..." } pattern
+    fixed = fixed.replace(
+      /\{\s*message:\s*["'`](?:Failed to|Error|Could not|Unable to)[^"'`]*["'`]\s*\}/g,
+      '{ error: (err as Error).message }',
+    );
+
+    // Fix 3: Ensure catch blocks have the err parameter
+    // Replace: } catch { with } catch (err) {
+    fixed = fixed.replace(
+      /\}\s*catch\s*\{/g,
+      '} catch (err) {',
+    );
+
+    // Fix 4: Replace catch (error) with catch (err) for consistency
+    // Then replace error.message with (err as Error).message
+    fixed = fixed.replace(
+      /catch\s*\(\s*error\s*\)/g,
+      'catch (err)',
+    );
+    fixed = fixed.replace(
+      /error\.message/g,
+      '(err as Error).message',
+    );
+
+    // Fix 5: Convert Next.js 14 sync params to Next.js 15 async params
+    // Pattern: { params }: { params: { id: string } } → props: { params: Promise<{ id: string }> }
+    fixed = fixed.replace(
+      /\{\s*params\s*\}\s*:\s*\{\s*params\s*:\s*\{([^}]+)\}\s*\}/g,
+      'props: { params: Promise<{$1}> }',
+    );
+    // Then add `const { id } = await props.params;` after the opening brace if not already present
+    if (fixed.includes('props: { params: Promise<') && !fixed.includes('await props.params')) {
+      fixed = fixed.replace(
+        /(props:\s*\{\s*params:\s*Promise<\{[^}]+\}>\s*\}\s*)\)\s*\{/g,
+        '$1) {\n  const { id } = await props.params;',
+      );
+      // Remove direct params.id references (now just use `id`)
+      fixed = fixed.replace(/params\.id/g, 'id');
+    }
+
+    return fixed;
   }
 
   /* ------------------------------------------------------------------ */
@@ -230,10 +367,22 @@ export class GenerateBackendStage implements GenerationStage {
 
   private detectDomain(spec: Record<string, unknown>): string {
     const keywords = Object.values(spec).join(' ').toLowerCase();
+    // Industrial domains
     if (keywords.includes('pcb') || keywords.includes('electronics')) return 'pcb';
     if (keywords.includes('extrusion') || keywords.includes('aluminum')) return 'extrusion';
     if (keywords.includes('quality') || keywords.includes('inspection')) return 'quality';
-    return 'extrusion';
+    // Generic domains
+    if (keywords.includes('task') || keywords.includes('project')) return 'tasks';
+    if (keywords.includes('user') || keywords.includes('customer')) return 'users';
+    if (keywords.includes('order') || keywords.includes('booking')) return 'orders';
+    if (keywords.includes('product') || keywords.includes('inventory')) return 'products';
+    // Fallback: extract from appName or spec
+    const appName = (spec['appName'] as string) ?? '';
+    if (appName) {
+      const slug = appName.toLowerCase().replace(/[^a-z]+/g, '-').replace(/^-|-$/g, '');
+      return slug || 'items';
+    }
+    return 'items';
   }
 
   private async computeHash(content: string): Promise<string> {

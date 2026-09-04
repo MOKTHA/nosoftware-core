@@ -184,7 +184,7 @@ export function CreateProjectForm() {
           value={slug}
           onChange={(e) => setSlug(e.target.value)}
           required
-          placeholder="e.g. extrusion-routing-builder"
+          placeholder="e.g. my-booking-app"
           style={inputStyle}
         />
         {fieldErrors.slug && (

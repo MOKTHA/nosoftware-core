@@ -241,7 +241,13 @@ export class GenerateDeploymentStage implements GenerationStage {
     if (keywords.includes('pcb') || keywords.includes('electronics')) return 'pcb';
     if (keywords.includes('extrusion') || keywords.includes('aluminum')) return 'extrusion';
     if (keywords.includes('quality') || keywords.includes('inspection')) return 'quality';
-    return 'extrusion';
+    if (keywords.includes('task') || keywords.includes('project')) return 'tasks';
+    if (keywords.includes('user') || keywords.includes('customer')) return 'users';
+    if (keywords.includes('order') || keywords.includes('booking')) return 'orders';
+    if (keywords.includes('product') || keywords.includes('inventory')) return 'products';
+    const appName = (spec['appName'] as string) ?? '';
+    if (appName) return appName.toLowerCase().replace(/[^a-z]+/g, '-').replace(/^-|-$/g, '') || 'app';
+    return 'app';
   }
 
   private async computeHash(content: string): Promise<string> {

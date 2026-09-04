@@ -63,17 +63,50 @@ export class GenerateSchemaStage implements GenerationStage {
     const rawSchema = await callOpenRouter({
       model: 'anthropic/claude-sonnet-4',
       systemPrompt: [
-        'You are a Drizzle ORM schema generator for PostgreSQL.',
+        'You are a Drizzle ORM schema generator for PostgreSQL (Neon serverless).',
         'Output ONLY valid TypeScript for a single lib/schema.ts file.',
-        'Use pgTable from drizzle-orm/pg-core. Include id, createdAt, updatedAt columns on every table.',
-        'Import { pgTable, text, integer, boolean, timestamp, uuid } from "drizzle-orm/pg-core".',
-        'Export every table. No markdown fences, no explanations, no ```typescript blocks.',
-      ].join(' '),
+        '',
+        '## Import exactly this:',
+        'import { pgTable, text, integer, boolean, timestamp, uuid, serial, varchar } from "drizzle-orm/pg-core";',
+        '',
+        '## Column conventions (MANDATORY for every table):',
+        '- id: uuid("id").primaryKey().defaultRandom()',
+        '- createdAt: timestamp("created_at").defaultNow().notNull()',
+        '- updatedAt: timestamp("updated_at").defaultNow().notNull()',
+        '',
+        '## Column type rules:',
+        '- Names/titles: text("column_name").notNull()',
+        '- Emails: text("email").notNull()',
+        '- Descriptions/notes: text("description")',
+        '- Status/enums: text("status").notNull().default("active")',
+        '- Counts/quantities: integer("quantity").notNull().default(0)',
+        '- Booleans: boolean("is_active").notNull().default(true)',
+        '- Foreign keys: uuid("user_id").notNull()',
+        '',
+        '## Foreign key / relation rules:',
+        '- For foreign keys, use: uuid("user_id").notNull()  (just a uuid column)',
+        '- Name FK columns as <related_entity>_id in snake_case (e.g. user_id, project_id, category_id)',
+        '- Use camelCase for the JS property: userId: uuid("user_id").notNull()',
+        '- The frontend will use the column name to show a dropdown of related records',
+        '',
+        '## General rules:',
+        '- Use snake_case for DB column names in the string arg: text("first_name")',
+        '- Use camelCase for the JS property: firstName: text("first_name")',
+        '- Export every table with `export const`',
+        '- Make every required field .notNull() with a sensible .default() where possible',
+        '- Do NOT use serial() for IDs — use uuid().defaultRandom()',
+        '- Do NOT generate an adminUsers table — it is provided by the scaffold',
+        '- No markdown fences, no explanations, no ```typescript blocks',
+      ].join('\n'),
       userPrompt: `Generate a Drizzle ORM schema for these entities:\n${JSON.stringify(input.spec, null, 2)}`,
     });
 
     // Strip markdown fences the LLM may wrap output in
-    const schemaCode = rawSchema.replace(/^```[a-z]*\n?/gm, '').replace(/```$/gm, '').trim();
+    let schemaCode = rawSchema.replace(/^```[a-z]*\n?/gm, '').replace(/```$/gm, '').trim();
+
+    // Append the admin_users table required by the auth scaffold
+    const { ADMIN_USERS_SCHEMA_APPEND } = await import('@heynxt/sandbox');
+    schemaCode += '\n' + ADMIN_USERS_SCHEMA_APPEND;
 
     await session.writeFile('/workspace/app/lib/schema.ts', schemaCode);
 

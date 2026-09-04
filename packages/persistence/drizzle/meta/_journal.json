@@ -22,6 +22,27 @@
       "when": 1783578703913,
       "tag": "0002_tough_mad_thinker",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1783578800000,
+      "tag": "0003_agent_execution_tables",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1783578900000,
+      "tag": "0004_phase8_runtime_services",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1783579000000,
+      "tag": "0005_build_events_json",
+      "breakpoints": true
     }
   ]
 }

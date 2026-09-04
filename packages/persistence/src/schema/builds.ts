@@ -40,6 +40,12 @@ export const builds = pgTable('builds', {
   /** Human-readable application name. */
   appName: text('appName').notNull(),
 
+  /** The user's original prompt that triggered this build. */
+  prompt: text('prompt'),
+
+  /** The generated AppSpecTemplate as JSON (produced from the prompt). */
+  specJson: text('specJson'),
+
   /** Lifecycle status. Defaults to 'pending'. */
   status: buildStatusEnum('status').notNull().default('pending'),
 
@@ -48,6 +54,9 @@ export const builds = pgTable('builds', {
 
   /** Error message when the build fails. */
   errorMessage: text('errorMessage'),
+
+  /** Build events (SSE) stored as JSON array for replay on reconnect. */
+  eventsJson: text('eventsJson'),
 
   createdAt: timestamp('createdAt', { mode: 'date' }).notNull(),
   updatedAt: timestamp('updatedAt', { mode: 'date' }),
