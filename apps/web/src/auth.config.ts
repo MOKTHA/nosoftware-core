@@ -60,7 +60,7 @@ export const authConfig: NextAuthConfig = {
       const { pathname } = request.nextUrl;
 
       if (pathname === '/') return true;
-      if (pathname === '/build') return true;
+      if (pathname.startsWith('/build')) return true;
       if (pathname === '/api/health') return true;
       if (pathname.startsWith('/api/auth')) return true;
       if (pathname.startsWith('/api/prompt')) return true;
