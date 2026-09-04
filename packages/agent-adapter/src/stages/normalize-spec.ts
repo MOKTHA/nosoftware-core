@@ -75,6 +75,7 @@ export class NormalizeSpecStage implements GenerationStage {
 
     const session = await SandboxSession.create({
       sessionId,
+      timeoutMs: 30 * 60 * 1000, // 30 minutes — pipeline + QA retries need headroom
       env: {
         DATABASE_URL: databaseUrl,
         NEXTAUTH_SECRET: nextauthSecret,

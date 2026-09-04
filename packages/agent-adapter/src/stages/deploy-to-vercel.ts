@@ -290,6 +290,8 @@ export class DeployToVercelStage implements GenerationStage {
     }
 
     // QA Step 2: Production build (with retry loop)
+    // Fewer attempts if tsc already exhausted all retries (same errors likely)
+    const buildFixAttempts = tscPassed ? MAX_FIX_ATTEMPTS : 1;
     this.emitter?.emit('deploy-to-vercel', 'running', 'QA: Production build...');
     let buildPassed = false;
     {
@@ -300,8 +302,8 @@ export class DeployToVercelStage implements GenerationStage {
         buildPassed = true;
         this.emitter?.emit('deploy-to-vercel', 'running', '✓ Production build passed');
       } else {
-        for (let attempt = 1; attempt <= MAX_FIX_ATTEMPTS; attempt++) {
-          this.emitter?.emit('deploy-to-vercel', 'warning', `Build failed — auto-fix attempt ${attempt}/${MAX_FIX_ATTEMPTS}...`);
+        for (let attempt = 1; attempt <= buildFixAttempts; attempt++) {
+          this.emitter?.emit('deploy-to-vercel', 'warning', `Build failed — auto-fix attempt ${attempt}/${buildFixAttempts}...`);
           const errors = lastBuildResult.stderr || lastBuildResult.stdout;
           const fixed = await this.attemptBuildFix(session, errors);
           if (fixed) {
@@ -310,11 +312,13 @@ export class DeployToVercelStage implements GenerationStage {
             break;
           }
           // Get fresh errors for next attempt (fix may have partially succeeded)
-          lastBuildResult = await session.runCommand('npm', ['run', 'build'], { cwd: '/workspace/app' });
-          if (lastBuildResult.exitCode === 0) {
-            buildPassed = true;
-            this.emitter?.emit('deploy-to-vercel', 'running', `✓ Build errors fixed (attempt ${attempt})`);
-            break;
+          if (attempt < buildFixAttempts) {
+            lastBuildResult = await session.runCommand('npm', ['run', 'build'], { cwd: '/workspace/app' });
+            if (lastBuildResult.exitCode === 0) {
+              buildPassed = true;
+              this.emitter?.emit('deploy-to-vercel', 'running', `✓ Build errors fixed (attempt ${attempt})`);
+              break;
+            }
           }
         }
         if (!buildPassed) {
@@ -324,6 +328,7 @@ export class DeployToVercelStage implements GenerationStage {
     }
 
     // QA Step 3: Smoke tests (with retry loop — only if build passed)
+    const smokeFixAttempts = tscPassed ? MAX_FIX_ATTEMPTS : 1;
     if (buildPassed) {
       this.emitter?.emit('deploy-to-vercel', 'running', 'QA: Running smoke tests...');
       let smokePassed = false;
@@ -333,9 +338,9 @@ export class DeployToVercelStage implements GenerationStage {
         const count = smokeResult.results.length;
         this.emitter?.emit('deploy-to-vercel', 'running', `✓ All ${count} smoke tests passed`);
       } else {
-        for (let attempt = 1; attempt <= MAX_FIX_ATTEMPTS; attempt++) {
+        for (let attempt = 1; attempt <= smokeFixAttempts; attempt++) {
           const failedNames = smokeResult.failedTests.map((t: { test: string }) => t.test).join(', ');
-          this.emitter?.emit('deploy-to-vercel', 'warning', `Smoke tests failed (${failedNames}) — auto-fix attempt ${attempt}/${MAX_FIX_ATTEMPTS}...`);
+          this.emitter?.emit('deploy-to-vercel', 'warning', `Smoke tests failed (${failedNames}) — auto-fix attempt ${attempt}/${smokeFixAttempts}...`);
           const errorContext = smokeResult.failedTests
             .map((t: { test: string; detail: string }) => `${t.test}: ${t.detail}`)
             .join('\n');
