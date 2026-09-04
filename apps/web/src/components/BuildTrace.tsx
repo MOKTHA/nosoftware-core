@@ -589,7 +589,7 @@ const STEP_VERBS: Record<string, string> = {
   'generate-workflows': 'Orchestrating business workflows…',
   'generate-fixtures-tests': 'Seeding test data and writing tests…',
   'generate-deployment': 'Preparing deployment configuration…',
-  'deploy-to-vercel': 'Building, verifying, and deploying…',
+  'deploy-to-vercel': 'QA testing, building, and deploying…',
 };
 
 /** Returns a Claude-style active verb phrase for the current step. */
