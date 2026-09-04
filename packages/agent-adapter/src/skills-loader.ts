@@ -28,20 +28,41 @@ type SDKInput = any;
 /*  Skills Directory                                                  */
 /* ------------------------------------------------------------------ */
 
-/** Resolve skills directory — project-local or home dir fallback */
+/**
+ * Resolve skills directory by walking up from cwd to find the monorepo
+ * root (the directory containing `.claude/skills/`). This handles:
+ * - Running from monorepo root (pnpm dev)
+ * - Running from apps/web/ (Next.js cwd)
+ * - Running from packages/agent-adapter/ (tests)
+ * Falls back to home directory skills, then to cwd-based path.
+ */
 function getSkillsDir(): string {
-  // Project-local skills (primary — checked into repo)
-  const projectSkills = path.resolve(process.cwd(), '.claude', 'skills');
-  if (existsSync(projectSkills)) return projectSkills;
+  // Walk up from cwd to find .claude/skills/
+  let dir = process.cwd();
+  const root = path.parse(dir).root;
+  while (dir !== root) {
+    const candidate = path.join(dir, '.claude', 'skills');
+    if (existsSync(candidate)) return candidate;
+    dir = path.dirname(dir);
+  }
 
   // Home directory skills (fallback)
   const homeSkills = path.join(process.env['HOME'] || '~', '.claude', 'skills');
   if (existsSync(homeSkills)) return homeSkills;
 
-  return projectSkills; // Default to project path even if missing
+  // Last resort: cwd-based path (may not exist)
+  return path.resolve(process.cwd(), '.claude', 'skills');
 }
 
-const SKILLS_DIR = getSkillsDir();
+/** Lazily resolved and cached skills directory */
+let _skillsDir: string | null = null;
+function getSkillsDirCached(): string {
+  if (!_skillsDir) _skillsDir = getSkillsDir();
+  return _skillsDir;
+}
+
+// Alias for backward compatibility within this module
+const SKILLS_DIR_GETTER = getSkillsDirCached;
 
 /* ------------------------------------------------------------------ */
 /*  Skill Discovery                                                   */
@@ -49,25 +70,26 @@ const SKILLS_DIR = getSkillsDir();
 
 /** List available skill names (directories containing SKILL.md) */
 export function listAvailableSkills(): string[] {
-  if (!existsSync(SKILLS_DIR)) return [];
-  return readdirSync(SKILLS_DIR, { withFileTypes: true })
+  const skillsDir = SKILLS_DIR_GETTER();
+  if (!existsSync(skillsDir)) return [];
+  return readdirSync(skillsDir, { withFileTypes: true })
     .filter((dirent) => dirent.isDirectory())
     .filter((dirent) =>
-      existsSync(path.join(SKILLS_DIR, dirent.name, 'SKILL.md')),
+      existsSync(path.join(skillsDir, dirent.name, 'SKILL.md')),
     )
     .map((dirent) => dirent.name);
 }
 
 /** Read a skill's SKILL.md content */
 function readSkillContent(skillName: string): string | null {
-  const skillPath = path.join(SKILLS_DIR, skillName, 'SKILL.md');
+  const skillPath = path.join(SKILLS_DIR_GETTER(), skillName, 'SKILL.md');
   if (!existsSync(skillPath)) return null;
   return readFileSync(skillPath, 'utf-8');
 }
 
 /** Read all reference files for a skill */
 function readSkillReferences(skillName: string): string {
-  const refsDir = path.join(SKILLS_DIR, skillName, 'references');
+  const refsDir = path.join(SKILLS_DIR_GETTER(), skillName, 'references');
   if (!existsSync(refsDir)) return '';
 
   const refs = readdirSync(refsDir)
@@ -117,7 +139,7 @@ function appendSkillToInput(
   const skillContent = readSkillContent(skillName);
   if (!skillContent) return currentInput;
 
-  const skillDir = path.join(SKILLS_DIR, skillName);
+  const skillDir = path.join(SKILLS_DIR_GETTER(), skillName);
 
   let references = '';
   if (includeReferences) {
@@ -178,7 +200,7 @@ Each skill provides domain-specific design patterns, component patterns, and bes
 
   execute: async (params: Record<string, unknown>) => {
     const skillType = params['type'] as string;
-    const skillPath = path.join(SKILLS_DIR, skillType, 'SKILL.md');
+    const skillPath = path.join(SKILLS_DIR_GETTER(), skillType, 'SKILL.md');
     if (!existsSync(skillPath)) {
       const available = listAvailableSkills();
       return `Skill "${skillType}" not found. Available skills: ${available.join(', ') || 'none'}`;
@@ -231,7 +253,7 @@ export const multiSkillLoaderTool: ReturnType<typeof tool> = tool({
     const failed: Array<{ name: string; reason: string }> = [];
 
     for (const skill of skills) {
-      const skillPath = path.join(SKILLS_DIR, skill, 'SKILL.md');
+      const skillPath = path.join(SKILLS_DIR_GETTER(), skill, 'SKILL.md');
       if (existsSync(skillPath)) {
         loaded.push(skill);
       } else {
@@ -287,7 +309,7 @@ export const skillDiscoveryTool: ReturnType<typeof tool> = tool({
             ?.slice(0, 120) ?? 'No description';
 
       // Check for references directory
-      const refsDir = path.join(SKILLS_DIR, skillName, 'references');
+      const refsDir = path.join(SKILLS_DIR_GETTER(), skillName, 'references');
       const hasReferences = existsSync(refsDir);
 
       // Category filter

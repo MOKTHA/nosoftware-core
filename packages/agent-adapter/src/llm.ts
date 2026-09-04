@@ -126,6 +126,27 @@ function makeMsg(
 }
 
 /**
+ * Walk up from cwd to find the monorepo root's `.claude/skills/` dir.
+ * Handles running from apps/web/, packages/*, or monorepo root.
+ */
+function resolveSkillsDir(
+  pathMod: typeof import('path'),
+  existsSync: (p: string) => boolean,
+): string {
+  let dir = process.cwd();
+  const root = pathMod.parse(dir).root;
+  while (dir !== root) {
+    const candidate = pathMod.join(dir, '.claude', 'skills');
+    if (existsSync(candidate)) return candidate;
+    dir = pathMod.dirname(dir);
+  }
+  // Home directory fallback
+  const homeSkills = pathMod.join(process.env['HOME'] || '~', '.claude', 'skills');
+  if (existsSync(homeSkills)) return homeSkills;
+  return pathMod.resolve(process.cwd(), '.claude', 'skills');
+}
+
+/**
  * Call the OpenRouter Agent SDK with skills loaded via nextTurnParams.
  *
  * This follows the official skills-loader pattern:
@@ -157,13 +178,17 @@ export async function callModelWithSkills(
     const { readFileSync, existsSync } = await import('fs');
     const pathMod = await import('path');
 
-    const skillsDir = pathMod.resolve(process.cwd(), '.claude', 'skills');
+    // Walk up from cwd to find .claude/skills/ (handles Next.js cwd = apps/web/)
+    const skillsDir = resolveSkillsDir(pathMod, existsSync);
+    console.log(`[agent-adapter] Skills directory resolved to: ${skillsDir}`);
+    console.log(`[agent-adapter] Preloading ${opts.skills.length} skill(s): ${opts.skills.join(', ')}`);
 
     for (const skillName of opts.skills) {
       const skillMarker = `[Skill: ${skillName}]`;
       const skillPath = pathMod.join(skillsDir, skillName, 'SKILL.md');
 
       if (existsSync(skillPath)) {
+        console.log(`[agent-adapter] ✓ Loaded skill: ${skillName}`);
         let content = readFileSync(skillPath, 'utf-8');
 
         // Optionally load references
@@ -190,6 +215,8 @@ export async function callModelWithSkills(
             `${skillMarker}\nBase directory: ${pathMod.join(skillsDir, skillName)}\n\n${content}`,
           ),
         );
+      } else {
+        console.warn(`[agent-adapter] ✗ Skill not found: ${skillName} (looked at ${skillPath})`);
       }
     }
   }
