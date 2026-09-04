@@ -47,6 +47,7 @@ function packageJson(appNameKebab: string): string {
         'next-auth': '5.0.0-beta.25',
         zod: '3.24.1',
         bcryptjs: '2.4.3',
+        'lucide-react': '0.468.0',
       },
       devDependencies: {
         'drizzle-kit': '0.30.4',
