@@ -122,6 +122,18 @@ export class GenerateBackendStage implements GenerationStage {
         '  }',
         '}',
         '',
+        '## Dynamic route params (CRITICAL — Next.js 15 breaking change):',
+        'In Next.js 15, route params are ASYNC. You MUST use this pattern for [id] routes:',
+        '',
+        'export async function GET(req: NextRequest, props: { params: Promise<{ id: string }> }) {',
+        '  const { id } = await props.params;',
+        '  // Now use `id` directly, NOT `params.id`',
+        '}',
+        '',
+        'NEVER use `{ params }: { params: { id: string } }` — that is the old Next.js 14 pattern.',
+        'ALWAYS destructure params with `await props.params` inside the function body.',
+        'This applies to GET, PATCH, PUT, DELETE in [id] routes.',
+        '',
         '## Other handlers:',
         'EVERY file MUST start with: export const dynamic = "force-dynamic";',
         'PATCH/PUT: parse body, use eq(table.id, id) for WHERE.',
@@ -243,6 +255,22 @@ export class GenerateBackendStage implements GenerationStage {
       /error\.message/g,
       '(err as Error).message',
     );
+
+    // Fix 5: Convert Next.js 14 sync params to Next.js 15 async params
+    // Pattern: { params }: { params: { id: string } } → props: { params: Promise<{ id: string }> }
+    fixed = fixed.replace(
+      /\{\s*params\s*\}\s*:\s*\{\s*params\s*:\s*\{([^}]+)\}\s*\}/g,
+      'props: { params: Promise<{$1}> }',
+    );
+    // Then add `const { id } = await props.params;` after the opening brace if not already present
+    if (fixed.includes('props: { params: Promise<') && !fixed.includes('await props.params')) {
+      fixed = fixed.replace(
+        /(props:\s*\{\s*params:\s*Promise<\{[^}]+\}>\s*\}\s*)\)\s*\{/g,
+        '$1) {\n  const { id } = await props.params;',
+      );
+      // Remove direct params.id references (now just use `id`)
+      fixed = fixed.replace(/params\.id/g, 'id');
+    }
 
     return fixed;
   }

@@ -86,6 +86,18 @@ export class GenerateFrontendStage implements GenerationStage {
         'import { useState, useEffect } from "react";',
         'import { useRouter } from "next/navigation";',
         '',
+        '## Dynamic route params (CRITICAL — Next.js 15 breaking change):',
+        'In Next.js 15, page params are ASYNC. You MUST use this pattern for [id] pages:',
+        '',
+        'export default async function EntityDetailPage(props: { params: Promise<{ id: string }> }) {',
+        '  const { id } = await props.params;',
+        '  // Now use `id` directly, NOT `params.id`',
+        '  const records = await db.select().from(myTable).where(eq(myTable.id, id));',
+        '}',
+        '',
+        'NEVER use `{ params }: { params: { id: string } }` — that is the old Next.js 14 pattern.',
+        'ALWAYS destructure params with `await props.params` inside the function body.',
+        '',
         '## Critical rules',
         'EVERY server component file MUST start with: export const dynamic = "force-dynamic";',
         'EVERY client component file MUST start with: "use client";',
@@ -333,6 +345,22 @@ export class GenerateFrontendStage implements GenerationStage {
       /\{\s*error:\s*["'`](?:Failed to|Error|Could not|Unable to)[^"'`]*["'`]\s*\}/g,
       '{ error: (err as Error).message }',
     );
+
+    // Fix 5: Convert Next.js 14 sync params to Next.js 15 async params (pages)
+    // Pattern: { params }: { params: { id: string } } → props: { params: Promise<{ id: string }> }
+    fixed = fixed.replace(
+      /\{\s*params\s*\}\s*:\s*\{\s*params\s*:\s*\{([^}]+)\}\s*\}/g,
+      'props: { params: Promise<{$1}> }',
+    );
+    // Add `const { id } = await props.params;` after the opening brace if not already present
+    if (fixed.includes('props: { params: Promise<') && !fixed.includes('await props.params')) {
+      fixed = fixed.replace(
+        /(props:\s*\{\s*params:\s*Promise<\{[^}]+\}>\s*\}\s*)\)\s*\{/g,
+        '$1) {\n  const { id } = await props.params;',
+      );
+      // Remove direct params.id references (now just use `id`)
+      fixed = fixed.replace(/params\.id/g, 'id');
+    }
 
     return fixed;
   }

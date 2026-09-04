@@ -479,12 +479,27 @@ export class DeployToVercelStage implements GenerationStage {
     try {
       const { callOpenRouter } = await import('../llm.js');
 
-      // Extract file paths from build errors (Next.js format: ./app/path/file.tsx)
+      // Extract file paths from build errors
+      // Next.js formats: ./app/path/file.tsx or .next/types/app/path/file.ts
       const errorFiles = new Set<string>();
-      const fileRegex = /\.\/([^\s:]+\.tsx?)/g;
+      const fileRegex = /(?:\.\/|\.next\/types\/)(app\/[^\s:(]+\.tsx?)/g;
       let match: RegExpExecArray | null;
       while ((match = fileRegex.exec(buildErrors)) !== null) {
-        errorFiles.add(match[1]!);
+        // For .next/types/ paths, map back to the actual source file
+        let filePath = match[1]!;
+        // .next/types generates wrapper files — find the actual source
+        // e.g. .next/types/app/api/adopters/[id]/route.ts → app/api/adopters/[id]/route.ts
+        errorFiles.add(filePath);
+      }
+
+      // If we couldn't find specific files but have param-related errors,
+      // scan all [id] route files
+      if (errorFiles.size === 0 && buildErrors.includes('PageProps') || buildErrors.includes('ParamCheck') || buildErrors.includes('RouteContext')) {
+        // Find all [id] route and page files by scanning common paths
+        const idPaths = buildErrors.match(/app\/[^\s:(]+\[id\][^\s:(]+\.tsx?/g) ?? [];
+        for (const p of idPaths) {
+          errorFiles.add(p);
+        }
       }
 
       if (errorFiles.size === 0) return false;
@@ -517,6 +532,15 @@ export class DeployToVercelStage implements GenerationStage {
           'You are a Next.js 15 build error fixer.',
           'Given files with build errors, output the FIXED versions.',
           'Fix ALL TypeScript and import errors. Keep the same functionality.',
+          '',
+          '## CRITICAL: Next.js 15 async params',
+          'In Next.js 15, route/page params are ASYNC. NEVER use:',
+          '  { params }: { params: { id: string } }  ← WRONG (Next.js 14)',
+          'ALWAYS use:',
+          '  props: { params: Promise<{ id: string }> }  ← CORRECT (Next.js 15)',
+          'Then inside the function: const { id } = await props.params;',
+          'This applies to ALL dynamic [id] route handlers AND pages.',
+          '',
           'EVERY API route file MUST start with: export const dynamic = "force-dynamic";',
           'Wrap all database queries in try/catch with: catch (err) { return NextResponse.json({ error: (err as Error).message }, { status: 500 }); }',
           'Only import from: "next/server", "next/link", "next/navigation", "react", "@/lib/db", "@/lib/schema", "drizzle-orm".',
@@ -543,7 +567,12 @@ export class DeployToVercelStage implements GenerationStage {
         }
       }
 
-      // Retry build
+      // Retry TypeScript check first, then build
+      const retryTsc = await session.runCommand('npx', ['tsc', '--noEmit'], {
+        cwd: '/workspace/app',
+      });
+      if (retryTsc.exitCode !== 0) return false;
+
       const retryResult = await session.runCommand('npm', ['run', 'build'], {
         cwd: '/workspace/app',
       });
@@ -611,6 +640,14 @@ export class DeployToVercelStage implements GenerationStage {
           'You are a Next.js 15 runtime error fixer.',
           'Given API route files that fail at runtime, output FIXED versions.',
           'Fix import errors, missing exports, database query issues.',
+          '',
+          '## CRITICAL: Next.js 15 async params',
+          'In Next.js 15, route params are ASYNC. NEVER use:',
+          '  { params }: { params: { id: string } }  ← WRONG (Next.js 14)',
+          'ALWAYS use:',
+          '  props: { params: Promise<{ id: string }> }  ← CORRECT (Next.js 15)',
+          'Then inside the function: const { id } = await props.params;',
+          '',
           'EVERY file MUST start with: export const dynamic = "force-dynamic";',
           'EVERY file MUST export GET and/or POST as async functions.',
           'GET handlers MUST return NextResponse.json(records) where records is an array.',
