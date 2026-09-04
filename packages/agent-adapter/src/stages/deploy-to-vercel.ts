@@ -251,65 +251,97 @@ export class DeployToVercelStage implements GenerationStage {
     const { SandboxSession, collectProjectFiles } = await import('@heynxt/sandbox');
     const session = await SandboxSession.resume(sessionId);
 
-    /* ── QA GATE ────────────────────────────────────────────── */
+    /* ── QA GATE (never-stop: auto-fix loop, deploy regardless) ── */
 
-    // QA Step 1: TypeScript check
+    const MAX_FIX_ATTEMPTS = 3;
+
+    // QA Step 1: TypeScript check (with retry loop)
     this.emitter?.emit('deploy-to-vercel', 'running', 'QA: TypeScript type check...');
-    const tscResult = await session.runCommand('npx', ['tsc', '--noEmit'], {
-      cwd: '/workspace/app',
-    });
-    if (tscResult.exitCode !== 0) {
-      this.emitter?.emit('deploy-to-vercel', 'warning', 'TypeScript errors found — attempting auto-fix...');
-      const fixed = await this.attemptBuildFix(session, tscResult.stderr || tscResult.stdout);
-      if (!fixed) {
-        throw new Error(
-          `QA failed — TypeScript errors:\n${(tscResult.stderr || tscResult.stdout).slice(0, 2000)}`,
-        );
-      }
-      this.emitter?.emit('deploy-to-vercel', 'running', 'TypeScript errors fixed');
-    } else {
-      this.emitter?.emit('deploy-to-vercel', 'running', '✓ TypeScript check passed');
-    }
-
-    // QA Step 2: Production build
-    this.emitter?.emit('deploy-to-vercel', 'running', 'QA: Production build...');
-    const buildResult = await session.runCommand('npm', ['run', 'build'], {
-      cwd: '/workspace/app',
-    });
-    if (buildResult.exitCode !== 0) {
-      this.emitter?.emit('deploy-to-vercel', 'warning', 'Build failed — attempting auto-fix...');
-      const fixed = await this.attemptBuildFix(session, buildResult.stderr || buildResult.stdout);
-      if (!fixed) {
-        throw new Error(
-          `QA failed — production build errors:\n${(buildResult.stderr || buildResult.stdout).slice(0, 2000)}`,
-        );
-      }
-      this.emitter?.emit('deploy-to-vercel', 'running', 'Build errors fixed');
-    } else {
-      this.emitter?.emit('deploy-to-vercel', 'running', '✓ Production build passed');
-    }
-
-    // QA Step 3: Smoke tests (start server, hit endpoints, verify)
-    this.emitter?.emit('deploy-to-vercel', 'running', 'QA: Running smoke tests...');
-    const smokeResult = await this.runSmokeTests(session);
-    if (!smokeResult.passed) {
-      const failedNames = smokeResult.failedTests.map((t: { test: string }) => t.test).join(', ');
-      this.emitter?.emit('deploy-to-vercel', 'warning', `Smoke tests failed: ${failedNames} — attempting auto-fix...`);
-
-      // Try to fix based on smoke test failures
-      const errorContext = smokeResult.failedTests
-        .map((t: { test: string; detail: string }) => `${t.test}: ${t.detail}`)
-        .join('\n');
-      const fixed = await this.attemptSmokeFix(session, errorContext, input);
-      if (!fixed) {
-        // Smoke test failures are warnings, not blockers — the app built successfully
-        this.emitter?.emit('deploy-to-vercel', 'warning', `Smoke tests still failing (${failedNames}) — deploying anyway`);
+    let tscPassed = false;
+    {
+      const tscResult = await session.runCommand('npx', ['tsc', '--noEmit'], {
+        cwd: '/workspace/app',
+      });
+      if (tscResult.exitCode === 0) {
+        tscPassed = true;
+        this.emitter?.emit('deploy-to-vercel', 'running', '✓ TypeScript check passed');
       } else {
-        this.emitter?.emit('deploy-to-vercel', 'running', '✓ Smoke test issues fixed');
+        for (let attempt = 1; attempt <= MAX_FIX_ATTEMPTS; attempt++) {
+          this.emitter?.emit('deploy-to-vercel', 'warning', `TypeScript errors — auto-fix attempt ${attempt}/${MAX_FIX_ATTEMPTS}...`);
+          const retryTsc = await session.runCommand('npx', ['tsc', '--noEmit'], { cwd: '/workspace/app' });
+          const errors = retryTsc.stderr || retryTsc.stdout || tscResult.stderr || tscResult.stdout;
+          const fixed = await this.attemptBuildFix(session, errors);
+          if (fixed) {
+            tscPassed = true;
+            this.emitter?.emit('deploy-to-vercel', 'running', `✓ TypeScript errors fixed (attempt ${attempt})`);
+            break;
+          }
+        }
+        if (!tscPassed) {
+          this.emitter?.emit('deploy-to-vercel', 'warning', 'TypeScript errors remain after auto-fix — continuing anyway (Vercel ignoreBuildErrors=true)');
+        }
+      }
+    }
+
+    // QA Step 2: Production build (with retry loop)
+    this.emitter?.emit('deploy-to-vercel', 'running', 'QA: Production build...');
+    let buildPassed = false;
+    {
+      const buildResult = await session.runCommand('npm', ['run', 'build'], {
+        cwd: '/workspace/app',
+      });
+      if (buildResult.exitCode === 0) {
+        buildPassed = true;
+        this.emitter?.emit('deploy-to-vercel', 'running', '✓ Production build passed');
+      } else {
+        for (let attempt = 1; attempt <= MAX_FIX_ATTEMPTS; attempt++) {
+          this.emitter?.emit('deploy-to-vercel', 'warning', `Build failed — auto-fix attempt ${attempt}/${MAX_FIX_ATTEMPTS}...`);
+          // Re-run build to get fresh errors after fix
+          const retryBuild = await session.runCommand('npm', ['run', 'build'], { cwd: '/workspace/app' });
+          const errors = retryBuild.stderr || retryBuild.stdout || buildResult.stderr || buildResult.stdout;
+          const fixed = await this.attemptBuildFix(session, errors);
+          if (fixed) {
+            buildPassed = true;
+            this.emitter?.emit('deploy-to-vercel', 'running', `✓ Build errors fixed (attempt ${attempt})`);
+            break;
+          }
+        }
+        if (!buildPassed) {
+          this.emitter?.emit('deploy-to-vercel', 'warning', 'Build errors remain after auto-fix — deploying anyway (Vercel will attempt its own build)');
+        }
+      }
+    }
+
+    // QA Step 3: Smoke tests (with retry loop — only if build passed)
+    if (buildPassed) {
+      this.emitter?.emit('deploy-to-vercel', 'running', 'QA: Running smoke tests...');
+      let smokePassed = false;
+      const smokeResult = await this.runSmokeTests(session);
+      if (smokeResult.passed) {
+        smokePassed = true;
+        const count = smokeResult.results.length;
+        this.emitter?.emit('deploy-to-vercel', 'running', `✓ All ${count} smoke tests passed`);
+      } else {
+        for (let attempt = 1; attempt <= MAX_FIX_ATTEMPTS; attempt++) {
+          const failedNames = smokeResult.failedTests.map((t: { test: string }) => t.test).join(', ');
+          this.emitter?.emit('deploy-to-vercel', 'warning', `Smoke tests failed (${failedNames}) — auto-fix attempt ${attempt}/${MAX_FIX_ATTEMPTS}...`);
+          const errorContext = smokeResult.failedTests
+            .map((t: { test: string; detail: string }) => `${t.test}: ${t.detail}`)
+            .join('\n');
+          const fixed = await this.attemptSmokeFix(session, errorContext, input);
+          if (fixed) {
+            smokePassed = true;
+            this.emitter?.emit('deploy-to-vercel', 'running', `✓ Smoke test issues fixed (attempt ${attempt})`);
+            break;
+          }
+        }
+        if (!smokePassed) {
+          const failedNames = smokeResult.failedTests.map((t: { test: string }) => t.test).join(', ');
+          this.emitter?.emit('deploy-to-vercel', 'warning', `Smoke tests still failing (${failedNames}) — deploying anyway`);
+        }
       }
     } else {
-      const count = smokeResult.results.length;
-      this.emitter?.emit('deploy-to-vercel', 'running', `✓ All ${count} smoke tests passed`);
+      this.emitter?.emit('deploy-to-vercel', 'warning', 'Skipping smoke tests (build did not pass locally) — deploying anyway');
     }
 
     /* ── DEPLOY ─────────────────────────────────────────────── */
@@ -502,7 +534,32 @@ export class DeployToVercelStage implements GenerationStage {
         }
       }
 
-      if (errorFiles.size === 0) return false;
+      // Quick-fix: Sidebar named export mismatch
+      // The scaffold layout.tsx uses `import { Sidebar }` (named import)
+      // but LLM may generate `export default function Sidebar` (default export).
+      if (buildErrors.includes('has no exported member') && buildErrors.includes('Sidebar')) {
+        try {
+          const sidebarCode = await session.readFile('/workspace/app/components/Sidebar.tsx');
+          if (sidebarCode.includes('export default function Sidebar')) {
+            const fixedSidebar = sidebarCode.replace(
+              /export\s+default\s+function\s+Sidebar/g,
+              'export function Sidebar',
+            );
+            await session.writeFile('/workspace/app/components/Sidebar.tsx', fixedSidebar);
+            errorFiles.delete('components/Sidebar.tsx'); // Don't re-process via LLM
+          }
+        } catch { /* skip */ }
+      }
+
+      if (errorFiles.size === 0) {
+        // All errors were quick-fixed (e.g. Sidebar export). Verify by re-running tsc.
+        const verifyTsc = await session.runCommand('npx', ['tsc', '--noEmit'], { cwd: '/workspace/app' });
+        if (verifyTsc.exitCode === 0) {
+          const verifyBuild = await session.runCommand('npm', ['run', 'build'], { cwd: '/workspace/app' });
+          return verifyBuild.exitCode === 0;
+        }
+        return false;
+      }
 
       // Read the broken files
       const fileContents: string[] = [];

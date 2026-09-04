@@ -346,7 +346,16 @@ export class GenerateFrontendStage implements GenerationStage {
       '{ error: (err as Error).message }',
     );
 
-    // Fix 5: Convert Next.js 14 sync params to Next.js 15 async params (pages)
+    // Fix 5: Ensure Sidebar uses NAMED export (not default) to match scaffold layout.tsx
+    // The scaffold layout.tsx does: import { Sidebar } from '@/components/Sidebar';
+    if (filePath === 'components/Sidebar.tsx' || filePath.endsWith('/Sidebar.tsx')) {
+      fixed = fixed.replace(
+        /export\s+default\s+function\s+Sidebar/g,
+        'export function Sidebar',
+      );
+    }
+
+    // Fix 6: Convert Next.js 14 sync params to Next.js 15 async params (pages)
     // Pattern: { params }: { params: { id: string } } → props: { params: Promise<{ id: string }> }
     fixed = fixed.replace(
       /\{\s*params\s*\}\s*:\s*\{\s*params\s*:\s*\{([^}]+)\}\s*\}/g,
