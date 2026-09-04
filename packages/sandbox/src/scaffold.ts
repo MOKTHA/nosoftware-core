@@ -46,6 +46,7 @@ function packageJson(appNameKebab: string): string {
         '@neondatabase/serverless': '0.10.4',
         'next-auth': '5.0.0-beta.25',
         zod: '3.24.1',
+        bcryptjs: '2.4.3',
       },
       devDependencies: {
         'drizzle-kit': '0.30.4',
@@ -54,6 +55,7 @@ function packageJson(appNameKebab: string): string {
         '@types/node': '22.13.10',
         '@types/react': '19.0.10',
         '@types/react-dom': '19.0.4',
+        '@types/bcryptjs': '2.4.6',
         typescript: '5.7.3',
       },
     },
@@ -156,12 +158,350 @@ export async function GET() {
 }
 `;
 
+/* ------------------------------------------------------------------ */
+/*  Auth: login API + seed admin user                                 */
+/* ------------------------------------------------------------------ */
+
+const AUTH_ROUTE = `export const dynamic = "force-dynamic";
+import { NextRequest, NextResponse } from "next/server";
+import { db } from "@/lib/db";
+import { adminUsers } from "@/lib/schema";
+import { eq } from "drizzle-orm";
+import bcrypt from "bcryptjs";
+
+export async function POST(req: NextRequest) {
+  try {
+    const { email, password } = await req.json();
+    if (!email || !password) {
+      return NextResponse.json({ error: "Email and password required" }, { status: 400 });
+    }
+
+    const [user] = await db.select().from(adminUsers).where(eq(adminUsers.email, email));
+    if (!user) {
+      return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+    }
+
+    const valid = await bcrypt.compare(password, user.passwordHash);
+    if (!valid) {
+      return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+    }
+
+    // Simple token — in production use JWT or NextAuth sessions
+    const token = Buffer.from(JSON.stringify({ id: user.id, email: user.email, name: user.name })).toString("base64");
+
+    const response = NextResponse.json({ success: true, user: { id: user.id, email: user.email, name: user.name } });
+    response.cookies.set("auth-token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+    });
+    return response;
+  } catch (err) {
+    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+  }
+}
+`;
+
+const AUTH_ME_ROUTE = `export const dynamic = "force-dynamic";
+import { NextRequest, NextResponse } from "next/server";
+
+export async function GET(req: NextRequest) {
+  const token = req.cookies.get("auth-token")?.value;
+  if (!token) {
+    return NextResponse.json({ user: null }, { status: 401 });
+  }
+  try {
+    const user = JSON.parse(Buffer.from(token, "base64").toString());
+    return NextResponse.json({ user });
+  } catch {
+    return NextResponse.json({ user: null }, { status: 401 });
+  }
+}
+`;
+
+const AUTH_LOGOUT_ROUTE = `export const dynamic = "force-dynamic";
+import { NextResponse } from "next/server";
+
+export async function POST() {
+  const response = NextResponse.json({ success: true });
+  response.cookies.delete("auth-token");
+  return response;
+}
+`;
+
+const SEED_ROUTE = `export const dynamic = "force-dynamic";
+import { NextResponse } from "next/server";
+import { db } from "@/lib/db";
+import { adminUsers } from "@/lib/schema";
+import { eq } from "drizzle-orm";
+import bcrypt from "bcryptjs";
+
+export async function POST() {
+  try {
+    // Check if admin already exists
+    const [existing] = await db.select().from(adminUsers).where(eq(adminUsers.email, "admin@nosoftware.ai"));
+    if (existing) {
+      return NextResponse.json({ message: "Admin user already exists" });
+    }
+
+    const hash = await bcrypt.hash("nosoftware@1234", 10);
+    await db.insert(adminUsers).values({
+      email: "admin@nosoftware.ai",
+      name: "Admin",
+      passwordHash: hash,
+    });
+
+    return NextResponse.json({ message: "Admin user created", email: "admin@nosoftware.ai" });
+  } catch (err) {
+    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+  }
+}
+`;
+
+/* ------------------------------------------------------------------ */
+/*  Layout, sidebar, login page                                       */
+/* ------------------------------------------------------------------ */
+
 const GLOBALS_CSS = `@import "tailwindcss";
 `;
 
-const ROOT_LAYOUT = `import './globals.css';
+function rootLayout(appName: string): string {
+  return `import './globals.css';
+import { Sidebar } from '@/components/Sidebar';
+import { AuthProvider } from '@/components/AuthProvider';
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return <html lang="en"><body>{children}</body></html>;
+  return (
+    <html lang="en">
+      <body className="bg-gray-50 text-gray-900" style={{ margin: 0 }}>
+        <AuthProvider>
+          <div className="flex min-h-screen">
+            <Sidebar appName="${appName}" />
+            <div className="flex flex-col flex-1 ml-64">
+              <header className="h-14 border-b border-gray-200 bg-white flex items-center justify-between px-6">
+                <h1 className="text-sm font-medium text-gray-700">${appName}</h1>
+                <div id="header-user" />
+              </header>
+              <main className="flex-1 p-6">
+                {children}
+              </main>
+              <footer className="border-t border-gray-200 bg-white px-6 py-3 text-xs text-gray-400 flex items-center justify-between">
+                <span>© ${new Date().getFullYear()} ${appName}</span>
+                <span>Powered by <a href="https://nosoftware.ai" target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-gray-700 font-medium">NoSoftware</a></span>
+              </footer>
+            </div>
+          </div>
+        </AuthProvider>
+      </body>
+    </html>
+  );
+}
+`;
+}
+
+const SIDEBAR_COMPONENT = `"use client";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+
+interface SidebarProps {
+  appName: string;
+}
+
+export function Sidebar({ appName }: SidebarProps) {
+  const pathname = usePathname();
+
+  // Login page should not show sidebar
+  if (pathname === "/login") return null;
+
+  return (
+    <aside className="fixed left-0 top-0 bottom-0 w-64 bg-gray-900 text-white flex flex-col z-50">
+      {/* Logo */}
+      <div className="h-14 flex items-center px-5 border-b border-gray-800">
+        <Link href="/" className="text-base font-semibold tracking-tight text-white no-underline">
+          {appName}
+        </Link>
+      </div>
+
+      {/* Navigation — LLM will inject links here */}
+      <nav id="sidebar-nav" className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
+        <SidebarLink href="/" label="Dashboard" icon="◻" active={pathname === "/"} />
+        {/* Entity links will be added by the LLM-generated code */}
+      </nav>
+
+      {/* Footer */}
+      <div className="px-5 py-3 border-t border-gray-800 text-xs text-gray-500">
+        Powered by NoSoftware
+      </div>
+    </aside>
+  );
+}
+
+export function SidebarLink({ href, label, icon, active }: { href: string; label: string; icon?: string; active?: boolean }) {
+  return (
+    <Link
+      href={href}
+      className={\`flex items-center gap-3 px-3 py-2 rounded-lg text-sm no-underline transition-colors \${
+        active
+          ? "bg-gray-800 text-white font-medium"
+          : "text-gray-400 hover:text-white hover:bg-gray-800/50"
+      }\`}
+    >
+      {icon && <span className="text-base">{icon}</span>}
+      <span>{label}</span>
+    </Link>
+  );
+}
+`;
+
+const AUTH_PROVIDER = `"use client";
+import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { usePathname, useRouter } from "next/navigation";
+
+interface User {
+  id: string;
+  email: string;
+  name: string;
+}
+
+interface AuthContextType {
+  user: User | null;
+  loading: boolean;
+  logout: () => Promise<void>;
+}
+
+const AuthContext = createContext<AuthContextType>({ user: null, loading: true, logout: async () => {} });
+
+export function useAuth() {
+  return useContext(AuthContext);
+}
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const pathname = usePathname();
+  const router = useRouter();
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((res) => (res.ok ? res.json() : { user: null }))
+      .then((data) => {
+        setUser(data.user);
+        setLoading(false);
+        if (!data.user && pathname !== "/login") {
+          // Seed admin user on first load (idempotent)
+          fetch("/api/auth/seed", { method: "POST" }).catch(() => {});
+          router.push("/login");
+        }
+      })
+      .catch(() => {
+        setLoading(false);
+        if (pathname !== "/login") router.push("/login");
+      });
+  }, [pathname, router]);
+
+  const logout = useCallback(async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+    setUser(null);
+    router.push("/login");
+  }, [router]);
+
+  return (
+    <AuthContext.Provider value={{ user, loading, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+`;
+
+const LOGIN_PAGE = `"use client";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+
+export default function LoginPage() {
+  const router = useRouter();
+  const [email, setEmail] = useState("admin@nosoftware.ai");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Login failed");
+
+      router.push("/");
+      router.refresh();
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50" style={{ marginLeft: 0 }}>
+      <div className="w-full max-w-sm">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+          <h1 className="text-xl font-semibold text-gray-900 text-center mb-1">Welcome back</h1>
+          <p className="text-sm text-gray-500 text-center mb-6">Sign in to your account</p>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <div className="bg-red-50 text-red-600 text-sm px-4 py-2 rounded-lg">{error}</div>
+            )}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                placeholder="Enter your password"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 disabled:opacity-50 transition-colors"
+            >
+              {loading ? "Signing in..." : "Sign in"}
+            </button>
+          </form>
+
+          <p className="text-xs text-gray-400 text-center mt-6">
+            Default: admin@nosoftware.ai / nosoftware@1234
+          </p>
+        </div>
+
+        <p className="text-xs text-gray-400 text-center mt-4">
+          Powered by <a href="https://nosoftware.ai" target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-gray-700 font-medium">NoSoftware</a>
+        </p>
+      </div>
+    </div>
+  );
 }
 `;
 
@@ -169,14 +509,29 @@ const HOME_PAGE = `export const dynamic = "force-dynamic";
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-gray-50 flex items-center justify-center">
+    <main className="min-h-[60vh] flex items-center justify-center">
       <div className="text-center">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome</h1>
-        <p className="text-gray-500">Your app is live. Navigate using the links above.</p>
+        <p className="text-gray-500">Your app is live. Use the sidebar to navigate.</p>
       </div>
     </main>
   );
 }
+`;
+
+/* ------------------------------------------------------------------ */
+/*  Admin users schema (appended to LLM-generated schema)             */
+/* ------------------------------------------------------------------ */
+
+const ADMIN_USERS_SCHEMA = `
+// ── Auth: admin users (scaffold-provided) ──────────────────────────
+export const adminUsers = pgTable("admin_users", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  email: text("email").notNull().unique(),
+  name: text("name").notNull(),
+  passwordHash: text("password_hash").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
 `;
 
 /** ------------------------------------------------------------------ */
@@ -208,9 +563,16 @@ export async function writeNextJsScaffold(
     [`${base}/drizzle.config.ts`, DRIZZLE_CONFIG],
     [`${base}/lib/db.ts`, DB_LIB],
     [`${base}/app/globals.css`, GLOBALS_CSS],
-    [`${base}/app/layout.tsx`, ROOT_LAYOUT],
+    [`${base}/app/layout.tsx`, rootLayout(appName)],
     [`${base}/app/page.tsx`, HOME_PAGE],
+    [`${base}/app/login/page.tsx`, LOGIN_PAGE],
     [`${base}/app/api/health/route.ts`, HEALTH_ROUTE],
+    [`${base}/app/api/auth/login/route.ts`, AUTH_ROUTE],
+    [`${base}/app/api/auth/me/route.ts`, AUTH_ME_ROUTE],
+    [`${base}/app/api/auth/logout/route.ts`, AUTH_LOGOUT_ROUTE],
+    [`${base}/app/api/auth/seed/route.ts`, SEED_ROUTE],
+    [`${base}/components/Sidebar.tsx`, SIDEBAR_COMPONENT],
+    [`${base}/components/AuthProvider.tsx`, AUTH_PROVIDER],
   ];
 
   for (const [path, content] of files) {
@@ -223,3 +585,9 @@ export async function writeNextJsScaffold(
     throw new Error(`npm install failed:\n${result.stderr}`);
   }
 }
+
+/**
+ * Content that must be appended to the LLM-generated schema so the
+ * admin_users table is created alongside the app entities.
+ */
+export const ADMIN_USERS_SCHEMA_APPEND = ADMIN_USERS_SCHEMA;

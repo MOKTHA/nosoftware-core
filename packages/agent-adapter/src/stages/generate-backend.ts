@@ -109,9 +109,21 @@ export class GenerateBackendStage implements GenerationStage {
         '- Only pass the user-supplied fields from req.json().',
         '- Always use .returning() to get the created record back.',
         '',
+        '## GET handler (IMPORTANT for dropdown support):',
+        'The GET handler MUST return a plain JSON array of records.',
+        'The frontend uses GET /api/<entity> to populate <select> dropdowns for FK fields.',
+        'Pattern:',
+        'export async function GET() {',
+        '  try {',
+        '    const records = await db.select().from(myTable);',
+        '    return NextResponse.json(records);',
+        '  } catch (err) {',
+        '    return NextResponse.json({ error: (err as Error).message }, { status: 500 });',
+        '  }',
+        '}',
+        '',
         '## Other handlers:',
         'EVERY file MUST start with: export const dynamic = "force-dynamic";',
-        'GET: list all records, or filter by searchParams.',
         'PATCH/PUT: parse body, use eq(table.id, id) for WHERE.',
         'DELETE: use eq(table.id, id), return { success: true }.',
         '',
@@ -120,7 +132,7 @@ export class GenerateBackendStage implements GenerationStage {
         'For single-item routes with dynamic [id]: app/api/<entity>/[id]/route.ts',
         'Separate each file with "// FILE: <path>" on its own line.',
         'Do NOT use a src/ directory.',
-        'Do NOT generate app/layout.tsx — it already exists.',
+        'Do NOT generate app/layout.tsx or any app/api/auth/* routes — they already exist.',
         '',
         'Output ONLY TypeScript. No markdown fences, no explanations.',
       ].join('\n'),
@@ -165,8 +177,13 @@ export class GenerateBackendStage implements GenerationStage {
       // Guard: strip route groups like (dashboard), (auth), etc.
       path = path.replace(/\([^)]+\)\//g, '');
 
-      // Guard: skip scaffold files
-      if (path === 'app/layout.tsx' || path === 'app/globals.css' || path === 'app/page.tsx') {
+      // Guard: skip scaffold files and auth routes
+      if (
+        path === 'app/layout.tsx' ||
+        path === 'app/globals.css' ||
+        path === 'app/page.tsx' ||
+        path.startsWith('app/api/auth/')
+      ) {
         continue;
       }
 

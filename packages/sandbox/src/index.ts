@@ -12,7 +12,7 @@
 export { SandboxSession } from './session.js';
 export type { SandboxConfig, RunCommandResult } from './session.js';
 
-export { writeNextJsScaffold } from './scaffold.js';
+export { writeNextJsScaffold, ADMIN_USERS_SCHEMA_APPEND } from './scaffold.js';
 
 export { provisionDatabase } from './neon.js';
 export type { NeonProvisionResult } from './neon.js';
