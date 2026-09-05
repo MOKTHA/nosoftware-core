@@ -47,6 +47,7 @@ function packageJson(appNameKebab: string): string {
         'next-auth': '5.0.0-beta.25',
         zod: '3.24.1',
         bcryptjs: '2.4.3',
+        'lucide-react': '0.468.0',
       },
       devDependencies: {
         'drizzle-kit': '0.30.4',
@@ -286,6 +287,45 @@ export async function POST() {
 /* ------------------------------------------------------------------ */
 
 const GLOBALS_CSS = `@import "tailwindcss";
+
+/* ── NoSoftware Design System Tokens ─────────────────────────── */
+
+:root {
+  --color-primary: #111827;
+  --color-primary-hover: #1f2937;
+  --color-accent: #2563eb;
+  --color-accent-hover: #1d4ed8;
+  --color-danger: #dc2626;
+  --color-success: #059669;
+  --color-warning: #d97706;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05);
+}
+
+/* Smooth transitions on interactive elements */
+a, button, input, select, textarea {
+  transition: all 0.15s ease;
+}
+
+/* Better focus rings */
+*:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* Table styling defaults */
+table { border-collapse: collapse; }
+th { text-align: left; }
+
+/* Scrollbar styling */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
 `;
 
 function rootLayout(appName: string): string {
@@ -305,7 +345,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <h1 className="text-sm font-medium text-gray-700">${appName}</h1>
                 <div id="header-user" />
               </header>
-              <main className="flex-1 p-6">
+              <main className="flex-1 px-6 py-4">
                 {children}
               </main>
               <footer className="border-t border-gray-200 bg-white px-6 py-3 text-xs text-gray-400 flex items-center justify-between">

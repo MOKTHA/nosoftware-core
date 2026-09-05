@@ -6,7 +6,7 @@
 
 import { Octokit } from '@octokit/rest';
 import type { Endpoints } from '@octokit/types';
-import { z } from 'zod';
+import { z } from 'zod/v3';
 
 // Type aliases for GitHub API response data types
 type PullCreateResponse = Endpoints['POST /repos/{owner}/{repo}/pulls']['response']['data'];

@@ -28,6 +28,8 @@ import type { PipelineContext } from '../pipeline-context.js';
 import type { BuildEventEmitter } from '../sse.js';
 import {
   createOrGetVercelProject,
+  setProjectPublicAccess,
+  addCustomDomain,
   setVercelProjectEnvVars,
   uploadProjectFiles,
   createVercelDeployment,
@@ -259,19 +261,25 @@ export class DeployToVercelStage implements GenerationStage {
     this.emitter?.emit('deploy-to-vercel', 'running', 'QA: TypeScript type check...');
     let tscPassed = false;
     {
-      const tscResult = await session.runCommand('npx', ['tsc', '--noEmit'], {
+      let lastTscResult = await session.runCommand('npx', ['tsc', '--noEmit'], {
         cwd: '/workspace/app',
       });
-      if (tscResult.exitCode === 0) {
+      if (lastTscResult.exitCode === 0) {
         tscPassed = true;
         this.emitter?.emit('deploy-to-vercel', 'running', '✓ TypeScript check passed');
       } else {
         for (let attempt = 1; attempt <= MAX_FIX_ATTEMPTS; attempt++) {
           this.emitter?.emit('deploy-to-vercel', 'warning', `TypeScript errors — auto-fix attempt ${attempt}/${MAX_FIX_ATTEMPTS}...`);
-          const retryTsc = await session.runCommand('npx', ['tsc', '--noEmit'], { cwd: '/workspace/app' });
-          const errors = retryTsc.stderr || retryTsc.stdout || tscResult.stderr || tscResult.stdout;
+          const errors = lastTscResult.stderr || lastTscResult.stdout;
           const fixed = await this.attemptBuildFix(session, errors);
           if (fixed) {
+            tscPassed = true;
+            this.emitter?.emit('deploy-to-vercel', 'running', `✓ TypeScript errors fixed (attempt ${attempt})`);
+            break;
+          }
+          // Get fresh errors for next attempt (fix may have partially succeeded)
+          lastTscResult = await session.runCommand('npx', ['tsc', '--noEmit'], { cwd: '/workspace/app' });
+          if (lastTscResult.exitCode === 0) {
             tscPassed = true;
             this.emitter?.emit('deploy-to-vercel', 'running', `✓ TypeScript errors fixed (attempt ${attempt})`);
             break;
@@ -284,26 +292,35 @@ export class DeployToVercelStage implements GenerationStage {
     }
 
     // QA Step 2: Production build (with retry loop)
+    // Fewer attempts if tsc already exhausted all retries (same errors likely)
+    const buildFixAttempts = tscPassed ? MAX_FIX_ATTEMPTS : 1;
     this.emitter?.emit('deploy-to-vercel', 'running', 'QA: Production build...');
     let buildPassed = false;
     {
-      const buildResult = await session.runCommand('npm', ['run', 'build'], {
+      let lastBuildResult = await session.runCommand('npm', ['run', 'build'], {
         cwd: '/workspace/app',
       });
-      if (buildResult.exitCode === 0) {
+      if (lastBuildResult.exitCode === 0) {
         buildPassed = true;
         this.emitter?.emit('deploy-to-vercel', 'running', '✓ Production build passed');
       } else {
-        for (let attempt = 1; attempt <= MAX_FIX_ATTEMPTS; attempt++) {
-          this.emitter?.emit('deploy-to-vercel', 'warning', `Build failed — auto-fix attempt ${attempt}/${MAX_FIX_ATTEMPTS}...`);
-          // Re-run build to get fresh errors after fix
-          const retryBuild = await session.runCommand('npm', ['run', 'build'], { cwd: '/workspace/app' });
-          const errors = retryBuild.stderr || retryBuild.stdout || buildResult.stderr || buildResult.stdout;
+        for (let attempt = 1; attempt <= buildFixAttempts; attempt++) {
+          this.emitter?.emit('deploy-to-vercel', 'warning', `Build failed — auto-fix attempt ${attempt}/${buildFixAttempts}...`);
+          const errors = lastBuildResult.stderr || lastBuildResult.stdout;
           const fixed = await this.attemptBuildFix(session, errors);
           if (fixed) {
             buildPassed = true;
             this.emitter?.emit('deploy-to-vercel', 'running', `✓ Build errors fixed (attempt ${attempt})`);
             break;
+          }
+          // Get fresh errors for next attempt (fix may have partially succeeded)
+          if (attempt < buildFixAttempts) {
+            lastBuildResult = await session.runCommand('npm', ['run', 'build'], { cwd: '/workspace/app' });
+            if (lastBuildResult.exitCode === 0) {
+              buildPassed = true;
+              this.emitter?.emit('deploy-to-vercel', 'running', `✓ Build errors fixed (attempt ${attempt})`);
+              break;
+            }
           }
         }
         if (!buildPassed) {
@@ -313,6 +330,7 @@ export class DeployToVercelStage implements GenerationStage {
     }
 
     // QA Step 3: Smoke tests (with retry loop — only if build passed)
+    const smokeFixAttempts = tscPassed ? MAX_FIX_ATTEMPTS : 1;
     if (buildPassed) {
       this.emitter?.emit('deploy-to-vercel', 'running', 'QA: Running smoke tests...');
       let smokePassed = false;
@@ -322,9 +340,9 @@ export class DeployToVercelStage implements GenerationStage {
         const count = smokeResult.results.length;
         this.emitter?.emit('deploy-to-vercel', 'running', `✓ All ${count} smoke tests passed`);
       } else {
-        for (let attempt = 1; attempt <= MAX_FIX_ATTEMPTS; attempt++) {
+        for (let attempt = 1; attempt <= smokeFixAttempts; attempt++) {
           const failedNames = smokeResult.failedTests.map((t: { test: string }) => t.test).join(', ');
-          this.emitter?.emit('deploy-to-vercel', 'warning', `Smoke tests failed (${failedNames}) — auto-fix attempt ${attempt}/${MAX_FIX_ATTEMPTS}...`);
+          this.emitter?.emit('deploy-to-vercel', 'warning', `Smoke tests failed (${failedNames}) — auto-fix attempt ${attempt}/${smokeFixAttempts}...`);
           const errorContext = smokeResult.failedTests
             .map((t: { test: string; detail: string }) => `${t.test}: ${t.detail}`)
             .join('\n');
@@ -350,16 +368,31 @@ export class DeployToVercelStage implements GenerationStage {
     this.emitter?.emit('deploy-to-vercel', 'running', 'Collecting project files...');
     const projectFiles = await collectProjectFiles(session);
 
+    // Emit file data so the frontend can display the file tree + code viewer
+    this.emitter?.emit(
+      'files-collected',
+      'done',
+      `${projectFiles.length} files collected`,
+      projectFiles.map(f => ({ path: f.path, content: f.content })),
+    );
+
     // Create (or get) the Vercel project
     this.emitter?.emit('deploy-to-vercel', 'running', 'Creating Vercel project...');
     const slug = toProjectSlug(appName);
     const project = await createOrGetVercelProject(slug);
 
+    // Make project publicly accessible (disable Vercel Auth protection)
+    await setProjectPublicAccess(project.id);
+
+    // Add custom domain (<slug>.nosoftware.app)
+    const customDomain = await addCustomDomain(project.id, slug);
+    const primaryUrl = `https://${customDomain}`;
+
     // Set environment variables on the Vercel project
     await setVercelProjectEnvVars(project.id, {
       DATABASE_URL: databaseUrl ?? '',
       NEXTAUTH_SECRET: nextauthSecret ?? crypto.randomUUID(),
-      NEXTAUTH_URL: `https://${project.name}.vercel.app`,
+      NEXTAUTH_URL: primaryUrl,
     });
 
     // Upload files to Vercel
@@ -376,7 +409,11 @@ export class DeployToVercelStage implements GenerationStage {
     try {
       deployedUrl = await pollDeployment(deployment.id);
     } catch (pollError) {
-      throw pollError;
+      const fullMsg = pollError instanceof Error ? pollError.message : String(pollError);
+      // Emit a truncated version for SSE (first line only), throw full for DB storage
+      const firstLine = fullMsg.split('\n')[0] ?? fullMsg;
+      this.emitter?.emit('deploy-to-vercel', 'error', firstLine);
+      throw new Error(fullMsg);
     }
 
     /* ── POST-DEPLOY VERIFICATION ───────────────────────────── */
@@ -415,26 +452,29 @@ export class DeployToVercelStage implements GenerationStage {
     // Delete the sandbox — no longer needed
     await session.delete();
 
+    // Prefer the custom domain URL; fall back to Vercel URL
+    const finalUrl = primaryUrl || deployedUrl;
+
     if (this.ctx) {
-      this.ctx.deployedUrl = deployedUrl;
+      this.ctx.deployedUrl = finalUrl;
     }
 
     return {
       inputHash,
-      outputHash: await this.computeHash(deployedUrl),
+      outputHash: await this.computeHash(finalUrl),
       artifacts: [{
         id: crypto.randomUUID(),
         generationRunId: '00000000-0000-0000-0000-000000000000',
         stageName: this.name,
         kind: 'deployment-config' as const,
         relativePath: 'deployment/vercel-deployment.json',
-        contentHash: (await this.computeHash(deployedUrl)).slice(-64),
-        fileSizeBytes: Buffer.byteLength(deployedUrl),
+        contentHash: (await this.computeHash(finalUrl)).slice(-64),
+        fileSizeBytes: Buffer.byteLength(finalUrl),
         isNew: true,
-        description: `Deployed to ${deployedUrl}`,
+        description: `Deployed to ${finalUrl}`,
         createdAt: new Date(),
       }],
-      summary: deployedUrl,
+      summary: finalUrl,
       warnings: [],
     };
   }
@@ -582,7 +622,7 @@ export class DeployToVercelStage implements GenerationStage {
         // Schema may not exist
       }
 
-      // Ask LLM to fix
+      // Ask LLM to fix build errors
       const fixedCode = await callOpenRouter({
         model: 'anthropic/claude-sonnet-4',
         systemPrompt: [
@@ -691,6 +731,7 @@ export class DeployToVercelStage implements GenerationStage {
 
       if (fileContents.length === 0) return false;
 
+      // Ask LLM to fix runtime errors
       const fixedCode = await callOpenRouter({
         model: 'anthropic/claude-sonnet-4',
         systemPrompt: [

@@ -7,7 +7,7 @@
 import { execa } from 'execa';
 import type { ValidationStage, ValidationStageInput, ValidationStageOutput } from '../../generation-pipeline.js';
 import type { ValidationResult, ValidationEvidence } from '@heynxt/core-types';
-import { z } from 'zod';
+import { z } from 'zod/v3';
 import { GitHubAPIClient, generateBranchName, generatePRTitle, generatePRBody, CheckStatusEnum } from './github-api.js';
 
 /** Schema for PR creation result metadata. */

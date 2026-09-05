@@ -5,7 +5,7 @@
  * or direct integration with coding-agent-template deployments.
  */
 
-import { z } from 'zod';
+import { z } from 'zod/v3';
 import type {
   AgentSpec,
   ExecutionConfig,

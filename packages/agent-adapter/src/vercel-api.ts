@@ -85,6 +85,77 @@ export async function createOrGetVercelProject(
 }
 
 /** ------------------------------------------------------------------ */
+/*  Public access                                                      */
+/** ------------------------------------------------------------------ */
+
+/**
+ * Disable Vercel deployment protection so the app is publicly accessible.
+ * By default, Vercel Pro/Enterprise teams enable "Vercel Authentication"
+ * which blocks unauthenticated visitors. This turns it off for production.
+ */
+export async function setProjectPublicAccess(projectId: string): Promise<void> {
+  const config = getConfig();
+
+  const res = await fetch(
+    vercelUrl(`/v9/projects/${projectId}`, config),
+    {
+      method: 'PATCH',
+      headers: vercelHeaders(config),
+      body: JSON.stringify({
+        passwordProtection: null,
+        ssoProtection: null,
+        vercelAuthentication: { deploymentType: 'none' },
+      }),
+    },
+  );
+
+  if (!res.ok) {
+    const body = await res.text();
+    console.warn(`[vercel-api] Failed to set public access: ${res.status} ${body}`);
+  }
+}
+
+/** ------------------------------------------------------------------ */
+/*  Custom domain                                                      */
+/** ------------------------------------------------------------------ */
+
+/** The base domain for generated apps. */
+const APP_DOMAIN = 'nosoftware.app';
+
+/**
+ * Add a custom subdomain (`<slug>.nosoftware.app`) to a Vercel project.
+ * Idempotent: if the domain already exists on the project, does nothing.
+ * Returns the full domain string (e.g. "my-app.nosoftware.app").
+ */
+export async function addCustomDomain(
+  projectId: string,
+  slug: string,
+): Promise<string> {
+  const config = getConfig();
+  const domain = `${slug}.${APP_DOMAIN}`;
+
+  const res = await fetch(
+    vercelUrl(`/v10/projects/${projectId}/domains`, config),
+    {
+      method: 'POST',
+      headers: vercelHeaders(config),
+      body: JSON.stringify({ name: domain }),
+    },
+  );
+
+  if (res.ok) return domain;
+
+  // 409 = domain already added — that's fine
+  if (res.status === 409) return domain;
+
+  // Non-critical: if domain add fails (e.g. DNS not configured),
+  // log but don't throw — the vercel.app URL still works
+  const body = await res.text();
+  console.warn(`[vercel-api] Failed to add custom domain ${domain}: ${res.status} ${body}`);
+  return domain;
+}
+
+/** ------------------------------------------------------------------ */
 /*  Env vars                                                           */
 /** ------------------------------------------------------------------ */
 
@@ -289,7 +360,34 @@ export async function pollDeployment(
     if (data.readyState === 'ERROR') {
       const msg = data.errorMessage ?? 'unknown error';
       const code = data.errorCode ? ` [${data.errorCode}]` : '';
-      throw new Error(`Vercel deployment failed${code}: ${msg}`);
+
+      // Fetch build logs for actionable error details
+      let buildLogs = '';
+      try {
+        const logsRes = await fetch(
+          vercelUrl(`/v7/deployments/${deploymentId}/events`, config),
+          { headers: vercelHeaders(config) },
+        );
+        if (logsRes.ok) {
+          const events = (await logsRes.json()) as Array<{
+            type: string;
+            payload?: { text?: string };
+          }>;
+          // Extract the last 30 log lines for error context
+          const logLines = events
+            .filter(e => e.payload?.text)
+            .map(e => e.payload!.text!)
+            .slice(-30);
+          buildLogs = logLines.join('\n');
+        }
+      } catch {
+        // Non-critical — continue with the basic error message
+      }
+
+      const detail = buildLogs
+        ? `Vercel deployment failed${code}: ${msg}\n\nBuild logs (last 30 lines):\n${buildLogs}`
+        : `Vercel deployment failed${code}: ${msg}`;
+      throw new Error(detail);
     }
 
     await new Promise((resolve) => setTimeout(resolve, intervalMs));

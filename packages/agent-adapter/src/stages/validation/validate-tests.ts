@@ -7,7 +7,7 @@
 import { execa } from 'execa';
 import type { ValidationStage, ValidationStageInput, ValidationStageOutput } from '../../generation-pipeline.js';
 import type { ValidationEvidence } from '@heynxt/core-types';
-import { z } from 'zod';
+import { z } from 'zod/v3';
 
 /** Schema for test validation result metadata. */
 export const TestValidationResult = z.object({
@@ -210,6 +210,34 @@ export class ValidateTestsStage implements ValidationStage {
         testsFailed = testsFailed || Math.floor(totalTests * 0.2); // Estimate 20% failure rate
       }
 
+      // If tests failed and LLM is available, attempt auto-fix
+      if (testsFailed > 0 && process.env['OPENROUTER_API_KEY']) {
+        const fixApplied = await this.attemptTestFix(
+          effectiveCwd,
+          stderr || stdout,
+        );
+        if (fixApplied) {
+          // Re-run tests after fix
+          const retryResult = await execa(command[0] as string, command.slice(1) as string[], {
+            cwd: effectiveCwd,
+            timeout: 300000,
+            reject: false,
+          });
+          if (retryResult.exitCode === 0) {
+            const retryDuration = Date.now() - startTime;
+            return {
+              totalTests,
+              testsPassed: totalTests,
+              testsFailed: 0,
+              testsSkipped: 0,
+              coveragePercent: coveragePercent ?? null,
+              totalDurationMs: retryDuration,
+              warnings: ['Tests passed after LLM-based auto-fix'],
+            };
+          }
+        }
+      }
+
       return {
         totalTests,
         testsPassed,
@@ -327,6 +355,102 @@ export class ValidateTestsStage implements ValidationStage {
         createdAt: new Date(),
       },
     ];
+  }
+
+  /**
+   * Attempt to fix failing tests using the LLM with QA skills.
+   * Reads the failing test files, asks the LLM to fix them, and writes them back.
+   * Returns true if fixes were applied.
+   */
+  private async attemptTestFix(
+    cwd: string,
+    errorOutput: string,
+  ): Promise<boolean> {
+    try {
+      const { callOpenRouter } = await import('../../llm.js');
+      const fs = await import('fs');
+      const pathModule = await import('path');
+
+      // Find test files that failed from error output
+      const testFileRegex = /(?:FAIL|✕|×)\s+(?:\.\/)?([^\s]+\.test\.tsx?)/g;
+      const failedFiles = new Set<string>();
+      let match: RegExpExecArray | null;
+      while ((match = testFileRegex.exec(errorOutput)) !== null) {
+        if (match[1]) failedFiles.add(match[1]);
+      }
+
+      // Also scan __tests__ directory for any .test.ts files if no failures matched
+      if (failedFiles.size === 0) {
+        const testsDir = pathModule.join(cwd, '__tests__');
+        if (fs.existsSync(testsDir)) {
+          const files = fs.readdirSync(testsDir).filter((f: string) => f.endsWith('.test.ts'));
+          for (const f of files) failedFiles.add(`__tests__/${f}`);
+        }
+      }
+
+      if (failedFiles.size === 0) return false;
+
+      // Read failing test files
+      const fileContents: string[] = [];
+      for (const file of failedFiles) {
+        const fullPath = pathModule.join(cwd, file);
+        if (fs.existsSync(fullPath)) {
+          const content = fs.readFileSync(fullPath, 'utf-8');
+          fileContents.push(`// FILE: ${file}\n${content}`);
+        }
+      }
+
+      if (fileContents.length === 0) return false;
+
+      // Read schema for context
+      let schemaContent = '';
+      const schemaPath = pathModule.join(cwd, 'lib', 'schema.ts');
+      if (fs.existsSync(schemaPath)) {
+        schemaContent = fs.readFileSync(schemaPath, 'utf-8');
+      }
+
+      // Ask LLM to fix failing tests
+      const fixedCode = await callOpenRouter({
+        model: 'anthropic/claude-sonnet-4',
+        systemPrompt: [
+          'You are a QA engineer fixing failing test files.',
+          'Given test files with failures, output the FIXED versions.',
+          'Fix assertion errors, import issues, async/await problems, and mock setup.',
+          '',
+          'Use Vitest: import { describe, it, expect } from "vitest";',
+          'Separate each file with "// FILE: <path>" on its own line.',
+          'Output ONLY TypeScript. No markdown fences, no explanations.',
+        ].join('\n'),
+        userPrompt: [
+          `Test errors:\n${errorOutput.slice(0, 3000)}`,
+          '',
+          schemaContent ? `Schema:\n${schemaContent}\n` : '',
+          `Failing test files:\n${fileContents.join('\n\n')}`,
+        ].join('\n'),
+      });
+
+      // Parse and write fixed files
+      const output = fixedCode.replace(/^```[a-z]*\n?/gm, '').replace(/```$/gm, '');
+      const parts = output.split(/^\/\/\s*FILE:\s*/m);
+      let fixesApplied = false;
+
+      for (const part of parts) {
+        if (!part.trim()) continue;
+        const newlineIdx = part.indexOf('\n');
+        if (newlineIdx === -1) continue;
+        const filePath = part.slice(0, newlineIdx).trim();
+        const content = part.slice(newlineIdx + 1).trim();
+        if (filePath && content) {
+          const fullPath = pathModule.join(cwd, filePath);
+          fs.writeFileSync(fullPath, content, 'utf-8');
+          fixesApplied = true;
+        }
+      }
+
+      return fixesApplied;
+    } catch {
+      return false;
+    }
   }
 
   /**

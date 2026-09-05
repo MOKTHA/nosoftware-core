@@ -60,9 +60,10 @@ export const revalidate = 0;
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } },
+  props: { params: Promise<{ id: string }> },
 ) {
   try {
+    const { id: rawId } = await props.params;
     // --- auth + body parsing ------------------------------------------------
     const session = await requireAuth();
     const actorId = session.user.id;
@@ -71,7 +72,7 @@ export async function PATCH(
     // clean 400 before we hit the SELECT.
     let projectId: string;
     try {
-      projectId = ProjectId.parse(params.id);
+      projectId = ProjectId.parse(rawId);
     } catch {
       return errorResponse(
         badRequest(

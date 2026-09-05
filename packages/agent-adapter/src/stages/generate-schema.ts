@@ -62,6 +62,7 @@ export class GenerateSchemaStage implements GenerationStage {
 
     const rawSchema = await callOpenRouter({
       model: 'anthropic/claude-sonnet-4',
+      userPrompt: `Generate a Drizzle ORM schema for these entities:\n${JSON.stringify(input.spec, null, 2)}`,
       systemPrompt: [
         'You are a Drizzle ORM schema generator for PostgreSQL (Neon serverless).',
         'Output ONLY valid TypeScript for a single lib/schema.ts file.',
@@ -89,7 +90,7 @@ export class GenerateSchemaStage implements GenerationStage {
         '- Use camelCase for the JS property: userId: uuid("user_id").notNull()',
         '- The frontend will use the column name to show a dropdown of related records',
         '',
-        '## General rules:',
+        '## General rules(Critical):',
         '- Use snake_case for DB column names in the string arg: text("first_name")',
         '- Use camelCase for the JS property: firstName: text("first_name")',
         '- Export every table with `export const`',
@@ -98,7 +99,6 @@ export class GenerateSchemaStage implements GenerationStage {
         '- Do NOT generate an adminUsers table — it is provided by the scaffold',
         '- No markdown fences, no explanations, no ```typescript blocks',
       ].join('\n'),
-      userPrompt: `Generate a Drizzle ORM schema for these entities:\n${JSON.stringify(input.spec, null, 2)}`,
     });
 
     // Strip markdown fences the LLM may wrap output in

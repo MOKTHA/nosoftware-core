@@ -71,13 +71,31 @@ export { buildPipelineFromSpec } from './pipeline-factory.js';
 export { createPipelineContext } from './pipeline-context.js';
 export type { PipelineContext } from './pipeline-context.js';
 
-// OpenRouter LLM helper (Phase 5)
-export { callOpenRouter } from './llm.js';
-export type { OpenRouterCallOptions } from './llm.js';
+// OpenRouter LLM helper (Phase 5) + Agent SDK skills loader (Phase 6)
+export { callOpenRouter, callModelWithSkills, listAvailableSkills } from './llm.js';
+export type { OpenRouterCallOptions, SkillModelCallOptions } from './llm.js';
+
+// OpenRouter Agent SDK skill tools (nextTurnParams pattern)
+export {
+  skillLoaderTool,
+  multiSkillLoaderTool,
+  skillDiscoveryTool,
+  resolveSkillsDirectory,
+} from './skills-loader.js';
 
 // SSE build event streaming (Phase 5)
 export { BuildEventEmitter } from './sse.js';
 export type { BuildEvent } from './sse.js';
+
+// UI/UX Design System (injected into LLM generation calls)
+export {
+  DESIGN_TOKENS,
+  COMPONENT_PATTERNS,
+  DESIGN_SYSTEM_PROMPT,
+  SIDEBAR_PROMPT,
+  PAGE_GENERATION_PROMPT,
+  INSTALLED_SKILLS,
+} from './design-system.js';
 
 // Vercel deployment API helpers (Phase 6)
 export {

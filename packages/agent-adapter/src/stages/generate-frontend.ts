@@ -12,6 +12,7 @@
 
 import type { GenerationStage, GenerationStageInput, GenerationStageOutput } from '../generation-pipeline.js';
 import type { PipelineContext } from '../pipeline-context.js';
+import { DESIGN_SYSTEM_PROMPT, SIDEBAR_PROMPT, PAGE_GENERATION_PROMPT } from '../design-system.js';
 
 export class GenerateFrontendStage implements GenerationStage {
   readonly name = 'generate-frontend' as const;
@@ -67,9 +68,10 @@ export class GenerateFrontendStage implements GenerationStage {
 
     const pageCode = await callOpenRouter({
       model: 'anthropic/claude-sonnet-4',
+      userPrompt: `Schema:\n${schemaContent}\n\nSpec:\n${JSON.stringify(input.spec, null, 2)}`,
       systemPrompt: [
-        'You are a Next.js 15 App Router page generator producing PRODUCTION-READY code.',
-        'Generate pages using Tailwind CSS for styling.',
+        // Inject the full design system from design-system.ts
+        DESIGN_SYSTEM_PROMPT,
         '',
         '## Two kinds of pages',
         '1. SERVER components (list, detail, dashboard) — directly import db and query.',
@@ -104,18 +106,8 @@ export class GenerateFrontendStage implements GenerationStage {
         'EVERY database query MUST be wrapped in try/catch — on error, render a friendly message.',
         'EVERY page must handle empty state (no data yet) gracefully.',
         '',
-        '## SIDEBAR NAVIGATION (IMPORTANT)',
-        'You MUST also generate components/Sidebar.tsx that replaces the scaffold placeholder.',
-        'The Sidebar should list ALL entity types as nav links in the sidebar.',
-        'Import { SidebarLink } from "@/components/Sidebar" is available — but you should',
-        'generate a FULL Sidebar component with proper nav links for each entity.',
-        'Pattern:',
-        '  "use client";',
-        '  import Link from "next/link";',
-        '  import { usePathname } from "next/navigation";',
-        '  import { useAuth } from "@/components/AuthProvider";',
-        '  // Include Dashboard link + one link per entity',
-        '  // Include logout button at the bottom using useAuth().logout',
+        // Inject Sidebar generation instructions from design-system.ts
+        SIDEBAR_PROMPT,
         '',
         '## Foreign Key / Relation Fields in Forms (CRITICAL)',
         'When a form has a foreign key field (e.g. userId, projectId, categoryId):',
@@ -197,12 +189,8 @@ export class GenerateFrontendStage implements GenerationStage {
         'IMPORTANT: NEVER use <form method="POST" action="..."> — that sends URL-encoded data, not JSON.',
         'ALWAYS use onSubmit + fetch() with JSON body as shown above.',
         '',
-        '## Pages to generate',
-        'components/Sidebar.tsx — SIDEBAR (client): nav links for Dashboard + each entity. Include logout button using useAuth().',
-        'app/page.tsx — DASHBOARD (server component): app name, nav cards linking to entity lists, entity counts.',
-        'app/<entity>/page.tsx — LIST (server): table with all records, link to /new and /[id].',
-        'app/<entity>/[id]/page.tsx — DETAIL (server): show all fields, edit/delete buttons.',
-        'app/<entity>/new/page.tsx — CREATE (client): form with fetch() POST. Use dropdowns for FK fields.',
+        // Inject page generation rules from design-system.ts
+        PAGE_GENERATION_PROMPT,
         '',
         '## File format',
         'Separate each file with "// FILE: <path>" on its own line.',
@@ -212,9 +200,9 @@ export class GenerateFrontendStage implements GenerationStage {
         'Do NOT generate app/api/auth/* routes — those exist in the scaffold.',
         'Do NOT include adminUsers in your queries or pages — it is for auth only.',
         '',
+        '###Output rules (CRITICAL)',
         'Output ONLY TypeScript/TSX. No markdown fences, no explanations.',
       ].join('\n'),
-      userPrompt: `Schema:\n${schemaContent}\n\nSpec:\n${JSON.stringify(input.spec, null, 2)}`,
     });
 
     const files = this.parseMultiFileOutput(pageCode);

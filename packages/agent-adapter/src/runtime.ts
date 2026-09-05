@@ -5,11 +5,11 @@
  * monitoring, and collecting results from coding agent executions.
  */
 
-import { z } from 'zod';
 import type {
   AgentSpec,
   ExecutionConfig,
   AgentExecutionResult,
+  AgentType,
 } from '@heynxt/core-types';
 
 /** ------------------------------------------------------------------ */
@@ -82,7 +82,7 @@ export interface AgentRuntime {
   readonly name: string;
 
   /** The agent type this runtime supports. */
-  readonly supportedType: z.infer<typeof import('@heynxt/core-types').AgentType>;
+  readonly supportedType: AgentType;
 
   /**
    * Spawn an execution for the given spec.
@@ -144,12 +144,12 @@ export interface ExecutionHandle {
 export abstract class BaseAgentRuntime implements AgentRuntime {
   readonly id: string;
   readonly name: string;
-  readonly supportedType: z.infer<typeof import('@heynxt/core-types').AgentType>;
+  readonly supportedType: AgentType;
 
   constructor(
     id: string,
     name: string,
-    supportedType: z.infer<typeof import('@heynxt/core-types').AgentType>
+    supportedType: AgentType
   ) {
     this.id = id;
     this.name = name;

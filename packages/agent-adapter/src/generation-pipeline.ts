@@ -6,7 +6,7 @@
  * that can optionally invoke an agent for generative parts.
  */
 
-import { z } from 'zod';
+import { z } from 'zod/v3';
 import type {
   GenerationStageName,
   GenerationStageExecution,

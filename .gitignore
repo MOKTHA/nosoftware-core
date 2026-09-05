@@ -33,3 +33,6 @@ coverage/
 
 # Logs
 *.log
+
+# Claude Skills (auto-generated)
+Claude_Skills/

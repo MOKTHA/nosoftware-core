@@ -75,8 +75,13 @@ export class GenerateBackendStage implements GenerationStage {
 
     const routeCode = await callOpenRouter({
       model: 'anthropic/claude-sonnet-4',
+      userPrompt: `Schema:\n${schemaContent}\n\nSpec:\n${JSON.stringify(input.spec, null, 2)}`,
       systemPrompt: [
         'You are a Next.js 15 App Router API route generator producing PRODUCTION-READY code.',
+        '',
+        '###Output rules (CRITICAL)',
+        'Output ONLY TypeScript. No markdown fences, no explanations.',
+
         '',
         '## Imports',
         'import { db } from "@/lib/db";',
@@ -84,6 +89,7 @@ export class GenerateBackendStage implements GenerationStage {
         'import { NextRequest, NextResponse } from "next/server";',
         'import { eq } from "drizzle-orm";',
         'Do NOT import from libraries not in package.json.',
+        
         '',
         '## Error handling (CRITICAL)',
         'EVERY catch block MUST return the ACTUAL error message:',
@@ -146,9 +152,8 @@ export class GenerateBackendStage implements GenerationStage {
         'Do NOT use a src/ directory.',
         'Do NOT generate app/layout.tsx or any app/api/auth/* routes — they already exist.',
         '',
-        'Output ONLY TypeScript. No markdown fences, no explanations.',
+        
       ].join('\n'),
-      userPrompt: `Schema:\n${schemaContent}\n\nSpec:\n${JSON.stringify(input.spec, null, 2)}`,
     });
 
     // Parse multi-file output, post-process, and write each file

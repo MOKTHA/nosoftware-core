@@ -58,6 +58,9 @@ export const builds = pgTable('builds', {
   /** Build events (SSE) stored as JSON array for replay on reconnect. */
   eventsJson: text('eventsJson'),
 
+  /** Generated source files stored as JSON array of {path, content}. */
+  filesJson: text('filesJson'),
+
   createdAt: timestamp('createdAt', { mode: 'date' }).notNull(),
   updatedAt: timestamp('updatedAt', { mode: 'date' }),
 });
