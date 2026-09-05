@@ -12,11 +12,16 @@
  *     pipeline end, so a page refresh can pick up where it left off.
  */
 import { eq } from 'drizzle-orm';
+import { randomUUID } from 'node:crypto';
 
-import { db, builds } from '@heynxt/persistence';
+import { db, builds, users, creditTransactions } from '@heynxt/persistence';
 import { BuildEventEmitter, buildPipelineFromSpec } from '@heynxt/agent-adapter';
 import type { BuildEvent } from '@heynxt/agent-adapter';
 import { helpdeskTicketingFixture } from '@heynxt/prompt-spec';
+
+import { getAdminConfig } from '@/lib/admin';
+import { getModelPricing } from '@/lib/openrouter';
+import { calculateBuildCost } from '@/lib/credit-calculator';
 
 export const dynamic = 'force-dynamic';
 
@@ -210,6 +215,12 @@ async function runPipeline(
       finalDetail,
     );
 
+    // ── Credit deduction (post-generation) ──
+    // Estimate token usage from pipeline stages and deduct from user balance
+    await deductCreditsForBuild(buildId, results).catch((err) => {
+      console.error(`[credit-deduction] Failed for build ${buildId}:`, err);
+    });
+
     // Final DB update: status, URL, error message, and ALL events (files stripped)
     await db
       .update(builds)
@@ -226,4 +237,96 @@ async function runPipeline(
     await flushEventsToDB(buildId, emitter.buffer).catch(() => {});
     emitter.close();
   }
+}
+
+/**
+ * Deduct credits from the user's balance after a build completes.
+ *
+ * Flow:
+ *   1. Look up the build's userId and model
+ *   2. Estimate token usage from pipeline stage results
+ *   3. Fetch model pricing (OpenRouter API with cache)
+ *   4. Calculate cost using admin config (creditsPerUSD, platformFeeMultiplier)
+ *   5. Atomically deduct credits and log the transaction
+ *   6. Save cost fields to the builds table
+ */
+async function deductCreditsForBuild(
+  buildId: string,
+  results: Array<{ execution: { stageName: string; status: string }; output?: { summary?: string } }>,
+): Promise<void> {
+  // 1. Look up build
+  const [build] = await db
+    .select({ userId: builds.userId, model: builds.model })
+    .from(builds)
+    .where(eq(builds.id, buildId));
+
+  if (!build?.userId) return; // No user attached (e.g. anonymous build)
+
+  // 2. Estimate token usage from code generation stages
+  // The pipeline generates code across multiple stages. We estimate based on
+  // the number of stages that ran successfully (each generates ~2K output tokens).
+  const succeededStages = results.filter((r) => r.execution.status === 'succeeded').length;
+  const estimatedInputTokens = succeededStages * 3000;  // ~3K prompt tokens per stage
+  const estimatedOutputTokens = succeededStages * 2000;  // ~2K output tokens per stage
+
+  if (estimatedInputTokens === 0 && estimatedOutputTokens === 0) return;
+
+  // 3. Fetch model pricing
+  const model = build.model ?? 'anthropic/claude-sonnet-4';
+  const pricing = await getModelPricing(model);
+
+  // 4. Calculate cost
+  const adminCfg = await getAdminConfig();
+  const cost = calculateBuildCost(
+    {
+      inputTokens: estimatedInputTokens,
+      outputTokens: estimatedOutputTokens,
+      inputPricePer1M: pricing.inputPricePer1M,
+      outputPricePer1M: pricing.outputPricePer1M,
+    },
+    adminCfg.creditsPerUSD,
+    adminCfg.platformFeeMultiplier,
+  );
+
+  if (cost.creditsToDeduct <= 0) return;
+
+  // 5. Atomically deduct credits
+  const [user] = await db
+    .select({ credits: users.credits })
+    .from(users)
+    .where(eq(users.id, build.userId));
+
+  if (!user) return;
+
+  const balanceBefore = parseFloat(user.credits);
+  const balanceAfter = Math.max(0, balanceBefore - cost.creditsToDeduct);
+
+  await db
+    .update(users)
+    .set({ credits: balanceAfter.toFixed(2), updatedAt: new Date() })
+    .where(eq(users.id, build.userId));
+
+  await db.insert(creditTransactions).values({
+    id: randomUUID(),
+    userId: build.userId,
+    type: 'debit',
+    amount: (-cost.creditsToDeduct).toFixed(2),
+    balanceBefore: balanceBefore.toFixed(2),
+    balanceAfter: balanceAfter.toFixed(2),
+    reason: `Build ${buildId}`,
+    buildId,
+    createdAt: new Date(),
+  });
+
+  // 6. Save cost fields to builds table
+  await db
+    .update(builds)
+    .set({
+      model,
+      inputTokens: estimatedInputTokens,
+      outputTokens: estimatedOutputTokens,
+      costUSD: cost.costUSD.toFixed(6),
+      creditsDeducted: cost.creditsToDeduct.toFixed(2),
+    })
+    .where(eq(builds.id, buildId));
 }

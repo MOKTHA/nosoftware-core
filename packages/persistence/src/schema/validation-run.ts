@@ -13,7 +13,7 @@ import {
   index,
 } from 'drizzle-orm/pg-core';
 
-import type { GenerationRunId } from '@heynxt/core-types';
+import { generationRuns } from './generation-runs.js';
 import { workspaces } from './workspaces.js';
 import { users } from './users.js';
 
@@ -29,7 +29,7 @@ export const validationRuns = pgTable('validation_runs', {
   /** FK to the triggering generation run. */
   generationRunId: text('generationRunId')
     .notNull()
-    .references(() => 'generation_runs' as any),
+    .references(() => generationRuns.id),
 
   /** FK to the workspace this validation belongs to (for RBAC). */
   workspaceId: text('workspaceId')

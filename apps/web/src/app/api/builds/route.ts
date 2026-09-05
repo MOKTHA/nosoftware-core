@@ -26,6 +26,7 @@ import { errorResponse } from '@/lib/api';
 import { getSession } from '@/lib/session';
 import { getAdminConfig } from '@/lib/admin';
 import { hasEnoughCredits } from '@/lib/credit-calculator';
+import { checkRateLimit, rateLimitResponse } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
@@ -108,6 +109,13 @@ export async function POST(req: Request) {
     // ── Auth & credit check ──
     const session = await getSession();
     const userId = session?.user?.id ?? null;
+
+    // Rate limit: 10 builds per minute per user (or IP for anonymous)
+    const rateLimitKey = userId ?? 'anon';
+    const rl = checkRateLimit(rateLimitKey, { maxRequests: 10, windowMs: 60_000 });
+    if (!rl.allowed) {
+      return rateLimitResponse(rl);
+    }
 
     // If user is authenticated, check credit balance
     if (userId) {

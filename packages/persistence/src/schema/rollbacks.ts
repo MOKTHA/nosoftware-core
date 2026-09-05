@@ -9,7 +9,6 @@
 
 import {
   pgTable,
-  uuid,
   text,
   timestamp,
   boolean,
@@ -23,6 +22,7 @@ import { generationRuns } from './generation-runs.js';
 import { artifacts } from './artifacts.js';
 import { organizations } from './organizations.js';
 import { workspaces } from './workspaces.js';
+import { users } from './users.js';
 
 // ---------------------------------------------------------------------------
 // Enums
@@ -59,7 +59,7 @@ export const snapshotStatusEnum = pgEnum('snapshot_status', [
 
 export const snapshots = pgTable('snapshots', {
   /** Unique ID. */
-  id: uuid('id').primaryKey().defaultRandom(),
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
 
   /** Organization this snapshot belongs to. */
   organizationId: text('organizationId')
@@ -73,7 +73,7 @@ export const snapshots = pgTable('snapshots', {
   snapshotType: snapshotTypeEnum('snapshotType').notNull(),
 
   /** Reference entity - e.g., generation run ID for generation-run snapshots. */
-  referenceEntityId: uuid('referenceEntityId'),
+  referenceEntityId: text('referenceEntityId'),
 
   /** Reference entity type (e.g., 'generation-run', 'workspace-config'). */
   referenceEntityType: text('referenceEntityType').notNull(),
@@ -89,8 +89,8 @@ export const snapshots = pgTable('snapshots', {
    */
   stateSnapshot: jsonb('stateSnapshot').$type<Record<string, unknown>>(),
 
-  /** List of artifacts included in this snapshot. */
-  artifactIds: uuid('artifactIds[]'),
+  /** List of artifact IDs included in this snapshot (stored as text). */
+  artifactIds: text('artifactIds'),
 
   /** Hash of the state for quick comparison (detects if rollback needed). */
   stateHash: text('stateHash'),
@@ -113,7 +113,7 @@ export const snapshots = pgTable('snapshots', {
   /** Who created this snapshot. */
   createdBy: text('createdBy')
     .notNull()
-    .references(() => 'users' as any, { onDelete: 'cascade' }),
+    .references(() => users.id, { onDelete: 'cascade' }),
 
   createdAt: timestamp('createdAt', { mode: 'date' }).notNull(),
   updatedAt: timestamp('updatedAt', { mode: 'date' }).notNull(),
@@ -135,7 +135,7 @@ export type InsertSnapshot = typeof snapshots.$inferInsert;
 
 export const rollbackRequests = pgTable('rollback_requests', {
   /** Unique ID. */
-  id: uuid('id').primaryKey().defaultRandom(),
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
 
   /** Organization this rollback applies to. */
   organizationId: text('organizationId')
@@ -146,22 +146,22 @@ export const rollbackRequests = pgTable('rollback_requests', {
   workspaceId: text('workspaceId').references(() => workspaces.id),
 
   /** The generation run being rolled back to. */
-  targetGenerationRunId: uuid('targetGenerationRunId')
+  targetGenerationRunId: text('targetGenerationRunId')
     .notNull()
     .references(() => generationRuns.id, { onDelete: 'restrict' }),
 
   /** Snapshot that represents the target state (if applicable). */
-  snapshotId: uuid('snapshotId').references(() => snapshots.id),
+  snapshotId: text('snapshotId').references(() => snapshots.id),
 
   /** The current generation run being replaced. */
-  sourceGenerationRunId: uuid('sourceGenerationRunId')
+  sourceGenerationRunId: text('sourceGenerationRunId')
     .notNull()
     .references(() => generationRuns.id, { onDelete: 'restrict' }),
 
   /** Who requested the rollback. */
   requestedBy: text('requestedBy')
     .notNull()
-    .references(() => 'users' as any, { onDelete: 'cascade' }),
+    .references(() => users.id, { onDelete: 'cascade' }),
 
   /** Rollback status (pending, in-progress, completed, failed, cancelled). */
   status: rollbackStatusEnum('status').notNull().default('pending'),
@@ -179,14 +179,14 @@ export const rollbackRequests = pgTable('rollback_requests', {
   requiresApproval: boolean('requiresApproval').notNull().default(true),
 
   /** Approval decision if required. */
-  approvedBy: text('approvedBy').references(() => 'users' as any, { onDelete: 'set null' }),
+  approvedBy: text('approvedBy').references(() => users.id, { onDelete: 'set null' }),
   approvedAt: timestamp('approvedAt', { mode: 'date' }),
 
   /** Actual rollback execution time (when status changes to in-progress). */
   executedAt: timestamp('executedAt', { mode: 'date' }),
 
   /** Who executed the rollback. */
-  executedBy: text('executedBy').references(() => 'users' as any, { onDelete: 'set null' }),
+  executedBy: text('executedBy').references(() => users.id, { onDelete: 'set null' }),
 
   /** Rollback result summary (number of files reverted, etc.). */
   resultSummary: jsonb('resultSummary').$type<Record<string, unknown>>(),
@@ -210,15 +210,15 @@ export type InsertRollbackRequest = typeof rollbackRequests.$inferInsert;
 
 export const rollbackArtifactMappings = pgTable('rollback_artifact_mappings', {
   /** Unique ID. */
-  id: uuid('id').primaryKey().defaultRandom(),
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
 
   /** Rollback request this mapping belongs to. */
-  rollbackRequestId: uuid('rollbackRequestId')
+  rollbackRequestId: text('rollbackRequestId')
     .notNull()
     .references(() => rollbackRequests.id, { onDelete: 'cascade' }),
 
   /** Artifact that was reverted (the new version). */
-  artifactId: uuid('artifactId').references(() => artifacts.id),
+  artifactId: text('artifactId').references(() => artifacts.id),
 
   /** Previous artifact state being restored. */
   previousArtifactHash: text('previousArtifactHash'),
@@ -243,10 +243,10 @@ export type InsertRollbackArtifactMapping = typeof rollbackArtifactMappings.$inf
 
 export const snapshotMetadataStorage = pgTable('snapshot_metadata_storage', {
   /** Unique ID. */
-  id: uuid('id').primaryKey().defaultRandom(),
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
 
   /** Snapshot this metadata entry belongs to. */
-  snapshotId: uuid('snapshotId')
+  snapshotId: text('snapshotId')
     .notNull()
     .references(() => snapshots.id, { onDelete: 'cascade' }),
 
