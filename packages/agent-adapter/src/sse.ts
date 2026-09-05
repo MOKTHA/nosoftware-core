@@ -14,6 +14,8 @@ export interface BuildEvent {
   status: 'running' | 'done' | 'warning' | 'error';
   detail: string;
   elapsed_ms: number;
+  /** Optional file list emitted during deploy (file paths + content). */
+  files?: Array<{ path: string; content: string }>;
 }
 
 /** ------------------------------------------------------------------ */
@@ -32,12 +34,13 @@ export class BuildEventEmitter extends EventTarget {
   onEvent?: (event: BuildEvent) => void;
 
   /** Emit a build event with the given step name and status. */
-  emit(step: string, status: BuildEvent['status'], detail: string): void {
+  emit(step: string, status: BuildEvent['status'], detail: string, files?: BuildEvent['files']): void {
     const event: BuildEvent = {
       step,
       status,
       detail,
       elapsed_ms: Date.now() - this.startTime,
+      ...(files ? { files } : {}),
     };
 
     this.buffer.push(event);

@@ -368,6 +368,14 @@ export class DeployToVercelStage implements GenerationStage {
     this.emitter?.emit('deploy-to-vercel', 'running', 'Collecting project files...');
     const projectFiles = await collectProjectFiles(session);
 
+    // Emit file data so the frontend can display the file tree + code viewer
+    this.emitter?.emit(
+      'files-collected',
+      'done',
+      `${projectFiles.length} files collected`,
+      projectFiles.map(f => ({ path: f.path, content: f.content })),
+    );
+
     // Create (or get) the Vercel project
     this.emitter?.emit('deploy-to-vercel', 'running', 'Creating Vercel project...');
     const slug = toProjectSlug(appName);

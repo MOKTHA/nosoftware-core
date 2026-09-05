@@ -47,8 +47,17 @@ export async function GET(
 
   // Flush events to DB periodically (every 5 events) and at the end
   let flushCounter = 0;
-  emitter.onEvent = () => {
+  emitter.onEvent = (event) => {
     flushCounter++;
+
+    // Capture file data when emitted by the deploy stage
+    if (event.step === 'files-collected' && event.files) {
+      db.update(builds)
+        .set({ filesJson: JSON.stringify(event.files), updatedAt: new Date() })
+        .where(eq(builds.id, buildId))
+        .catch(() => {});
+    }
+
     if (flushCounter % 5 === 0) {
       flushEventsToDB(buildId, emitter.buffer).catch(() => {});
     }
@@ -131,11 +140,22 @@ function replayStoredEvents(build: typeof builds.$inferSelect): Response {
   });
 }
 
+/** Strip bulky `files` data from events before saving to eventsJson (files go in filesJson). */
+function stripFiles(events: BuildEvent[]): BuildEvent[] {
+  return events.map((e) => {
+    if (e.files) {
+      const { files: _files, ...rest } = e;
+      return rest;
+    }
+    return e;
+  });
+}
+
 /** Flush buffered events to the builds.eventsJson column. */
 async function flushEventsToDB(buildId: string, events: BuildEvent[]): Promise<void> {
   await db
     .update(builds)
-    .set({ eventsJson: JSON.stringify(events), updatedAt: new Date() })
+    .set({ eventsJson: JSON.stringify(stripFiles(events)), updatedAt: new Date() })
     .where(eq(builds.id, buildId));
 }
 
@@ -190,14 +210,14 @@ async function runPipeline(
       finalDetail,
     );
 
-    // Final DB update: status, URL, error message, and ALL events
+    // Final DB update: status, URL, error message, and ALL events (files stripped)
     await db
       .update(builds)
       .set({
         status: allSucceeded ? 'succeeded' : 'failed',
         deployedUrl,
         errorMessage: allSucceeded ? null : (failedDetails || 'One or more stages failed'),
-        eventsJson: JSON.stringify(emitter.buffer),
+        eventsJson: JSON.stringify(stripFiles(emitter.buffer)),
         updatedAt: new Date(),
       })
       .where(eq(builds.id, buildId));

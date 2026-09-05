@@ -15,7 +15,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { BuildTrace } from '@/components/BuildTrace';
+import { BuildStudio } from '@/components/BuildStudio';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                             */
@@ -304,8 +304,8 @@ export default function BuildDetailPage() {
       {/* ── Left panel: chat sidebar ─────────────────────────── */}
       <div
         style={{
-          flex: '0 0 400px',
-          maxWidth: '400px',
+          flex: '0 0 320px',
+          maxWidth: '320px',
           display: 'flex',
           flexDirection: 'column',
           borderRight: '1px solid #e5e5e5',
@@ -527,7 +527,7 @@ export default function BuildDetailPage() {
         )}
       </div>
 
-      {/* ── Right panel: build trace / preview ─────────────────── */}
+      {/* ── Right panel: IDE-style build studio ─────────────────── */}
       <div
         style={{
           flex: 1,
@@ -537,157 +537,15 @@ export default function BuildDetailPage() {
           overflow: 'hidden',
           border: '1px solid #e5e5e5',
           borderLeft: 'none',
-          background: deployedUrl ? '#f5f5f5' : '#ffffff',
         }}
       >
-        {deployedUrl ? (
-          <DeployedPreview url={deployedUrl} />
-        ) : (
-          <BuildTrace buildId={buildId} onDeployed={handleDeployed} />
-        )}
+        <BuildStudio buildId={buildId} onDeployed={handleDeployed} />
       </div>
     </div>
   );
 }
 
-/* ------------------------------------------------------------------ */
-/*  Deployed preview (iframe with fallback)                           */
-/* ------------------------------------------------------------------ */
-
-function DeployedPreview({ url }: { url: string }) {
-  const [iframeBlocked, setIframeBlocked] = useState(false);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      try {
-        const doc = iframeRef.current?.contentDocument;
-        if (!doc || !doc.body || doc.body.innerHTML === '') {
-          setIframeBlocked(true);
-        }
-      } catch {
-        setIframeBlocked(true);
-      }
-    }, 8000);
-    return () => clearTimeout(timer);
-  }, [url]);
-
-  return (
-    <>
-      {/* URL bar */}
-      <div
-        style={{
-          padding: '0.5rem 0.75rem',
-          borderBottom: '1px solid #e5e5e5',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          background: '#ffffff',
-          borderRadius: '0 0.75rem 0 0',
-        }}
-      >
-        <span
-          style={{
-            fontSize: '0.75rem',
-            color: '#16a34a',
-            fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.375rem',
-          }}
-        >
-          <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#16a34a', flexShrink: 0 }} />
-          {url}
-        </span>
-        <a
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{
-            fontSize: '0.75rem',
-            color: '#ffffff',
-            background: '#0a0a0a',
-            padding: '0.25rem 0.75rem',
-            borderRadius: '9999px',
-            textDecoration: 'none',
-            fontWeight: 500,
-          }}
-        >
-          Open in new tab ↗
-        </a>
-      </div>
-
-      {/* Preview area */}
-      <div style={{ flex: 1, position: 'relative' }}>
-        {iframeBlocked ? (
-          <div
-            style={{
-              width: '100%',
-              height: '100%',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '1rem',
-              background: '#fafafa',
-            }}
-          >
-            <div
-              style={{
-                width: 48,
-                height: 48,
-                borderRadius: '50%',
-                background: '#dcfce7',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '1.5rem',
-              }}
-            >
-              ✓
-            </div>
-            <div style={{ textAlign: 'center' }}>
-              <p style={{ fontWeight: 600, fontSize: '1rem', color: '#0a0a0a', margin: '0 0 0.25rem' }}>
-                Your app is live!
-              </p>
-              <p style={{ fontSize: '0.8125rem', color: '#737373', margin: '0 0 1rem' }}>
-                Preview blocked by security headers. Open in a new tab to view.
-              </p>
-              <a
-                href={url}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  padding: '0.625rem 1.5rem',
-                  background: '#0a0a0a',
-                  color: '#fafafa',
-                  border: 'none',
-                  borderRadius: '0.5rem',
-                  fontSize: '0.875rem',
-                  fontWeight: 500,
-                  textDecoration: 'none',
-                }}
-              >
-                View App ↗
-              </a>
-            </div>
-          </div>
-        ) : (
-          <iframe
-            ref={iframeRef}
-            src={url}
-            style={{ width: '100%', height: '100%', border: 'none' }}
-            title="Generated app preview"
-            onError={() => setIframeBlocked(true)}
-          />
-        )}
-      </div>
-    </>
-  );
-}
+/* DeployedPreview moved into BuildStudio component */
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                           */
