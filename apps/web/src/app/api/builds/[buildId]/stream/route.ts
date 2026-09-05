@@ -26,7 +26,6 @@ import { helpdeskTicketingFixture } from '@heynxt/prompt-spec';
 
 import { getAdminConfig } from '@/lib/admin';
 import { getModelPricing } from '@/lib/openrouter';
-import { calculateBuildCost } from '@/lib/credit-calculator';
 
 export const dynamic = 'force-dynamic';
 
@@ -291,24 +290,30 @@ async function deductCreditsForBuild(
 
   if (inputTokens === 0 && outputTokens === 0) return;
 
-  // 3. Fetch model pricing
+  // 3. Determine raw cost in USD
+  //    Priority: use OpenRouter's reported cost (usage.cost) when available —
+  //    this is the actual amount charged and reflects real-time model pricing.
+  //    Fallback: calculate from token counts × model pricing (may be stale by up to 10min).
   const model = build.model ?? 'anthropic/claude-sonnet-4';
-  const pricing = await getModelPricing(model);
-
-  // 4. Calculate cost
   const adminCfg = await getAdminConfig();
-  const cost = calculateBuildCost(
-    {
-      inputTokens,
-      outputTokens,
-      inputPricePer1M: pricing.inputPricePer1M,
-      outputPricePer1M: pricing.outputPricePer1M,
-    },
-    adminCfg.creditsPerUSD,
-    adminCfg.platformFeeMultiplier,
-  );
+  let rawCostUSD: number;
 
-  if (cost.creditsToDeduct <= 0) return;
+  if (accumulated.costUSD != null && accumulated.costUSD > 0) {
+    // OpenRouter told us the exact cost — use it
+    rawCostUSD = accumulated.costUSD;
+  } else {
+    // Calculate from tokens × pricing (fallback)
+    const pricing = await getModelPricing(model);
+    rawCostUSD =
+      (inputTokens / 1_000_000) * pricing.inputPricePer1M +
+      (outputTokens / 1_000_000) * pricing.outputPricePer1M;
+  }
+
+  // 4. Apply platform fee and convert to credits
+  const costUSD = rawCostUSD * adminCfg.platformFeeMultiplier;
+  const creditsToDeduct = Math.round(costUSD * adminCfg.creditsPerUSD * 100) / 100;
+
+  if (creditsToDeduct <= 0) return;
 
   // 5. Atomically deduct credits
   const [user] = await db
@@ -319,7 +324,7 @@ async function deductCreditsForBuild(
   if (!user) return;
 
   const balanceBefore = parseFloat(user.credits);
-  const balanceAfter = Math.max(0, balanceBefore - cost.creditsToDeduct);
+  const balanceAfter = Math.max(0, balanceBefore - creditsToDeduct);
 
   await db
     .update(users)
@@ -330,7 +335,7 @@ async function deductCreditsForBuild(
     id: randomUUID(),
     userId: build.userId,
     type: 'debit',
-    amount: (-cost.creditsToDeduct).toFixed(2),
+    amount: (-creditsToDeduct).toFixed(2),
     balanceBefore: balanceBefore.toFixed(2),
     balanceAfter: balanceAfter.toFixed(2),
     reason: `Build ${buildId}`,
@@ -345,8 +350,8 @@ async function deductCreditsForBuild(
       model,
       inputTokens,
       outputTokens,
-      costUSD: cost.costUSD.toFixed(6),
-      creditsDeducted: cost.creditsToDeduct.toFixed(2),
+      costUSD: costUSD.toFixed(6),
+      creditsDeducted: creditsToDeduct.toFixed(2),
     })
     .where(eq(builds.id, buildId));
 }

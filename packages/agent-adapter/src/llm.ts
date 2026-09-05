@@ -32,10 +32,12 @@ export interface OpenRouterCallOptions {
   userPrompt: string;
 }
 
-/** Token usage returned from each OpenRouter API call. */
+/** Token usage and cost returned from each OpenRouter API call. */
 export interface TokenUsage {
   promptTokens: number;
   completionTokens: number;
+  /** Direct cost in USD reported by OpenRouter (usage.cost field). Null if not provided. */
+  costUSD: number | null;
 }
 
 /** Result from callOpenRouter — content + actual token usage from the API. */
@@ -73,12 +75,13 @@ const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
  * Global accumulator for token usage across all pipeline stages.
  * Reset at the start of each pipeline run via `resetTokenAccumulator()`.
  */
-const _tokenAccumulator: TokenUsage = { promptTokens: 0, completionTokens: 0 };
+const _tokenAccumulator: TokenUsage = { promptTokens: 0, completionTokens: 0, costUSD: null };
 
 /** Reset the token accumulator (call at start of each pipeline run). */
 export function resetTokenAccumulator(): void {
   _tokenAccumulator.promptTokens = 0;
   _tokenAccumulator.completionTokens = 0;
+  _tokenAccumulator.costUSD = null;
 }
 
 /** Get accumulated token usage from all callOpenRouter calls since last reset. */
@@ -144,17 +147,26 @@ export async function callOpenRouterWithUsage(
 
   const json = (await res.json()) as {
     choices: Array<{ message: { content: string } }>;
-    usage?: { prompt_tokens?: number; completion_tokens?: number };
+    usage?: {
+      prompt_tokens?: number;
+      completion_tokens?: number;
+      /** Direct cost in USD reported by OpenRouter. */
+      cost?: number;
+    };
   };
 
   const usage: TokenUsage = {
     promptTokens: json.usage?.prompt_tokens ?? 0,
     completionTokens: json.usage?.completion_tokens ?? 0,
+    costUSD: json.usage?.cost ?? null,
   };
 
   // Accumulate into global tracker
   _tokenAccumulator.promptTokens += usage.promptTokens;
   _tokenAccumulator.completionTokens += usage.completionTokens;
+  if (usage.costUSD != null) {
+    _tokenAccumulator.costUSD = (_tokenAccumulator.costUSD ?? 0) + usage.costUSD;
+  }
 
   return {
     content: json.choices[0]?.message?.content ?? '',
