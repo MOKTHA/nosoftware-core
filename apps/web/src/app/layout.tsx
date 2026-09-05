@@ -100,15 +100,19 @@ export default async function RootLayout({
                 color: '#737373',
               }}
             >
-              <a href="/workspaces">Workspaces</a>
-              <a href="/projects">Projects</a>
-              <a href="/tasks">Tasks</a>
+              <a href="/dashboard">Dashboard</a>
               <a
                 href="/build"
                 style={{ fontWeight: 500, color: '#0a0a0a' }}
               >
                 Build
               </a>
+              <a href="/workspaces">Workspaces</a>
+              <a href="/projects">Projects</a>
+              <a href="/tasks">Tasks</a>
+              {user && (
+                <a href="/admin" style={{ color: '#737373' }}>Admin</a>
+              )}
             </nav>
           </div>
           <UserMenu user={user} />

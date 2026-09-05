@@ -9,6 +9,7 @@
 export {
   users,
   userStatusEnum,
+  userRoleEnum,
 } from './users.js';
 
 export {
@@ -69,6 +70,21 @@ export {
   type Build,
   type InsertBuild,
 } from './builds.js';
+
+// Admin configuration (Phase 6 credits/billing)
+export {
+  adminConfig,
+  type AdminConfig,
+  type InsertAdminConfig,
+} from './admin-config.js';
+
+// Credit transactions audit log (Phase 6 credits/billing)
+export {
+  creditTransactions,
+  creditTxTypeEnum,
+  type CreditTransaction,
+  type InsertCreditTransaction,
+} from './credit-transactions.js';
 
 // Agent execution (Phase 2)
 export {

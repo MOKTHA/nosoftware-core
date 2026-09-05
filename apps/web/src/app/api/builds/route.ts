@@ -5,29 +5,48 @@
  *     Accepts { prompt, appName } to generate a spec from a user prompt,
  *     or falls back to the helpdesk fixture if no prompt is provided.
  *     Returns 201 with `{ buildId }`.
+ *
+ *   Credit flow:
+ *     1. Authenticate user (requireAuth)
+ *     2. Check user has enough credits (>= minCreditsForBuild)
+ *     3. Create the build record
+ *     4. Credit deduction happens post-generation in the pipeline SSE route
+ *        when token usage is known (see /api/builds/[buildId]/pipeline/route.ts)
  */
 import { NextResponse } from 'next/server';
 import { randomUUID } from 'node:crypto';
-import { desc } from 'drizzle-orm';
+import { desc, eq } from 'drizzle-orm';
 
 import type { AppSpecTemplate } from '@heynxt/core-types';
-import { db, builds } from '@heynxt/persistence';
+import { db, builds, users } from '@heynxt/persistence';
 import { validateSpecTemplate } from '@heynxt/agent-adapter';
 import { helpdeskTicketingFixture } from '@heynxt/prompt-spec';
 
 import { errorResponse } from '@/lib/api';
+import { getSession } from '@/lib/session';
+import { getAdminConfig } from '@/lib/admin';
+import { hasEnoughCredits } from '@/lib/credit-calculator';
 
 export const dynamic = 'force-dynamic';
 
 /**
- * GET /api/builds — list all builds, newest first.
+ * GET /api/builds — list builds for the current user, newest first.
+ * If no user session, returns all builds (for backward compat).
  */
 export async function GET() {
-  const rows = await db
+  const session = await getSession();
+  const userId = session?.user?.id;
+
+  let query = db
     .select({
       id: builds.id,
       appName: builds.appName,
       status: builds.status,
+      model: builds.model,
+      inputTokens: builds.inputTokens,
+      outputTokens: builds.outputTokens,
+      costUSD: builds.costUSD,
+      creditsDeducted: builds.creditsDeducted,
       deployedUrl: builds.deployedUrl,
       createdAt: builds.createdAt,
     })
@@ -35,6 +54,11 @@ export async function GET() {
     .orderBy(desc(builds.createdAt))
     .limit(50);
 
+  if (userId) {
+    query = query.where(eq(builds.userId, userId)) as typeof query;
+  }
+
+  const rows = await query;
   return NextResponse.json({ builds: rows });
 }
 
@@ -81,6 +105,29 @@ interface BuildRequest {
 
 export async function POST(req: Request) {
   try {
+    // ── Auth & credit check ──
+    const session = await getSession();
+    const userId = session?.user?.id ?? null;
+
+    // If user is authenticated, check credit balance
+    if (userId) {
+      const [user] = await db
+        .select({ credits: users.credits })
+        .from(users)
+        .where(eq(users.id, userId));
+
+      if (user) {
+        const adminCfg = await getAdminConfig();
+        const userCredits = parseFloat(user.credits);
+        if (!hasEnoughCredits(userCredits, adminCfg.minCreditsForBuild)) {
+          return NextResponse.json(
+            { error: `Insufficient credits. You have ${userCredits.toFixed(2)}, minimum ${adminCfg.minCreditsForBuild} required.` },
+            { status: 402 },
+          );
+        }
+      }
+    }
+
     let body: BuildRequest = {};
     try {
       body = (await req.json()) as BuildRequest;
@@ -125,6 +172,7 @@ export async function POST(req: Request) {
 
     await db.insert(builds).values({
       id: buildId,
+      userId,
       appId: (spec as { spec?: { appId?: string } }).spec?.appId ?? randomUUID(),
       appName: (spec as { spec?: { appName?: string } }).spec?.appName ?? appName,
       prompt,

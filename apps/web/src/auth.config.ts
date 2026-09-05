@@ -60,6 +60,7 @@ export const authConfig: NextAuthConfig = {
       const { pathname } = request.nextUrl;
 
       if (pathname === '/') return true;
+      if (pathname === '/login') return true;
       if (pathname.startsWith('/build')) return true;
       if (pathname === '/api/health') return true;
       if (pathname.startsWith('/api/auth')) return true;
@@ -67,7 +68,7 @@ export const authConfig: NextAuthConfig = {
       if (pathname.startsWith('/api/builds')) return true;
       if (pathname === '/api/invitations/accept') return true;
 
-      // Logged in → allow. Otherwise Auth.js redirects to /api/auth/signin.
+      // Logged in → allow. Otherwise Auth.js redirects to /login.
       return !!auth;
     },
   },
@@ -76,6 +77,9 @@ export const authConfig: NextAuthConfig = {
   // ngrok/similar). Phase 9 hardening will tighten this.
   trustHost: true,
 
-  // Pages override — keep defaults (Auth.js's built-in sign-in page
-  // works fine for Phase 1; UI-side sign-in button added later).
+  // Custom sign-in page — our /login page handles both GitHub OAuth
+  // and admin credentials login.
+  pages: {
+    signIn: '/login',
+  },
 };

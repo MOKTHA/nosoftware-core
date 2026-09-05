@@ -22,7 +22,8 @@
     "db:migrate:generate": "pnpm build && drizzle-kit generate --config=drizzle.config.ts",
     "db:migrate:reset": "drizzle-kit drop --config=drizzle.config.ts && drizzle-kit migrate --config=drizzle.config.ts",
     "db:studio": "drizzle-kit studio --config=drizzle.config.ts",
-    "db:seed": "pnpm build && node --experimental-transform-types scripts/seed.ts"
+    "db:seed": "pnpm build && node --experimental-transform-types scripts/seed.ts",
+    "db:seed:admin": "pnpm build && node --experimental-transform-types scripts/seed-admin.ts"
   },
   "dependencies": {
     "@heynxt/core-types": "workspace:*",

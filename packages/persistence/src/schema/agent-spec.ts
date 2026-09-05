@@ -14,6 +14,7 @@ import {
   index,
   jsonb,
 } from 'drizzle-orm/pg-core';
+import { projects } from './projects.js';
 
 // ---------------------------------------------------------------------------
 // Enums
@@ -52,7 +53,7 @@ export const agentSpecs = pgTable('agent_specs', {
 
   /** Parent project reference (optional — specs can be shared across projects). */
   projectId: text('projectId')
-    .references(() => ({ id: 'id' }) as any), // Foreign key to projects.id
+    .references(() => projects.id),
 
   /** Human-readable name for the agent configuration. */
   displayName: text('displayName').notNull(),

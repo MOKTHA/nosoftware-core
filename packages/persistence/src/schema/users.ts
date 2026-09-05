@@ -3,9 +3,7 @@
  *
  * Column naming convention: camelCase for both the TypeScript key and the
  * Postgres column name. This keeps the Drizzle ↔ Zod mapping 1:1 with the
- * Zod schema in `@heynxt/core-types` — no `mapFromView` transforms needed.
- *
- * Source Zod schema: packages/core-types/src/schemas/user.ts
+ * Zod schema in `@heynxt/core-types`.
  *
  * Auth.js compat note (see docs/adr/0008-auth-library-and-provider.md):
  * Property names `emailVerified` and `image` match what Auth.js's Drizzle
@@ -17,6 +15,8 @@ import {
   timestamp,
   pgEnum,
   index,
+  numeric,
+  boolean,
 } from 'drizzle-orm/pg-core';
 
 // ---------------------------------------------------------------------------
@@ -30,6 +30,9 @@ export const userStatusEnum = pgEnum('user_status', [
   'suspended',
   'deleted',
 ]);
+
+/** user.role — access level. */
+export const userRoleEnum = pgEnum('user_role', ['user', 'admin']);
 
 // ---------------------------------------------------------------------------
 // Table
@@ -54,10 +57,23 @@ export const users = pgTable('users', {
   /** Lifecycle status. Defaults to 'invited'. */
   status: userStatusEnum('status').notNull().default('invited'),
 
+  // ── Credits & role (Phase 6 auth/billing) ──
+
+  /** User role. Defaults to 'user'. Admins access /admin dashboard. */
+  role: userRoleEnum('role').notNull().default('user'),
+
+  /** Credit balance (decimal). 1 USD = 100 credits by default. */
+  credits: numeric('credits', { precision: 12, scale: 2 }).notNull().default('0'),
+
+  /** Hashed password for admin/credentials login. Nullable (OAuth users don't have one). */
+  passwordHash: text('passwordHash'),
+
+  /** If true, admin must change password on next login. */
+  mustChangePassword: boolean('mustChangePassword').notNull().default(false),
+
   /**
    * Row creation time. DB-level default so Auth.js (and any other code
    * path that doesn't explicitly set this) can insert without failure.
-   * Existing seed rows already have values; this only affects new rows.
    */
   createdAt: timestamp('createdAt', { mode: 'date' })
     .notNull()
@@ -65,8 +81,6 @@ export const users = pgTable('users', {
 
   /**
    * Last-modified time. See createdAt note — same Auth.js reasoning.
-   * Auth.js never updates this column on user update; application code
-   * that wants to track modification should set it explicitly.
    */
   updatedAt: timestamp('updatedAt', { mode: 'date' })
     .notNull()
