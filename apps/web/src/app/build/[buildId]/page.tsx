@@ -50,6 +50,7 @@ export default function BuildDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deployedUrl, setDeployedUrl] = useState<string | null>(null);
+  const [filesReady, setFilesReady] = useState(false);
 
   // Chat state
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
@@ -326,24 +327,43 @@ export default function BuildDetailPage() {
             >
               ← New Build
             </a>
-            {deployedUrl && (
-              <a
-                href={deployedUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  fontSize: '0.6875rem',
-                  color: '#ffffff',
-                  background: '#0a0a0a',
-                  padding: '0.2rem 0.625rem',
-                  borderRadius: '9999px',
-                  textDecoration: 'none',
-                  fontWeight: 500,
-                }}
-              >
-                Open App ↗
-              </a>
-            )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+              {filesReady && (
+                <a
+                  href={`/build/${buildId}/code`}
+                  style={{
+                    fontSize: '0.6875rem',
+                    color: '#525252',
+                    background: '#f5f5f5',
+                    padding: '0.2rem 0.625rem',
+                    borderRadius: '9999px',
+                    textDecoration: 'none',
+                    fontWeight: 500,
+                    border: '1px solid #e5e5e5',
+                  }}
+                >
+                  &lt;/&gt; Code
+                </a>
+              )}
+              {deployedUrl && (
+                <a
+                  href={deployedUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    fontSize: '0.6875rem',
+                    color: '#ffffff',
+                    background: '#0a0a0a',
+                    padding: '0.2rem 0.625rem',
+                    borderRadius: '9999px',
+                    textDecoration: 'none',
+                    fontWeight: 500,
+                  }}
+                >
+                  Open App ↗
+                </a>
+              )}
+            </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.375rem' }}>
             <h2
@@ -539,7 +559,7 @@ export default function BuildDetailPage() {
           borderLeft: 'none',
         }}
       >
-        <BuildStudio buildId={buildId} onDeployed={handleDeployed} />
+        <BuildStudio buildId={buildId} onDeployed={handleDeployed} onFilesReady={() => setFilesReady(true)} />
       </div>
     </div>
   );
