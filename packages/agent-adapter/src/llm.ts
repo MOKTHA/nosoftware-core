@@ -32,6 +32,18 @@ export interface OpenRouterCallOptions {
   userPrompt: string;
 }
 
+/** Token usage returned from each OpenRouter API call. */
+export interface TokenUsage {
+  promptTokens: number;
+  completionTokens: number;
+}
+
+/** Result from callOpenRouter — content + actual token usage from the API. */
+export interface OpenRouterResult {
+  content: string;
+  usage: TokenUsage;
+}
+
 export interface SkillModelCallOptions {
   /** Model to use (e.g. 'anthropic/claude-sonnet-4') */
   model: string;
@@ -58,8 +70,30 @@ const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 /** ------------------------------------------------------------------ */
 
 /**
+ * Global accumulator for token usage across all pipeline stages.
+ * Reset at the start of each pipeline run via `resetTokenAccumulator()`.
+ */
+const _tokenAccumulator: TokenUsage = { promptTokens: 0, completionTokens: 0 };
+
+/** Reset the token accumulator (call at start of each pipeline run). */
+export function resetTokenAccumulator(): void {
+  _tokenAccumulator.promptTokens = 0;
+  _tokenAccumulator.completionTokens = 0;
+}
+
+/** Get accumulated token usage from all callOpenRouter calls since last reset. */
+export function getAccumulatedTokenUsage(): TokenUsage {
+  return { ..._tokenAccumulator };
+}
+
+/**
  * Call the OpenRouter chat completions API and return the assistant
  * message content as a string.
+ *
+ * Token usage from each call is automatically accumulated in the
+ * global token accumulator. Use `getAccumulatedTokenUsage()` after
+ * the pipeline completes to get the total, and `resetTokenAccumulator()`
+ * at the start of each pipeline run.
  *
  * @throws {Error} When `OPENROUTER_API_KEY` is not set.
  * @throws {Error} When the API returns a non-2xx status.
@@ -67,6 +101,22 @@ const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 export async function callOpenRouter(
   opts: OpenRouterCallOptions,
 ): Promise<string> {
+  const result = await callOpenRouterWithUsage(opts);
+  return result.content;
+}
+
+/**
+ * Call the OpenRouter chat completions API and return both the content
+ * and the token usage reported by the API.
+ *
+ * This is the underlying call that `callOpenRouter()` delegates to.
+ * Use this when you need direct access to the usage data for a
+ * specific call (e.g. logging). For pipeline-level totals, use
+ * `getAccumulatedTokenUsage()` instead.
+ */
+export async function callOpenRouterWithUsage(
+  opts: OpenRouterCallOptions,
+): Promise<OpenRouterResult> {
   const apiKey = process.env['OPENROUTER_API_KEY'];
   if (!apiKey) throw new Error('OPENROUTER_API_KEY is not set');
 
@@ -94,8 +144,22 @@ export async function callOpenRouter(
 
   const json = (await res.json()) as {
     choices: Array<{ message: { content: string } }>;
+    usage?: { prompt_tokens?: number; completion_tokens?: number };
   };
-  return json.choices[0]?.message?.content ?? '';
+
+  const usage: TokenUsage = {
+    promptTokens: json.usage?.prompt_tokens ?? 0,
+    completionTokens: json.usage?.completion_tokens ?? 0,
+  };
+
+  // Accumulate into global tracker
+  _tokenAccumulator.promptTokens += usage.promptTokens;
+  _tokenAccumulator.completionTokens += usage.completionTokens;
+
+  return {
+    content: json.choices[0]?.message?.content ?? '',
+    usage,
+  };
 }
 
 /** ------------------------------------------------------------------ */

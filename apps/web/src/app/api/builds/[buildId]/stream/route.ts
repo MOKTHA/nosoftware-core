@@ -15,7 +15,12 @@ import { eq } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 
 import { db, builds, users, creditTransactions } from '@heynxt/persistence';
-import { BuildEventEmitter, buildPipelineFromSpec } from '@heynxt/agent-adapter';
+import {
+  BuildEventEmitter,
+  buildPipelineFromSpec,
+  resetTokenAccumulator,
+  getAccumulatedTokenUsage,
+} from '@heynxt/agent-adapter';
 import type { BuildEvent } from '@heynxt/agent-adapter';
 import { helpdeskTicketingFixture } from '@heynxt/prompt-spec';
 
@@ -181,6 +186,10 @@ async function runPipeline(
     spec = helpdeskTicketingFixture;
   }
 
+  // Reset the global token accumulator before starting so we only count
+  // tokens from THIS pipeline run.
+  resetTokenAccumulator();
+
   const pipeline = buildPipelineFromSpec(spec, buildId, emitter);
 
   try {
@@ -242,13 +251,18 @@ async function runPipeline(
 /**
  * Deduct credits from the user's balance after a build completes.
  *
+ * Uses REAL token usage accumulated from OpenRouter API responses during
+ * the pipeline run (via the global token accumulator in @heynxt/agent-adapter).
+ * Falls back to heuristic estimates only if the accumulator reports zero
+ * (e.g. all stages used stubs or the API didn't return usage data).
+ *
  * Flow:
  *   1. Look up the build's userId and model
- *   2. Estimate token usage from pipeline stage results
+ *   2. Read actual token usage from the global accumulator
  *   3. Fetch model pricing (OpenRouter API with cache)
  *   4. Calculate cost using admin config (creditsPerUSD, platformFeeMultiplier)
  *   5. Atomically deduct credits and log the transaction
- *   6. Save cost fields to the builds table
+ *   6. Save cost fields (model, tokens, costUSD, creditsDeducted) to builds table
  */
 async function deductCreditsForBuild(
   buildId: string,
@@ -262,14 +276,20 @@ async function deductCreditsForBuild(
 
   if (!build?.userId) return; // No user attached (e.g. anonymous build)
 
-  // 2. Estimate token usage from code generation stages
-  // The pipeline generates code across multiple stages. We estimate based on
-  // the number of stages that ran successfully (each generates ~2K output tokens).
-  const succeededStages = results.filter((r) => r.execution.status === 'succeeded').length;
-  const estimatedInputTokens = succeededStages * 3000;  // ~3K prompt tokens per stage
-  const estimatedOutputTokens = succeededStages * 2000;  // ~2K output tokens per stage
+  // 2. Read actual token usage from the pipeline's OpenRouter calls
+  const accumulated = getAccumulatedTokenUsage();
+  let inputTokens = accumulated.promptTokens;
+  let outputTokens = accumulated.completionTokens;
 
-  if (estimatedInputTokens === 0 && estimatedOutputTokens === 0) return;
+  // Fallback: if accumulator is zero (all stubs or API didn't return usage),
+  // estimate from succeeded stage count
+  if (inputTokens === 0 && outputTokens === 0) {
+    const succeededStages = results.filter((r) => r.execution.status === 'succeeded').length;
+    inputTokens = succeededStages * 3000;  // ~3K prompt tokens per stage
+    outputTokens = succeededStages * 2000;  // ~2K output tokens per stage
+  }
+
+  if (inputTokens === 0 && outputTokens === 0) return;
 
   // 3. Fetch model pricing
   const model = build.model ?? 'anthropic/claude-sonnet-4';
@@ -279,8 +299,8 @@ async function deductCreditsForBuild(
   const adminCfg = await getAdminConfig();
   const cost = calculateBuildCost(
     {
-      inputTokens: estimatedInputTokens,
-      outputTokens: estimatedOutputTokens,
+      inputTokens,
+      outputTokens,
       inputPricePer1M: pricing.inputPricePer1M,
       outputPricePer1M: pricing.outputPricePer1M,
     },
@@ -323,8 +343,8 @@ async function deductCreditsForBuild(
     .update(builds)
     .set({
       model,
-      inputTokens: estimatedInputTokens,
-      outputTokens: estimatedOutputTokens,
+      inputTokens,
+      outputTokens,
       costUSD: cost.costUSD.toFixed(6),
       creditsDeducted: cost.creditsToDeduct.toFixed(2),
     })

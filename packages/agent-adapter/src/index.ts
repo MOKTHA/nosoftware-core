@@ -72,8 +72,15 @@ export { createPipelineContext } from './pipeline-context.js';
 export type { PipelineContext } from './pipeline-context.js';
 
 // OpenRouter LLM helper (Phase 5) + Agent SDK skills loader (Phase 6)
-export { callOpenRouter, callModelWithSkills, listAvailableSkills } from './llm.js';
-export type { OpenRouterCallOptions, SkillModelCallOptions } from './llm.js';
+export {
+  callOpenRouter,
+  callOpenRouterWithUsage,
+  callModelWithSkills,
+  listAvailableSkills,
+  resetTokenAccumulator,
+  getAccumulatedTokenUsage,
+} from './llm.js';
+export type { OpenRouterCallOptions, SkillModelCallOptions, TokenUsage, OpenRouterResult } from './llm.js';
 
 // OpenRouter Agent SDK skill tools (nextTurnParams pattern)
 export {
