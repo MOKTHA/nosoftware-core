@@ -1,26 +1,22 @@
 /**
- * BuildStudio — Build progress + preview panel.
+ * BuildStudio — Build progress + collapsible preview panel.
  *
- * Shows live preview and agent status during/after a build.
- * File tree + code editor have moved to /build/[buildId]/code.
+ * Shows live preview (collapsible) and agent status during/after a build.
+ * File tree + code editor live at /build/[buildId]/code.
  *
- *   ┌──────────────────────────────────┐
- *   │          Live Preview            │
- *   │──────────────────────────────────│
- *   │         Agent Status             │
- *   └──────────────────────────────────┘
- *
- * Connects to SSE stream for real-time progress.
+ * Connects to SSE stream for real-time progress and notifies parent
+ * of step updates via onStepUpdate callback so the chat can show
+ * Claude-style code snippets.
  */
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                             */
 /* ------------------------------------------------------------------ */
 
-interface BuildEvent {
+export interface BuildEvent {
   step: string;
   status: 'running' | 'done' | 'warning' | 'error';
   detail: string;
@@ -39,19 +35,21 @@ interface BuildStudioProps {
   buildId: string;
   onDeployed?: (url: string) => void;
   onFilesReady?: () => void;
+  onStepUpdate?: (event: BuildEvent) => void;
 }
 
 /* ------------------------------------------------------------------ */
 /*  Component                                                         */
 /* ------------------------------------------------------------------ */
 
-export function BuildStudio({ buildId, onDeployed, onFilesReady }: BuildStudioProps) {
+export function BuildStudio({ buildId, onDeployed, onFilesReady, onStepUpdate }: BuildStudioProps) {
   const [steps, setSteps] = useState<StepState[]>([]);
   const [fileCount, setFileCount] = useState(0);
   const [connected, setConnected] = useState(false);
   const [done, setDone] = useState(false);
   const [failed, setFailed] = useState(false);
   const [deployedUrl, setDeployedUrl] = useState<string | null>(null);
+  const [previewCollapsed, setPreviewCollapsed] = useState(false);
   const esRef = useRef<EventSource | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -92,6 +90,9 @@ export function BuildStudio({ buildId, onDeployed, onFilesReady }: BuildStudioPr
         return;
       }
 
+      // Notify parent of step updates (for chat code snippets)
+      onStepUpdate?.(event);
+
       // Update step state
       setSteps((prev) => {
         const idx = prev.findIndex((s) => s.step === event.step);
@@ -114,6 +115,7 @@ export function BuildStudio({ buildId, onDeployed, onFilesReady }: BuildStudioPr
         event.detail.startsWith('https://')
       ) {
         setDeployedUrl(event.detail);
+        setPreviewCollapsed(false); // auto-expand on deploy
         onDeployed?.(event.detail);
       }
 
@@ -122,7 +124,6 @@ export function BuildStudio({ buildId, onDeployed, onFilesReady }: BuildStudioPr
         setDone(true);
         if (event.status === 'error') setFailed(true);
         es.close();
-        // Check if files are available
         checkFiles();
       }
     };
@@ -173,6 +174,7 @@ export function BuildStudio({ buildId, onDeployed, onFilesReady }: BuildStudioPr
           if (data.status === 'failed') setFailed(true);
           if (data.status === 'succeeded' && data.deployedUrl) {
             setDeployedUrl(data.deployedUrl);
+            setPreviewCollapsed(false);
             onDeployed?.(data.deployedUrl);
           }
           checkFiles();
@@ -206,102 +208,115 @@ export function BuildStudio({ buildId, onDeployed, onFilesReady }: BuildStudioPr
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: '#ffffff' }}>
-      {/* ── TOP: Live Preview ─────────────────────────── */}
+      {/* ── TOP: Live Preview (collapsible) ───────────── */}
       <div
         style={{
-          flex: 1,
+          flex: previewCollapsed ? '0 0 auto' : 1,
           display: 'flex',
           flexDirection: 'column',
           borderBottom: '1px solid #e5e5e5',
           minHeight: 0,
+          overflow: 'hidden',
         }}
       >
+        {/* Preview header with collapse toggle */}
         <div
+          onClick={() => setPreviewCollapsed(!previewCollapsed)}
           style={{
             padding: '0.5rem 0.75rem',
-            borderBottom: '1px solid #e5e5e5',
+            borderBottom: previewCollapsed ? 'none' : '1px solid #e5e5e5',
             fontSize: '0.6875rem',
             fontWeight: 600,
             textTransform: 'uppercase',
             letterSpacing: '0.05em',
             color: '#737373',
             background: '#f5f5f5',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            userSelect: 'none',
+            flexShrink: 0,
           }}
         >
-          Live Preview
+          <span>Live Preview</span>
+          <span style={{ fontSize: '0.625rem', transition: 'transform 0.2s', transform: previewCollapsed ? 'rotate(-90deg)' : 'rotate(0)' }}>
+            ▼
+          </span>
         </div>
 
-        <div style={{ flex: 1, background: '#f5f5f5', position: 'relative', overflow: 'hidden' }}>
-          {deployedUrl ? (
-            <>
-              {/* Faux browser chrome */}
-              <div
-                style={{
-                  padding: '0.375rem 0.625rem',
-                  background: '#e5e5e5',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.375rem',
-                }}
-              >
-                <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#ff5f57' }} />
-                <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#febc2e' }} />
-                <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#28c840' }} />
+        {!previewCollapsed && (
+          <div style={{ flex: 1, background: '#f5f5f5', position: 'relative', overflow: 'hidden' }}>
+            {deployedUrl ? (
+              <>
+                {/* Faux browser chrome */}
                 <div
                   style={{
-                    flex: 1,
-                    background: '#ffffff',
-                    borderRadius: 4,
-                    padding: '0.125rem 0.5rem',
-                    fontSize: '0.625rem',
-                    color: '#737373',
-                    textOverflow: 'ellipsis',
-                    overflow: 'hidden',
-                    whiteSpace: 'nowrap',
-                    marginLeft: '0.375rem',
+                    padding: '0.375rem 0.625rem',
+                    background: '#e5e5e5',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.375rem',
                   }}
                 >
-                  {deployedUrl}
-                </div>
-              </div>
-              <iframe
-                src={deployedUrl}
-                style={{ width: '100%', height: 'calc(100% - 28px)', border: 'none' }}
-                title="App preview"
-              />
-            </>
-          ) : (
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                height: '100%',
-                gap: '0.5rem',
-                color: '#a3a3a3',
-              }}
-            >
-              {/* Placeholder grid */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 4, opacity: 0.3 }}>
-                {Array.from({ length: 6 }).map((_, i) => (
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#ff5f57' }} />
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#febc2e' }} />
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#28c840' }} />
                   <div
-                    key={i}
                     style={{
-                      width: 56,
-                      height: 40,
-                      background: '#d4d4d4',
+                      flex: 1,
+                      background: '#ffffff',
                       borderRadius: 4,
+                      padding: '0.125rem 0.5rem',
+                      fontSize: '0.625rem',
+                      color: '#737373',
+                      textOverflow: 'ellipsis',
+                      overflow: 'hidden',
+                      whiteSpace: 'nowrap',
+                      marginLeft: '0.375rem',
                     }}
-                  />
-                ))}
+                  >
+                    {deployedUrl}
+                  </div>
+                </div>
+                <iframe
+                  src={deployedUrl}
+                  style={{ width: '100%', height: 'calc(100% - 28px)', border: 'none' }}
+                  title="App preview"
+                />
+              </>
+            ) : (
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  height: '100%',
+                  gap: '0.5rem',
+                  color: '#a3a3a3',
+                }}
+              >
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 4, opacity: 0.3 }}>
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        width: 56,
+                        height: 40,
+                        background: '#d4d4d4',
+                        borderRadius: 4,
+                      }}
+                    />
+                  ))}
+                </div>
+                <span style={{ fontSize: '0.6875rem', marginTop: '0.25rem' }}>
+                  Preview available after deploy
+                </span>
               </div>
-              <span style={{ fontSize: '0.6875rem', marginTop: '0.25rem' }}>
-                Preview available after deploy
-              </span>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* ── BOTTOM: Agent Status Panel ────────────────── */}
@@ -312,8 +327,10 @@ export function BuildStudio({ buildId, onDeployed, onFilesReady }: BuildStudioPr
           flexDirection: 'column',
           gap: '0.5rem',
           background: '#ffffff',
-          minHeight: 180,
+          minHeight: previewCollapsed ? 0 : 180,
           flexShrink: 0,
+          flex: previewCollapsed ? 1 : undefined,
+          overflow: previewCollapsed ? 'auto' : undefined,
         }}
       >
         <div
@@ -394,6 +411,35 @@ export function BuildStudio({ buildId, onDeployed, onFilesReady }: BuildStudioPr
             </svg>
             View Code
           </a>
+        )}
+
+        {/* Step log (visible when preview is collapsed) */}
+        {previewCollapsed && pipelineSteps.length > 0 && (
+          <div style={{ marginTop: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+            <div style={{
+              fontSize: '0.6875rem',
+              fontWeight: 600,
+              textTransform: 'uppercase',
+              letterSpacing: '0.08em',
+              color: '#a3a3a3',
+              marginBottom: '0.25rem',
+            }}>
+              Pipeline Steps
+            </div>
+            {pipelineSteps.map((s) => (
+              <div key={s.step} style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.75rem' }}>
+                <span style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: '50%',
+                  background: s.status === 'done' ? '#16a34a' : s.status === 'error' ? '#dc2626' : s.status === 'running' ? '#eab308' : '#a3a3a3',
+                  flexShrink: 0,
+                }} />
+                <span style={{ color: '#525252', flex: 1 }}>{getStepVerb(s.step).replace('…', '')}</span>
+                <span style={{ color: '#a3a3a3', fontSize: '0.6875rem' }}>{(s.elapsed_ms / 1000).toFixed(0)}s</span>
+              </div>
+            ))}
+          </div>
         )}
 
         {/* Progress bar */}
@@ -502,7 +548,7 @@ function Spinner() {
 /*  Step verbs                                                        */
 /* ------------------------------------------------------------------ */
 
-const STEP_VERBS: Record<string, string> = {
+export const STEP_VERBS: Record<string, string> = {
   'normalize-spec': 'Parsing spec…',
   'resolve-blueprint-plan': 'Resolving blueprint…',
   'generate-schema': 'Designing schema…',

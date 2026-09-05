@@ -8,6 +8,7 @@
  */
 import { NextResponse } from 'next/server';
 import { randomUUID } from 'node:crypto';
+import { desc } from 'drizzle-orm';
 
 import type { AppSpecTemplate } from '@heynxt/core-types';
 import { db, builds } from '@heynxt/persistence';
@@ -17,6 +18,25 @@ import { helpdeskTicketingFixture } from '@heynxt/prompt-spec';
 import { errorResponse } from '@/lib/api';
 
 export const dynamic = 'force-dynamic';
+
+/**
+ * GET /api/builds — list all builds, newest first.
+ */
+export async function GET() {
+  const rows = await db
+    .select({
+      id: builds.id,
+      appName: builds.appName,
+      status: builds.status,
+      deployedUrl: builds.deployedUrl,
+      createdAt: builds.createdAt,
+    })
+    .from(builds)
+    .orderBy(desc(builds.createdAt))
+    .limit(50);
+
+  return NextResponse.json({ builds: rows });
+}
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
